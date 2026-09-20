@@ -42,6 +42,29 @@ function toHtml(nodes: any[]): string {
   return String(toHtmlProc.stringify(hast));
 }
 
+/**
+ * Render a plain markdown document to HTML (blog posts).
+ *
+ * Blog posts come from the blogspot archive: raw HTML is allowed through so
+ * embedded tables and images survive, and `$...$` / `$$...$$` become KaTeX.
+ */
+export function renderMarkdown(source: string): string {
+  const tree = mdParser.parse(source) as any;
+  return toHtml(tree.children || []);
+}
+
+/** Split frontmatter from body. Returns the parsed frontmatter and raw body. */
+export function splitFrontmatter(source: string): {
+  data: Record<string, any>;
+  body: string;
+} {
+  const tree = mdParser.parse(source) as any;
+  const fm = (tree.children || []).find((n: any) => n.type === 'yaml');
+  if (!fm) return { data: {}, body: source };
+  const start = fm.position.end.offset;
+  return { data: parseYaml(fm.value) || {}, body: source.slice(start) };
+}
+
 /** Plain text of an mdast subtree — used for narration lines. */
 function textOf(node: any): string {
   if (!node) return '';
