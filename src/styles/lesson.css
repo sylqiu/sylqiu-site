@@ -1,0 +1,162 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-2: #1c2230;
+  --line: #2a3140;
+  --fg: #e6edf3;
+  --dim: #8b949e;
+  --accent: #58a6ff;
+  --ok: #3fb950;
+  --bad: #f85149;
+  --warn: #d29922;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 24px;
+  background: rgba(13, 17, 23, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+#topbar .brand { font-weight: 700; color: var(--fg); text-decoration: none; letter-spacing: 0.02em; }
+#topnav { display: flex; gap: 12px; font-size: 13px; color: var(--dim); }
+
+#app { max-width: 760px; margin: 0 auto; padding: 32px 24px 96px; }
+.loading, .dim { color: var(--dim); }
+
+/* ------------------------------- home ------------------------------- */
+.home h1 { margin: 0 0 4px; font-size: 30px; }
+.home .sub { color: var(--dim); margin-top: 0; }
+.mod { margin-top: 28px; }
+.mod h2 { font-size: 17px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }
+.mod ul { list-style: none; padding: 0; }
+.mod li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.mod a { color: var(--fg); text-decoration: none; }
+.mod a:hover { color: var(--accent); }
+.done { color: var(--ok); }
+
+/* ------------------------------ lesson ------------------------------ */
+.lesson header h1 { margin: 0 0 6px; font-size: 32px; line-height: 1.2; }
+.lesson .meta { font: 12px/1 var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.lesson .reading { color: var(--dim); font-size: 14px; }
+.prose { margin: 20px 0; }
+.prose h2 { font-size: 22px; margin-top: 34px; }
+.prose h3 { font-size: 18px; margin-top: 26px; }
+.prose a { color: var(--accent); }
+.prose code { font-family: var(--mono); font-size: 0.9em; background: var(--panel-2); padding: 2px 5px; border-radius: 4px; }
+.prose img { max-width: 100%; border-radius: 8px; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+
+/* -------------------------------- boxes -------------------------------- */
+.box {
+  margin: 22px 0;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dim);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.box-title {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line);
+}
+.box-body { padding: 4px 16px 12px; }
+.box-def { border-left-color: var(--accent); }
+.box-def .box-title { color: var(--accent); }
+.box-thm { border-left-color: #a371f7; }
+.box-thm .box-title { color: #a371f7; }
+.box-proof { border-left-color: var(--dim); }
+.box-con { border-left-color: #39c5cf; }
+.box-con .box-title { color: #39c5cf; }
+.box-ex { border-left-color: var(--warn); }
+.box-ex .box-title { color: var(--warn); }
+.box-rem { border-left-color: var(--dim); }
+
+/* ------------------------------- scenes ------------------------------- */
+.sceneblock { margin: 26px 0; }
+.scene-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.scene-id { font: 11px/1 var(--mono); color: var(--dim); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+.scene-title { font-size: 14px; color: var(--dim); flex: 1; }
+.scene-ctl { display: flex; gap: 6px; }
+.btn {
+  font: 13px/1 inherit;
+  color: var(--fg);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.scene-canvas {
+  height: var(--scene-h, 420px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: radial-gradient(120% 120% at 50% 0%, #131a26 0%, #0d1117 70%);
+  overflow: hidden;
+  position: relative;
+}
+.scene-canvas svg { width: 100%; height: 100%; display: block; }
+.scene-missing { padding: 20px; color: var(--bad); font: 13px/1.6 var(--mono); }
+.scene-caption {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+  font-size: 13px;
+  color: var(--fg);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+.beats { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.beat {
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  font: 14px/1.5 inherit;
+  color: var(--dim);
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.beat:hover { color: var(--fg); }
+.beat.active { color: var(--fg); border-left-color: var(--accent); background: rgba(88, 166, 255, 0.07); }
+.beat-n { font: 11px/1.6 var(--mono); color: var(--dim); min-width: 14px; }
+
+/* ------------------------------- checks ------------------------------- */
+.check { margin: 26px 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.check-q { font-weight: 600; margin-bottom: 12px; }
+.check-opts { display: flex; flex-direction: column; gap: 6px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; text-align: left; font: 15px/1.5 inherit; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.opt:hover { border-color: var(--accent); }
+.opt-mark { min-width: 16px; height: 16px; margin-top: 3px; border: 1px solid var(--dim); border-radius: 50%; }
+.opt.ok { border-color: var(--ok); }
+.opt.ok .opt-mark { border-color: var(--ok); background: var(--ok); }
+.opt.bad { border-color: var(--bad); }
+.opt.bad .opt-mark { border-color: var(--bad); background: var(--bad); }
+.opt[disabled] { cursor: default; }
+.check-exp { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--dim); font-size: 14px; }
+.check-exp p:first-child { margin-top: 0; }

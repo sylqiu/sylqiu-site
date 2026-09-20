@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+
+# Generated lesson JSON (rebuild with `npm run lessons`)
+public/data/
+
+# Local media (narration audio, rendered clips) — keep it out of git,
+# ship it separately or from the private content repo.
+public/media/
