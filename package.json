@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "build:lessons": "node scripts/build-lessons.ts",
     "lessons": "node scripts/build-lessons.ts",
-    "dev": "npm run lessons && vite",
-    "build": "npm run lessons && vite build",
+    "dev": "npm run build:lessons && vite",
+    "build": "npm run build:lessons && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

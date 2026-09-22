@@ -1,7 +1,9 @@
 # sylqiu-site
 
-Personal site + MathFlow course authoring. Built as one repo so the course can
-live inside the page later without a second toolchain.
+Personal site + ExploreFlow. One repo, one site.
+
+The landing page is deliberately minimal — name, one line, links, and three
+doors. Everything else lives on its own page.
 
 ## Run it
 
@@ -10,26 +12,62 @@ npm install
 npm run dev       # http://localhost:5173
 ```
 
-`npm run dev` rebuilds lessons from markdown first, then starts Vite with hot
-reload. Edit a `.md` file, save, then re-run (or re-run `npm run lessons`) — the
+`npm run dev` rebuilds lessons from markdown first, then starts Vite. Edit a
+`.md` file, save, then re-run `npm run build:lessons` (or restart `dev`) — the
 parser is a build step, not a Vite plugin yet.
 
 ```sh
-npm run build     # lessons + static site -> dist/
+npm run build     # lessons + blog + static site -> dist/
 npm run preview   # serve dist/
 ```
+
+Push to `main` deploys to Pages automatically:
+<https://sylqiu.github.io/sylqiu-site/>
+
+## Surfaces
+
+| Route | What it is |
+|---|---|
+| `#/` | Minimal landing: name, role, links, three doors. |
+| `#/research` | Publications. Content in `src/lib/site.ts`. |
+| `#/courses` | ExploreFlow index — all courses. |
+| `#/courses/:id` | One course: modules and lesson list. |
+| `#/lesson/:id` | Lesson player: boxes, scenes, narration beats, checks. |
+| `#/blog` | Writing index (migrated blogspot archive). |
+| `#/blog/:id` | Single post. |
 
 ## Where things live
 
 | Path | What it is |
 |---|---|
-| `content/course.yaml` | Course outline: modules and lesson order. |
-| `content/**/*.md` | **The lessons.** One file per lesson. This is the thing you edit. |
-| `src/lib/markdown.ts` | Markdown -> blocks parser (directives, boxes, checks). |
+| `src/lib/site.ts` | **Personal content** — name, bio, links, publications, and the ExploreFlow name/tagline. |
+| `content/courses/<id>/course.yaml` | Course outline: modules and lesson order. |
+| `content/courses/<id>/**.md` | **The lessons.** One file per lesson. |
+| `content/blog/*.md` | Blog posts, migrated from blogspot. Normal markdown now. |
+| `src/lib/markdown.ts` | Markdown -> blocks parser (directives, boxes, checks) + blog renderer. |
+| `src/lib/course.ts` | Discovers every course directory. |
 | `src/lib/narration.ts` | Beat clock: audio-driven, or estimated reading time. |
 | `src/lib/registry.ts` | Scene id -> code mapping, lazy-loaded. |
 | `src/scenes/*.ts` | The interactive demos. Hand-written, per-lesson. |
-| `public/data/lessons/*.json` | Generated. Never edit; never commit (`npm run lessons`). |
+| `scripts/import-blogspot.ts` | One-off import from the blogspot Atom feed. Not part of the build. |
+| `public/data/`, `public/media/` | Generated / local media. Git-ignored. |
+
+## Adding a course
+
+Create `content/courses/<course-id>/course.yaml`, drop lesson `.md` files beside
+it, set `publish: true` in each, then `npm run build`. The course appears on
+`#/courses` automatically — no code change, no registration step.
+
+```yaml
+id: linear-algebra
+title: Linear algebra
+subtitle: Optional one-liner.
+modules:
+  - id: m1
+    title: Module 1 — Vector spaces
+    lessons:
+      - vector-spaces
+```
 
 ## Authoring format
 
@@ -71,18 +109,7 @@ Since the probability is over $x \leftarrow \{0,1\}^n$ …
 :::
 ```
 
-**Frontmatter** — `publish: true` is required; drafts are skipped, not published.
-
-```markdown
----
-id: one-way-functions
-module: m1
-kind: theory
-title: One-way functions
-reading: { text: "Primer §2.1" }
-publish: true
----
-```
+**Frontmatter** — `publish: true` is required; drafts are skipped.
 
 ## Scenes
 
@@ -102,22 +129,22 @@ acting as a caption strip. **Narration owns time; the scene owns state.** Record
 or re-record audio at any point and nothing in the scene changes.
 
 Drop a narration file at `public/media/<lesson-id>.mp3` and set `audio:` in the
-frontmatter; the beats are then distributed across the real audio duration.
+frontmatter; beats are then distributed across the real audio duration.
 
 ## Notable choices
 
 - **Markdown, not JSON, is the source of truth.** `$$` LaTeX survives verbatim,
   diffs are readable, and one lesson file is a clean LLM context window.
-  `validate_courses.py`-style structure checks run in `scripts/build-lessons.ts`.
 - **No video.** Scenes are live DOM/SVG, so they respond to drag, hover, and
-  scroll — and they stay sharp on any display.
-- **Content and code are separable.** `public/media/` and `public/data/` are
-  git-ignored, so a private content repo can feed a public site later.
+  scroll — and stay sharp on any display.
+- **Courses are directories.** Adding a subject is a new folder, not a rename of
+  the whole project.
 
 ## Known gaps
 
-- Vite doesn't watch `content/`; re-run `npm run lessons` (or restart `dev`).
-- Scenes ship hand-written SVG. A math helper layer (axis/tick/label) is not
-  written yet — the three scenes inline their own.
-- The personal-page shell (hero, research, writing) is not built yet; `index.html`
-  is the course player only.
+- Vite doesn't watch `content/`; re-run `npm run build:lessons`.
+- Scenes ship hand-written SVG. No shared math helper layer (axis/tick/label) yet.
+- Blog images still hotlink to `bloggerusercontent.com` (51 images). They load,
+  but localizing them is a follow-up.
+- `sylqiu.github.io` — the original user page — is still the old Jon Barron
+  template. This site is deployed as a project page until that swap is decided.

@@ -43,6 +43,18 @@ export const site = {
   blogArchive: 'https://sylqiu.blogspot.com/',
 };
 
+/**
+ * The umbrella name for the interactive courses section. Deliberately not tied
+ * to one subject, so new topics can join without a rename.
+ */
+export const exploreFlow = {
+  name: 'ExploreFlow',
+  tagline: 'Interactive courses — visual, explorable, and steppable line by line.',
+  blurb:
+    'Each course pairs prose with live demos you can drag and step through, ' +
+    'narrated beat by beat. No video: everything runs in the page.',
+};
+
 export const publications: Publication[] = [
   {
     title: 'MonoAvatar: Learning Personalized High Quality Volumetric Head Avatars from Monocular RGB Videos',

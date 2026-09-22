@@ -79,51 +79,95 @@ h1, h2, h3 { line-height: 1.25; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #0b1220; font-weight: 600; }
 .btn.primary:hover { filter: brightness(1.1); }
 
-/* --------------------------------- home --------------------------------- */
+/* -------------------------------- landing -------------------------------- */
 
-.hero {
+.landing {
   display: flex;
-  gap: 32px;
-  align-items: flex-start;
-  padding-bottom: 28px;
-  border-bottom: 1px solid var(--line);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 0 44px;
 }
-.hero-text { flex: 1; }
-.hero h1 { margin: 0 0 2px; font-size: 34px; letter-spacing: -0.01em; }
-.hero .role { color: var(--accent); font-size: 15px; margin: 0 0 14px; }
-.hero p { margin: 0 0 12px; }
-.hero-links { margin-top: 16px !important; }
-.hero-links a { text-decoration: none; }
-.hero-links a:hover { text-decoration: underline; }
-.hero-links .sep { color: var(--line); margin: 0 8px; }
-.avatar {
-  width: 160px;
-  height: 160px;
+.landing .avatar {
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--line);
   background: var(--panel);
+  margin-bottom: 26px;
 }
+.landing h1 {
+  margin: 0 0 8px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.landing .role { color: var(--dim); font-size: 16px; margin: 0 0 22px; }
+.landing-links { font-size: 15px; }
+.landing-links a { text-decoration: none; color: var(--fg); }
+.landing-links a:hover { color: var(--accent); }
+.landing-links .sep { color: var(--line); margin: 0 10px; }
 
-.callout {
-  margin: 32px 0;
+/* Three doors to the rest of the site. */
+.doors { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.door {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'title arrow' 'blurb arrow';
+  gap: 2px 16px;
+  align-items: center;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+.door:hover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+  transform: translateX(3px);
+}
+.door-title { grid-area: title; color: var(--fg); font-size: 17px; font-weight: 600; }
+.door-blurb { grid-area: blurb; color: var(--dim); font-size: 14px; }
+.door-arrow { grid-area: arrow; color: var(--dim); font-size: 20px; }
+.door:hover .door-arrow { color: var(--accent); }
+
+/* --------------------------------- pages --------------------------------- */
+
+.page { margin-top: 8px; }
+.page header { margin-bottom: 26px; }
+.page header h1 { margin: 0 0 8px; font-size: 32px; }
+.page .sub { color: var(--dim); margin-top: -14px; }
+
+/* -------------------------------- courses -------------------------------- */
+
+.courses { display: flex; flex-direction: column; gap: 10px; }
+.course-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'title arrow' 'sub arrow' 'meta arrow';
+  gap: 3px 16px;
+  align-items: center;
   padding: 20px 22px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  border-radius: 10px;
-  background: linear-gradient(120deg, #131a26 0%, var(--panel) 60%);
+  border-radius: 12px;
+  background: var(--panel);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
 }
-.callout h2 { margin: 0 0 6px; font-size: 20px; }
-.callout p { margin: 0 0 14px; color: var(--dim); }
+.course-card:hover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+  transform: translateX(3px);
+}
+.course-title { grid-area: title; color: var(--fg); font-size: 18px; font-weight: 600; }
+.course-sub { grid-area: sub; color: var(--dim); font-size: 14px; }
+.course-meta { grid-area: meta; font: 12px/1.6 var(--mono); color: var(--dim); }
+.course-card .door-arrow { grid-area: arrow; }
 
-h2.section {
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-  margin: 40px 0 6px;
-  font-weight: 600;
-}
+/* ------------------------------ publications ------------------------------ */
 
 .pubs { display: flex; flex-direction: column; gap: 4px; }
 .pub {
@@ -189,8 +233,7 @@ h2.section {
 }
 
 .post-view header, .blog header, .course-home header { margin-bottom: 22px; }
-.post-view h1, .blog h1, .course-home h1 { margin: 0 0 6px; font-size: 30px; }
-.meta { font: 12px/1 var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+.post-view h1, .blog h1, .course-home h1 { margin: 0 0 6px; font-size: 30px; }.meta { font: 12px/1 var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
 .reading { color: var(--dim); font-size: 14px; }
 .post-source { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--dim); }
 
@@ -383,11 +426,17 @@ h2.section {
 @media (max-width: 640px) {
   #app { padding: 24px 16px 72px; }
   #topbar { padding: 12px 16px; gap: 14px; }
-  .hero { flex-direction: column-reverse; gap: 20px; }
-  .avatar { width: 110px; height: 110px; }
-  .hero h1 { font-size: 28px; }
+  #topnav { gap: 12px; font-size: 13px; }
+  #topbar .brand { font-size: 15px; }
+  .landing { padding: 32px 0 32px; }
+  .landing .avatar { width: 104px; height: 104px; margin-bottom: 20px; }
+  .landing h1 { font-size: 30px; }
+  .landing .role { font-size: 15px; }
+  .door, .course-card { padding: 16px 18px; }
+  .door:hover, .course-card:hover { transform: none; }
   .pub { flex-direction: column; gap: 14px; }
   .pub-media { width: 100%; max-width: 260px; }
+  .page header h1 { font-size: 26px; }
   .lesson header h1, .post-view h1 { font-size: 26px; }
   .scene-canvas { height: auto; min-height: 300px; }
 }

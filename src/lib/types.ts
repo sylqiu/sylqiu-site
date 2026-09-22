@@ -1,4 +1,4 @@
-/** Shared types for the MathFlow lesson format. */
+/** Shared types for the ExploreFlow lesson format. */
 
 export type BoxKind = 'def' | 'thm' | 'proof' | 'con' | 'ex' | 'rem';
 
@@ -30,6 +30,8 @@ export type Block =
 
 export interface LessonMeta {
   id: string;
+  /** Owning course id (set by the build; not required in frontmatter). */
+  courseId?: string;
   module: string;
   kind: string;
   title: string;
