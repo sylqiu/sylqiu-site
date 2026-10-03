@@ -11,6 +11,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { fixBlogspotMathBody } from '../src/lib/blogspot.ts';
 import TurndownService from 'turndown';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -85,6 +86,9 @@ for (const entry of entries) {
   md = md.replace(/\u00a0/g, ' ');
   md = md.replace(/^[ \t]+$/gm, '');
   md = md.replace(/\n{3,}/g, '\n\n').trim();
+  // Normalize the archive's LaTeX (doubled backslashes, escaped brackets) so
+  // the site's remark-math -> KaTeX pipeline renders it (see lib/blogspot.ts).
+  md = fixBlogspotMathBody(md);
 
   const id = slugify(title, published);
   const frontmatter = [

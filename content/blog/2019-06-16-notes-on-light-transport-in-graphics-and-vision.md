@@ -30,58 +30,58 @@ Fig.1 Lambert's Law. Figure taken from the **pbrt** book \[1\]
 
 Thus, we will consider finer differential radiometric quantities that take directions into account.  
 
--   *Incident radiance*: The number of photons arriving at $p$ per solid angle (i.e. standard measure on the unit sphere $\\mathbf{S}^2$) per unit time.
+-   *Incident radiance*: The number of photons arriving at $p$ per solid angle (i.e. standard measure on the unit sphere $\mathbf{S}^2$) per unit time.
 -   *Exitant radiance*: The number of photons leaving from $p$ per solid angle per unit time.
 
-These two quantities are closely related to the irradiance and radiant exitant. If we integrate incident radiance (or exitant radiance) over a unit sphere centered at $p$, we will get the irradiance (or resp. radiant exitant). In particular, if no light can pass through $p$ because of its material property, then it is equivalent to integrate over the unit half-sphere $\\mathbf{H}^2$ above the tangent plane at $p$.  
+These two quantities are closely related to the irradiance and radiant exitant. If we integrate incident radiance (or exitant radiance) over a unit sphere centered at $p$, we will get the irradiance (or resp. radiant exitant). In particular, if no light can pass through $p$ because of its material property, then it is equivalent to integrate over the unit half-sphere $\mathbf{H}^2$ above the tangent plane at $p$.  
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhQ7OHBpA3bKHWX_thYkmIIahxGrn9ByqCn1Ii2ki8z0RyEqTEvRNTIl_F6qjgmbNztb_hC14ZVqsQhR8RKv8v5JjXmXLb-pfQPzidvsy4bh-ynT18l7I4sOyRgstv6dZ-2mPKLlpcRmcc/s320/radiance_def.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhQ7OHBpA3bKHWX_thYkmIIahxGrn9ByqCn1Ii2ki8z0RyEqTEvRNTIl_F6qjgmbNztb_hC14ZVqsQhR8RKv8v5JjXmXLb-pfQPzidvsy4bh-ynT18l7I4sOyRgstv6dZ-2mPKLlpcRmcc/s1600/radiance_def.png)
 
 Fig.2 Incident radiance and exitant radiance. Figure taken from the **pbrt** book \[1\]
 
-The relation between incident radiance and exitant radiance at $p$ is dictated by the material property at $p$. Imagine a beam of light coming from direction $\\omega\_i \\in \\mathbf{S}^2$ arriving at $p$, in other words, a incident radiance $L\_{i}(p, \\omega\_{i})$. The outgoing light from $p$ due to this light beam is a distribution of exitant radiance over the unit sphere centered at $p$. Denote the exitant radiance in direction $\\omega\_o$ as $L\_{o}(p, \\omega\_{o})$. For simplicity, we assume a certain ratio of $L\_{i}(p, \\omega\_{i})$ is reflected or transmitted in the form of $L\_{o}(p, \\omega\_{o})$. Because of Lambert's Law, we also expect a uniform decrease in this ratio if the angle between $\\omega\_i$ and the surface normal at $p$ is large. We can thus normalize this effect out, which leads us to the *bidirectional scattering distribution function (BSDF)*$$  
-f(p, \\omega\_o, \\omega\_i) = \\frac{L\_{o}(p, \\omega\_{o})}{L\_{i}(p, \\omega\_{i})|\\cos(\\theta\_i)|},  
-$$where $\\theta\_i$ is the angle between $\\omega\_i$ and the surface normal $\\mathbf{n}$. We will assume this quantity depends only on the material. For examples,  
+The relation between incident radiance and exitant radiance at $p$ is dictated by the material property at $p$. Imagine a beam of light coming from direction $\omega\_i \in \mathbf{S}^2$ arriving at $p$, in other words, a incident radiance $L\_{i}(p, \omega\_{i})$. The outgoing light from $p$ due to this light beam is a distribution of exitant radiance over the unit sphere centered at $p$. Denote the exitant radiance in direction $\omega\_o$ as $L\_{o}(p, \omega\_{o})$. For simplicity, we assume a certain ratio of $L\_{i}(p, \omega\_{i})$ is reflected or transmitted in the form of $L\_{o}(p, \omega\_{o})$. Because of Lambert's Law, we also expect a uniform decrease in this ratio if the angle between $\omega\_i$ and the surface normal at $p$ is large. We can thus normalize this effect out, which leads us to the *bidirectional scattering distribution function (BSDF)*$$  
+f(p, \omega\_o, \omega\_i) = \frac{L\_{o}(p, \omega\_{o})}{L\_{i}(p, \omega\_{i})|\cos(\theta\_i)|},  
+$$where $\theta\_i$ is the angle between $\omega\_i$ and the surface normal $\mathbf{n}$. We will assume this quantity depends only on the material. For examples,  
 
--   For perfect specular reflection, the photons from $\\omega\_i$ are simply copied to its mirrored direction $\\omega\_o$, and so $f$ is a delta distribution for fixed $\\omega\_i$.
+-   For perfect specular reflection, the photons from $\omega\_i$ are simply copied to its mirrored direction $\omega\_o$, and so $f$ is a delta distribution for fixed $\omega\_i$.
 -   For glossy reflection, $f$ is more spread-out within a cone of directions than a perfect specular reflection.
--   For perfect Lambertian reflection, $f$ is a uniform distribution over the half sphere $\\mathbf{H}^2$.
+-   For perfect Lambertian reflection, $f$ is a uniform distribution over the half sphere $\mathbf{H}^2$.
 -   For a *black body*, $f$ is simply zero.
 
-Now we are ready to derive the light transport equation. For a scene point $p$, we must have conservatoin of energy. This means the difference in the radiant exitant and irradiance must equate the amount of photons emitted minus the amount absorbed per unit time. Moving the irradiance to the right hand side, and reformulate this equality in terms of incident radiance $L\_i(p, \\omega\_i)$, exitant radiance $L\_o(p, \\omega\_o)$, emitted radiance $L\_e(p, \\omega\_o)$ in direction $\\omega\_o$ and the BSDF, we have  
+Now we are ready to derive the light transport equation. For a scene point $p$, we must have conservatoin of energy. This means the difference in the radiant exitant and irradiance must equate the amount of photons emitted minus the amount absorbed per unit time. Moving the irradiance to the right hand side, and reformulate this equality in terms of incident radiance $L\_i(p, \omega\_i)$, exitant radiance $L\_o(p, \omega\_o)$, emitted radiance $L\_e(p, \omega\_o)$ in direction $\omega\_o$ and the BSDF, we have  
 
-$\\displaystyle L\_o(p, \\omega\_o) = L\_e(p, \\omega\_o) + \\int\_{\\mathbf{S}^2}  
-                f(p, \\omega\_o, \\omega\_i)L\_i(p, \\omega\_i)|\\cos(\\theta\_i)| \\, d\\omega\_i \\ \\ \\ \\ (1) $
+$\displaystyle L\_o(p, \omega\_o) = L\_e(p, \omega\_o) + \int\_{\mathbf{S}^2}  
+                f(p, \omega\_o, \omega\_i)L\_i(p, \omega\_i)|\cos(\theta\_i)| \, d\omega\_i \ \ \ \ (1) $
 
 This light transport equation will be the central theme. We will next turn to the evaluation of the solution of this integral equation given scene geometry, materials (in terms of BSDFs), and light sources through Monte-Carlo integration.  
 
  **1\. Monte-Carlo path tracing**
 
-Consider a non-light-source point $p$. The point's exitant radiance in direction $\\omega\_o$ is a result from the incident radiance at $p$, which in turn can possibly come from all other scene points. We can already sense a recursive process going on: most points are first lit by light sources, and then all the points lit each other, and then all the points lit each other again, and it goes on like this literally infinite number of times. The result after the first "light bounce" is called *direct illumination*, and the result afterwards is called indirect illumination. Indirect illumination accounts a great deal in the realism of a rendered image.  
+Consider a non-light-source point $p$. The point's exitant radiance in direction $\omega\_o$ is a result from the incident radiance at $p$, which in turn can possibly come from all other scene points. We can already sense a recursive process going on: most points are first lit by light sources, and then all the points lit each other, and then all the points lit each other again, and it goes on like this literally infinite number of times. The result after the first "light bounce" is called *direct illumination*, and the result afterwards is called indirect illumination. Indirect illumination accounts a great deal in the realism of a rendered image.  
 
 Thus the final rendered image is a superposition of first bounce image, second bounce image, third bounce image, etc. In practice we may terminate before a prescribed maximum level of bounces (per path tracing), since the contribution of each bounce is diminishing.  
 
-The idea is clearer if we consider the path integral formulation of light transport. We denote exitant radiance sent from $p'$ to $p$ by $L(p' \\to p)$. The BSDF term as $f(p''\\to p' \\to p)$. Here we no longer integrate over $\\mathbf{S}^2$ but the *scene surface*, denoted hereafter by $A$. Due to this reason, we will need to change the cosine term to a "geometry term". To change the integration domain to the entire scene, we use the change of variable formula in integration.
+The idea is clearer if we consider the path integral formulation of light transport. We denote exitant radiance sent from $p'$ to $p$ by $L(p' \to p)$. The BSDF term as $f(p''\to p' \to p)$. Here we no longer integrate over $\mathbf{S}^2$ but the *scene surface*, denoted hereafter by $A$. Due to this reason, we will need to change the cosine term to a "geometry term". To change the integration domain to the entire scene, we use the change of variable formula in integration.
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhoi09315_7nrkkshz2n_4N_57I8_wTkPQoGrfy1BYRpYcTi1mMJsAwUpVfWdBmFmKuvDLJnQJL195wgrCJqIjx4BXyl4LcFnxhQrgkNXKrFCTco4doETk0Up3OwNwzrsAlVVvTKJ6k-4Q/s320/integration_domain.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhoi09315_7nrkkshz2n_4N_57I8_wTkPQoGrfy1BYRpYcTi1mMJsAwUpVfWdBmFmKuvDLJnQJL195wgrCJqIjx4BXyl4LcFnxhQrgkNXKrFCTco4doETk0Up3OwNwzrsAlVVvTKJ6k-4Q/s1600/integration_domain.png)
 
 Fig.3 Change of variable from the unit sphere measureto the scene surface measure. Figure taken from the **pbrt** book \[1\]
 
-The Jacobian of this change of variable is $|\\cos(\\theta'')|/\\|p'' - p\\|^2$, where $\\theta''$ is the angle between the ray $p\\to p''$ and the normal vector at $p''$. The geometry term becomes
+The Jacobian of this change of variable is $|\cos(\theta'')|/\|p'' - p\|^2$, where $\theta''$ is the angle between the ray $p\to p''$ and the normal vector at $p''$. The geometry term becomes
 
-$ \\displaystyle G(p', p'') = V(p', p'')\\frac{|\\cos(\\theta')||\\cos(\\theta'')|}{\\|p'' - p'\\|^2} $
+$ \displaystyle G(p', p'') = V(p', p'')\frac{|\cos(\theta')||\cos(\theta'')|}{\|p'' - p'\|^2} $
 
 where $V(p', p'')$ is $1$ if $p''$ is visible from $p'$ and $0$ otherwise. Then the light transport equation write 
 
-$ \\displaystyle L(p'\\to p) = L\_e(p'\\to p) + \\int\_A f(p''\\to p' \\to p) L(p'' \\to p') G(p', p'') dA(p'') \\ \\ \\ (2) $
+$ \displaystyle L(p'\to p) = L\_e(p'\to p) + \int\_A f(p''\to p' \to p) L(p'' \to p') G(p', p'') dA(p'') \ \ \ (2) $
 
 Note that if we consider all pairs of $(p, p')$ and record the radiance in an "array" as $L$, the integration term above can be seen as a linear operator on $L$. Hence, in operator form (2) is  
 
-$ \\displaystyle L = L\_e + \\mathcal{A}L $
+$ \displaystyle L = L\_e + \mathcal{A}L $
 
- where $L\_e$ is the *first bounce radiance*, and the operator $\\mathcal{A}$ is called the light transportat matrix. Given $L\_e$, we can solve for the final radiance by inverting the operator $(I - \\mathcal{A})$, which has a *Neumann series* expansion  
+ where $L\_e$ is the *first bounce radiance*, and the operator $\mathcal{A}$ is called the light transportat matrix. Given $L\_e$, we can solve for the final radiance by inverting the operator $(I - \mathcal{A})$, which has a *Neumann series* expansion  
 
-$ \\displaystyle \\begin{array} {rcl} L & = & (I-\\mathcal{A})^{-1}L\_e \\\\ & = & L\_e + \\mathcal{A}L\_e + \\mathcal{A}^2L\_e + \\mathcal{A}^3L\_e + \\cdots \\end{array} $
+$ \displaystyle \begin{array} {rcl} L & = & (I-\mathcal{A})^{-1}L\_e \\ & = & L\_e + \mathcal{A}L\_e + \mathcal{A}^2L\_e + \mathcal{A}^3L\_e + \cdots \end{array} $
 
 which agrees well with our discussion about the first bounce, second bounce, etc. images.  
 
@@ -89,29 +89,29 @@ We now go on to describe the Monte-Carlo integration for the first bounce image,
 
 **1.1. Rendering direct illumination**
 
-Assume a simple pinhole camera model. To render the image as taken by this camera, we need to connect pixels on the image plane to each scene point and record the incident radiance on the image plane, i.e. a camera ray. Suppose the pixel is in the direction $\\omega\_o$ at a scene point $p$. The main job is to compute
+Assume a simple pinhole camera model. To render the image as taken by this camera, we need to connect pixels on the image plane to each scene point and record the incident radiance on the image plane, i.e. a camera ray. Suppose the pixel is in the direction $\omega\_o$ at a scene point $p$. The main job is to compute
 
-$\\displaystyle L\_o(p, \\omega\_o) = \\int\_{\\mathbf{S}^2} f(p, \\omega\_o, \\omega\_i) L\_d(p, \\omega\_i) |\\cos(\\theta\_i)|d\\omega\_i $
+$\displaystyle L\_o(p, \omega\_o) = \int\_{\mathbf{S}^2} f(p, \omega\_o, \omega\_i) L\_d(p, \omega\_i) |\cos(\theta\_i)|d\omega\_i $
 
 where $L\_d$ is the incident radiance directly from the light sources. $L\_d$ in path integral framework is  
 
-$\\displaystyle  V(p',p)\\frac{|\\cos(\\theta')|}{\\|p'-p\\|^2} L(p'\\to p) $
+$\displaystyle  V(p',p)\frac{|\cos(\theta')|}{\|p'-p\|^2} L(p'\to p) $
 
-where $p'$ is a point from the light source in the $\\omega\_i(p)$ direction, $\\theta'$ is the angle between the ray $p'p$ and the surface normal of the light source at $p'$, and $L(p'\\to p)$ is the simply number of photons emitted at $p'$ towards $p$ per solid angle per unit time (i.e. the exitant radiance at $p'$). Note that we should integrate this quantity over the entire light source surface $A\_L$.  
+where $p'$ is a point from the light source in the $\omega\_i(p)$ direction, $\theta'$ is the angle between the ray $p'p$ and the surface normal of the light source at $p'$, and $L(p'\to p)$ is the simply number of photons emitted at $p'$ towards $p$ per solid angle per unit time (i.e. the exitant radiance at $p'$). Note that we should integrate this quantity over the entire light source surface $A\_L$.  
 
-Monte-Carlo integration evaluates the integral by taking random samples $p' \\in A\_L$ with probability $P(p')$, evaluating the integrand, and applying harmonic average:  
+Monte-Carlo integration evaluates the integral by taking random samples $p' \in A\_L$ with probability $P(p')$, evaluating the integrand, and applying harmonic average:  
 
-$ \\displaystyle \\widehat{L\_o}(p, \\omega\_o) = \\sum\_{p'} \\frac{1}{P(p')}f(p'\\to p \\to \\text{cam}) V(p',p)\\frac{|\\cos(\\theta\_i)||\\cos(\\theta')|}{\\|p'-p\\|^2}L(p'\\to p)$
+$ \displaystyle \widehat{L\_o}(p, \omega\_o) = \sum\_{p'} \frac{1}{P(p')}f(p'\to p \to \text{cam}) V(p',p)\frac{|\cos(\theta\_i)||\cos(\theta')|}{\|p'-p\|^2}L(p'\to p)$
 
-where $\\theta\_i$ is the angle between the light ray $p'p$ and the surface normal at $p$, and $P(p') = P(\\omega\_i(p)) \\frac{|\\cos(\\theta')|}{\\|p'-p\\|^2}$ is the transformed probability. Hence in fact the above equation can be simplified to  
+where $\theta\_i$ is the angle between the light ray $p'p$ and the surface normal at $p$, and $P(p') = P(\omega\_i(p)) \frac{|\cos(\theta')|}{\|p'-p\|^2}$ is the transformed probability. Hence in fact the above equation can be simplified to  
 
-$\\displaystyle \\widehat{L\_o}(p, \\omega\_o) = \\sum\_{i} \\frac{1}{P(\\omega\_i)} f(p, \\omega\_o, \\omega\_i) V(p',p)|\\cos(\\theta\_i)|L(p'\\to p). \\ \\ \\ (3)$
+$\displaystyle \widehat{L\_o}(p, \omega\_o) = \sum\_{i} \frac{1}{P(\omega\_i)} f(p, \omega\_o, \omega\_i) V(p',p)|\cos(\theta\_i)|L(p'\to p). \ \ \ (3)$
 
 Note that this simplification can be made only if there is no "delta distribution" in the integrand. These deltas, such as point light source or specular component in BSDF, must be handled separately.  
 
 One can verify that this estimation is unbiased:  
 
-$ \\displaystyle L\_d(p, \\omega\_i) = \\mathbb{E}\\big (\\widehat{L\_d}(p, \\omega\_i) \\big) $
+$ \displaystyle L\_d(p, \omega\_i) = \mathbb{E}\big (\widehat{L\_d}(p, \omega\_i) \big) $
 
 The question is then how to make this estimate converge faster, or equivalently how to make the variance of this estimate smaller. A course in statistical computing tells us that the variance is smaller if the probability distribution $P$ resembles the integrand.  Since we can cheaply evaluate the integrand, and it's too expensive to compute a joint probability distribution of light and BSDF out of it, we have to cleverly choose a probability distribution so that it is large when the integrand is large. In this regard, **pbrt** \[1\] uses a power heuristic for multiple importance sampling and stratefied sampling.  
 
@@ -124,14 +124,14 @@ We now want to trace a ray from a scene point $p$ to another general scene point
 
 Figure 4. A path of 2 bounces.
 
-The overall process is very similar to that of the first bounce. We sample a direction $\\omega\_i(p)\\in\\mathbf{S}^2$ at $p$ with probability $P(\\omega\_i(p))$. We then find a closest interection point in the $\\omega\_i(p)$ direction, namely $p'$, that will give a exitant radiance direction $\\omega\_o(p')$ at $p'$. Suppose at $p'$ the exitant radiance is computed as $L(p'\\to p) = L\_o(p', \\omega\_o)$, and suppose the camera ray to $p$ is in direction $\\omega\_o(p)$. It follows that the exitant radiance at $p$  due to $L\_o(p', \\omega\_o)$ is  
+The overall process is very similar to that of the first bounce. We sample a direction $\omega\_i(p)\in\mathbf{S}^2$ at $p$ with probability $P(\omega\_i(p))$. We then find a closest interection point in the $\omega\_i(p)$ direction, namely $p'$, that will give a exitant radiance direction $\omega\_o(p')$ at $p'$. Suppose at $p'$ the exitant radiance is computed as $L(p'\to p) = L\_o(p', \omega\_o)$, and suppose the camera ray to $p$ is in direction $\omega\_o(p)$. It follows that the exitant radiance at $p$  due to $L\_o(p', \omega\_o)$ is  
 
-$\\displaystyle \\begin{array}{lcl} L\_o(p, \\omega\_o(p)) & = & \\int\_{\\mathbf{S}^2} f(p, \\omega\_o(p), \\omega\_i(p))L\_i(p, \\omega\_i(p))|\\cos(\\theta\_i(p))| d\\omega\_i   \\\\  
-& = & \\int\_{\\mathbf{S}^2} f(p, \\omega\_o(p), \\omega\_i(p)) |\\cos(\\theta\_i(p))|\\times \\\\ & & ~~~~~~~~ \\int\_{A\_{L}}f(p''\\to p' \\to p))L(p''\\to p)G(p'', p') ~d\\omega\_i(p) dA\_{L}(p'') \\\\ &\\approx &  \\sum\_{j, p''} \\frac{1}{P(\\omega\_j(p))} f(p, \\omega\_o(p), \\omega\_j(p)) |\\cos(\\theta\_j(p))|\\times \\\\ & & ~~~~~~~~~~~~~\\frac{1}{P(A\_L(p''))}f(p''\\to p' \\to p))L(p''\\to p)G(p'', p').  
-\\end{array}  
+$\displaystyle \begin{array}{lcl} L\_o(p, \omega\_o(p)) & = & \int\_{\mathbf{S}^2} f(p, \omega\_o(p), \omega\_i(p))L\_i(p, \omega\_i(p))|\cos(\theta\_i(p))| d\omega\_i   \\  
+& = & \int\_{\mathbf{S}^2} f(p, \omega\_o(p), \omega\_i(p)) |\cos(\theta\_i(p))|\times \\ & & ~~~~~~~~ \int\_{A\_{L}}f(p''\to p' \to p))L(p''\to p)G(p'', p') ~d\omega\_i(p) dA\_{L}(p'') \\ &\approx &  \sum\_{j, p''} \frac{1}{P(\omega\_j(p))} f(p, \omega\_o(p), \omega\_j(p)) |\cos(\theta\_j(p))|\times \\ & & ~~~~~~~~~~~~~\frac{1}{P(A\_L(p''))}f(p''\to p' \to p))L(p''\to p)G(p'', p').  
+\end{array}  
 $
 
-Two things should be noted. First, since we assumed $p''$ is the closest intersection in direction $\\omega\_i(p)$, the visibility term is simply $1$. Second, the probability term $P(A\_L(p''))$ actually cancels a lot of terms in the denominator, as is with Equation (3).  
+Two things should be noted. First, since we assumed $p''$ is the closest intersection in direction $\omega\_i(p)$, the visibility term is simply $1$. Second, the probability term $P(A\_L(p''))$ actually cancels a lot of terms in the denominator, as is with Equation (3).  
 
 In practice, paths are often constructed in an incremental manner. We sample the first segment from the camera to the scene, and calculate the first bounce image. We then sample the second segment according to the point's BSDF (though which might be inaccurate to sample from since we do not know the other factor $L\_i$), calculate the second bounce image and add it to the first bounce image, we then continue the path until the path is lost in void, or has reached the prescribed maximum depth, or terminated by *Russian Roulette*.  
 The path so generated has a probability associated, and as before the harmonic average is done to obtain the Monte-Carlo estimate.  
@@ -154,7 +154,7 @@ Leaving from the world of graphics to computer vision, we go in the reverse dire
 
 From what we know about the linearity of light transport, we have a decomposition of the image $I$ into a sum of images $I\_{L\_i}$ that are obtained from light sources $L\_i$ indexed in $i$. Think of $I$ as a column vector, then we can write this as  
 
-$\\displaystyle I = Tl ~~~~~~~~~~~~~~~~~~~~~~~~ (4)$
+$\displaystyle I = Tl ~~~~~~~~~~~~~~~~~~~~~~~~ (4)$
 
 where $l$ is a coefficient vector representing weighted combination of different lights, and $T$ is called the *light transport matrix* for the image $I$. The collection of light sources is assumed to be fixed. We are interested in the structure of the matrix $T$. Columns of $T$ have a very clear meaning: they are simply the images $I\_{L\_i}$. It is a more entertaining exercise to think about the meaning of the rows of $T$, and in particular, reversibility of light paths. We will come to this point soon.
 
@@ -162,11 +162,11 @@ where $l$ is a coefficient vector representing weighted combination of different
 
 If we have a good number of light sources, then we expect nearby light sources in space to produce similar effects. In terms of the matrix $T$, this property is translated to "nonlinear coherence" between columns or rows of $T$. Thus finding the most "incoherent" portion of the $T$ will help us understand $T$ more than others.  
 
-To be more precise, suppose we know $r$ rows $\\begin{bmatrix} A & R \\end{bmatrix}$ and $c$ columns $\\begin{bmatrix} A \\\\ C \\end{bmatrix}$ out of $T$. They carry the most information of $T$ if the $r\\times c$ submatrix $A$ has the same rank with $T$. If so, the remaining portion of $T$ can be reconstructed:  
+To be more precise, suppose we know $r$ rows $\begin{bmatrix} A & R \end{bmatrix}$ and $c$ columns $\begin{bmatrix} A \\ C \end{bmatrix}$ out of $T$. They carry the most information of $T$ if the $r\times c$ submatrix $A$ has the same rank with $T$. If so, the remaining portion of $T$ can be reconstructed:  
 
-$\\displaystyle T = \\begin{bmatrix} A & R \\\\ C & CA^{\\dagger}R  \\end{bmatrix}$
+$\displaystyle T = \begin{bmatrix} A & R \\ C & CA^{\dagger}R  \end{bmatrix}$
 
-where $A^{\\dagger}$ denotes the Moore-Penrose pseudoinverse of $A$. If the ranks are not exactly the same, the above is still the best approximation in the sense of Frobenius norm for matrices. Note that the implicit assumption here is that the matrix $T$ is approximately *low-rank*. This property can be enhanced using, such as the *kernel trick* \[2\], or neural networks \[3,4\]. Once $T$ is reconstructed, the scene can be re-lit under arbitrary lighting coeffcient $l$ from Equation (4).  
+where $A^{\dagger}$ denotes the Moore-Penrose pseudoinverse of $A$. If the ranks are not exactly the same, the above is still the best approximation in the sense of Frobenius norm for matrices. Note that the implicit assumption here is that the matrix $T$ is approximately *low-rank*. This property can be enhanced using, such as the *kernel trick* \[2\], or neural networks \[3,4\]. Once $T$ is reconstructed, the scene can be re-lit under arbitrary lighting coeffcient $l$ from Equation (4).  
 
 We must mention how one can actually sample the columns and more importantly rows of the transport matrix $T$. The figure below shows the setting of \[2\]. Here two pairs of camera-projector are used for principled sampling of columns and rows.  
 
@@ -178,11 +178,11 @@ Fig.5 Sampling columns and rows of the light transport matrix. (a) Photograph of
 
 It is possible to gain more insight into the light transport matrix, if not only do we have control over the light sources, for example using a beam projector, but also *control over how light sensing is made*. The technique, developed by O'Toole *et al*. (Siggraph 2012) called *primal-dual transport probing*, is capable of separating direct and indirect illumination. This is one of the major differences from Nystöm relighting technique described previously. 
 
-To probe the light transport matrix means to get a new image $I'$ via a probing matrix $\\Pi$  
+To probe the light transport matrix means to get a new image $I'$ via a probing matrix $\Pi$  
 
-$\\displaystyle I' = \\Pi \\odot T \\mathbf{1}$
+$\displaystyle I' = \Pi \odot T \mathbf{1}$
 
-where $\\odot$ means element-wise multiplication and $\\mathbf{1}$ means a vector of all ones. This formulation certainly includes Equaiton (4) as a special case. Intuitively, we can think of it as masking-out certain pixels for each light source and finally add-up them together.  
+where $\odot$ means element-wise multiplication and $\mathbf{1}$ means a vector of all ones. This formulation certainly includes Equaiton (4) as a special case. Intuitively, we can think of it as masking-out certain pixels for each light source and finally add-up them together.  
 
 Of course, there's price to pay: in order to know what to probe in the light transport matrix, one needs to know the meaning of each entry in it, that is, which light contributes to which pixel. This is often achieved by restricting the spatial relation between the projector and the camera, as shown in Figure 5.  
 
@@ -216,15 +216,15 @@ Distributional properties within the matrix $T$ also tells us about the distribu
 
 To probe the transport matrix, not only do we need to precisely control the point light sources, but also precisely control pixel response to light. In principle one could record pixelwise response to each point light source, but that would be too expensive to do, especially when we only want the resulting image for a particular probing. More generally, one can illuminate the scene with a specific light pattern $l$, and record the image with specific pixel masked, with mask $m$. The obtained image $I\_{m,l}$ can be mathematically expressed as  
 
-$\\displaystyle I\_{m,l} = M T l =  (m ~l^T) \\odot T ~\\mathbf{1}$
+$\displaystyle I\_{m,l} = M T l =  (m ~l^T) \odot T ~\mathbf{1}$
 
-where the $i$-th row of $M$ is $M\_i = (m^{T})$. Thus we can probe the light transport with matrix $\\Pi$ by decomposing $\\Pi$ into a sum of \_rank one\_ matrices:  
+where the $i$-th row of $M$ is $M\_i = (m^{T})$. Thus we can probe the light transport with matrix $\Pi$ by decomposing $\Pi$ into a sum of \_rank one\_ matrices:  
 
-$\\displaystyle \\Pi = \\sum\_k m\_k ~l^{T}\_{k}$
+$\displaystyle \Pi = \sum\_k m\_k ~l^{T}\_{k}$
 
 that is, a sequence of light patterns and masks.  
 
-In the paper \[5\]., they used a *stochastic* estimation, which is an amusing technique in itself developed by Hutchinson (1990) \[8\] and Bekas *et al.* (2007) \[9\] to estimate entries in a matrix. In short, instead of recording one image for each light source with masked pixels, the camera will record the desired image over a single exposure period, during which random *Rademacher light* $\\mathbf{i}\_k$ are projected to the scene and corresponding pixels on the sensor are masked according to $\\Pi~\\mathbf{i}\_k$. Within the exposure period, we have $k=1, ... K$ different light patterns together with masks integrated. The result will converge as $K \\to \\infty$. Below is a very illustrative example of what their approach is capable of:  
+In the paper \[5\]., they used a *stochastic* estimation, which is an amusing technique in itself developed by Hutchinson (1990) \[8\] and Bekas *et al.* (2007) \[9\] to estimate entries in a matrix. In short, instead of recording one image for each light source with masked pixels, the camera will record the desired image over a single exposure period, during which random *Rademacher light* $\mathbf{i}\_k$ are projected to the scene and corresponding pixels on the sensor are masked according to $\Pi~\mathbf{i}\_k$. Within the exposure period, we have $k=1, ... K$ different light patterns together with masks integrated. The result will converge as $K \to \infty$. Below is a very illustrative example of what their approach is capable of:  
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgOV6BD8fKGMG5bJZHX0hCmBOtIlA03gejaKVjKIZjA79DYPXCQCQlFmcZrqf0MAue52KsAOoDhjPPPSs0T6m3_03uLXZeF89ewfe3RZoo7FFIHjipxziLNn7o6aEBdHZosuiz1btwImCc/s640/primal_dual_probing.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgOV6BD8fKGMG5bJZHX0hCmBOtIlA03gejaKVjKIZjA79DYPXCQCQlFmcZrqf0MAue52KsAOoDhjPPPSs0T6m3_03uLXZeF89ewfe3RZoo7FFIHjipxziLNn7o6aEBdHZosuiz1btwImCc/s1600/primal_dual_probing.png)
 
@@ -240,21 +240,21 @@ Reversely, if we know the time of flight, we then know the length of the corresp
 
 The image space light transport (4) can also unfold along the time dimension. Now it reads  
 
-$\\displaystyle I(\\delta t) = T(\\delta t)~l $
+$\displaystyle I(\delta t) = T(\delta t)~l $
 
-where $\\delta t$ denotes the time interval starting from the instant when a *temporal impulse* of light with spatial pattern $l$ happens.  
+where $\delta t$ denotes the time interval starting from the instant when a *temporal impulse* of light with spatial pattern $l$ happens.  
 
-Suppose we have a temporally varing light $l(\\tau)$. Because of translational symmetry in time dimesion, we have the resulting cummulative image at pixel $p$ up to time $t$ as a superposition of above images with different $\\delta t$:  
+Suppose we have a temporally varing light $l(\tau)$. Because of translational symmetry in time dimesion, we have the resulting cummulative image at pixel $p$ up to time $t$ as a superposition of above images with different $\delta t$:  
 
-$\\displaystyle I(t,p) = \\int\_{-\\infty}^{\\infty} \\sum\_{q} T(\\tau, p, q)~l(t-\\tau, q) d\\tau \\ \\ \\ \\ \\ \\ (5)$
+$\displaystyle I(t,p) = \int\_{-\infty}^{\infty} \sum\_{q} T(\tau, p, q)~l(t-\tau, q) d\tau \ \ \ \ \ \ (5)$
 
 Taking Fourier transform on both sides, we have  
 
-$ \\displaystyle I^{\\omega}(p) = \\sum\_{q} \\widehat{T}(\\omega, p, q)~ l^{\\omega}(q) \\ \\ \\ \\ \\ \\ (6) $
+$ \displaystyle I^{\omega}(p) = \sum\_{q} \widehat{T}(\omega, p, q)~ l^{\omega}(q) \ \ \ \ \ \ (6) $
 
-where $\\widehat{T}(\\omega, \\cdot, \\cdot)$ denotes the time-dimension Fourier transform of $T(\\tau, \\cdot, \\cdot)$. Note that Equation (6) is in the same form with Equation (4). We now have a familiar form of image space single frequency light transport.  
+where $\widehat{T}(\omega, \cdot, \cdot)$ denotes the time-dimension Fourier transform of $T(\tau, \cdot, \cdot)$. Note that Equation (6) is in the same form with Equation (4). We now have a familiar form of image space single frequency light transport.  
 
-$\\displaystyle I^{\\omega} = T^{\\omega} ~l^{\\omega}. $
+$\displaystyle I^{\omega} = T^{\omega} ~l^{\omega}. $
 
 O'Toole *et al.* take advantage of this obsevation in their another Siggraph 2014 paper \[7\], using the same technique in O'Toole *et al.* \[5, 6\] described in the previous section to deal with transient light transport. It is worth mentioning that the depth sensing by probing the direct and retro-reflection component is a very clever way of reducing multi-path interference in optical domain. Further development of this approach include *eipolar ToF imaging*, by Apreeth *et al*. in Siggraph 2017 \[10\].  
 
