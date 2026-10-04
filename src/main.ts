@@ -78,21 +78,12 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  const doors = [
-    { href: '#/research', title: 'Research', blurb: `${publications.length} publications — graphics, vision, geometry.` },
-    { href: '#/exploreflow', title: exploreFlow.name, blurb: 'Research, writing, and interactive courses — in one place.' },
-    { href: '#/blog', title: 'Writing', blurb: 'Notes on analysis, geometry, and numerical methods.' },
+  // Deliberately tiny: identity plus two links (Google Scholar, Writing).
+  // Everything else (Research, Courses, ExploreFlow) is reachable from the nav.
+  const links = [
+    { label: 'Google Scholar', href: 'https://scholar.google.com.hk/citations?user=ZYVfX7UAAAAJ&hl' },
+    { label: 'Writing', href: '#/blog' },
   ]
-    .map(
-      (d) => `<a class="door" href="${d.href}">
-        <span class="door-title">${esc(d.title)}</span>
-        <span class="door-blurb">${esc(d.blurb)}</span>
-        <span class="door-arrow">→</span>
-      </a>`,
-    )
-    .join('');
-
-  const links = site.links
     .map(
       (l) =>
         `<a href="${esc(l.href)}"${l.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${esc(l.label)}</a>`,
@@ -106,7 +97,6 @@ function viewHome() {
       <p class="role">${esc(site.role)}</p>
       <p class="landing-links">${links}</p>
     </section>
-    <nav class="doors">${doors}</nav>
   `;
 }
 
