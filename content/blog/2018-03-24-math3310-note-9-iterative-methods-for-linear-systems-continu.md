@@ -50,19 +50,19 @@ The iteration matrix is
 
 $ \displaystyle B=\begin{bmatrix}1-\omega & 1/2\omega\\ \omega(1-\omega)/2 & 1-\omega+\omega^{2}/4 \end{bmatrix}. $
 
-We can optimize the eigenvalues in $ {\omega}$, it turns out that the optimal choice is when the two eigenvalues equal to $ {1-\omega^{\*}}$, where  
+We can optimize the eigenvalues in $ {\omega}$, it turns out that the optimal choice is when the two eigenvalues equal to $ {1-\omega^{*}}$, where  
 
-$ \displaystyle \omega^{\*}=4(2-\sqrt{3})\approx1.07. $
+$ \displaystyle \omega^{*}=4(2-\sqrt{3})\approx1.07. $
 
 In other words the spectral radius of the matrix $ {B}$ is around $ {\rho(B)=0.07}$. Compare this to the case of Jacobi iteration ($ {\rho(B)=\frac{1}{2}}$) and Gauss-Seidel $ {(\rho(B)=\frac{1}{4}}$). A rule of thumb is that the convergence is fast when all the eigenvalues of the iteration matrix stays about the same level.  
 
-**Block relaxation scheme.** It is easy to extend the previously described iterations to handle linear system in *blocks*. For example, the block Jacobi iteration for the block matrix $ {A=(A\_{ij})\_{1\leq i,j\leq p}}$ will be as follows. Define  
+**Block relaxation scheme.** It is easy to extend the previously described iterations to handle linear system in *blocks*. For example, the block Jacobi iteration for the block matrix $ {A=(A_{ij})_{1\leq i,j\leq p}}$ will be as follows. Define  
 
-$ \displaystyle D=\begin{bmatrix}A\_{11}\\ & A\_{22}\\ & & \ddots\\ & & & A\_{pp} \end{bmatrix},\quad L=\begin{bmatrix}0\\ A\_{21}\\ \vdots & \ddots\\ A\_{p1} & \cdots & A\_{p,p-1} & 0 \end{bmatrix}, $
+$ \displaystyle D=\begin{bmatrix}A_{11}\\ & A_{22}\\ & & \ddots\\ & & & A_{pp} \end{bmatrix},\quad L=\begin{bmatrix}0\\ A_{21}\\ \vdots & \ddots\\ A_{p1} & \cdots & A_{p,p-1} & 0 \end{bmatrix}, $
 
 and  
 
-$ \displaystyle L=\begin{bmatrix}0 & A\_{12} & \cdots & A\_{1,p}\\ & & \ddots & \vdots\\ & & & A\_{p-1,p}\\ & & & 0 \end{bmatrix}. $
+$ \displaystyle L=\begin{bmatrix}0 & A_{12} & \cdots & A_{1,p}\\ & & \ddots & \vdots\\ & & & A_{p-1,p}\\ & & & 0 \end{bmatrix}. $
 
 The block Jacobi iteration is of the same form  
 
@@ -95,15 +95,15 @@ $ \displaystyle \alpha L+\frac{1}{\alpha}U,\quad\alpha\neq0 $
 are independent of $ {\alpha}$. We are interested in this property because the convergence analysis of SOR scheme for such matrices are particularly simple. Here, we would like to find a special class of matrices that satisfy this property.  
 We have in mind the *tridiagonal matrices*, which are of the form  
 
-$ \displaystyle A=\begin{bmatrix}d\_{1} & t\_{12}\\ t\_{21} & d\_{2} & t\_{23}\\ & t\_{32} & d\_{3} & t\_{34}\\ & & \ddots & \ddots & \ddots\\ & & & t\_{N,N-1} & d\_{N} \end{bmatrix}. $
+$ \displaystyle A=\begin{bmatrix}d_{1} & t_{12}\\ t_{21} & d_{2} & t_{23}\\ & t_{32} & d_{3} & t_{34}\\ & & \ddots & \ddots & \ddots\\ & & & t_{N,N-1} & d_{N} \end{bmatrix}. $
 
 Examples include the central difference matrix for $ {\frac{d^{2}}{dx^{2}}}$ with Dirichlet or Neumann boundary condition. We note that, the matrices  
 
-$ \displaystyle L+U=\begin{bmatrix}0 & t\_{12}\\ t\_{21} & 0 & t\_{23}\\ & t\_{32} & 0 & t\_{34}\\ & & \ddots & \ddots & \ddots\\ & & & t\_{N,N-1} & 0 \end{bmatrix} $
+$ \displaystyle L+U=\begin{bmatrix}0 & t_{12}\\ t_{21} & 0 & t_{23}\\ & t_{32} & 0 & t_{34}\\ & & \ddots & \ddots & \ddots\\ & & & t_{N,N-1} & 0 \end{bmatrix} $
 
 and  
 
-$ \displaystyle \alpha L+\frac{1}{\alpha}U=\begin{bmatrix}0 & \frac{1}{\alpha}t\_{12}\\ \alpha t\_{21} & 0 & \frac{1}{\alpha}t\_{23}\\ & \alpha t\_{32} & 0 & \frac{1}{\alpha}t\_{34}\\ & & \ddots & \ddots & \ddots\\ & & & \alpha t\_{N,N-1} & 0 \end{bmatrix} $
+$ \displaystyle \alpha L+\frac{1}{\alpha}U=\begin{bmatrix}0 & \frac{1}{\alpha}t_{12}\\ \alpha t_{21} & 0 & \frac{1}{\alpha}t_{23}\\ & \alpha t_{32} & 0 & \frac{1}{\alpha}t_{34}\\ & & \ddots & \ddots & \ddots\\ & & & \alpha t_{N,N-1} & 0 \end{bmatrix} $
 
 are related by a similarity transform:  
 
@@ -127,7 +127,7 @@ Now we recall the result we proved in class.
 > 
 > Then the SOR method converges. The optimal $ {\omega}$ is given by  
 > 
-> $ \displaystyle \omega^{\*}=\frac{2}{1+\sqrt{1-\rho(D^{-1}(L+U))^{2}}}. $
+> $ \displaystyle \omega^{*}=\frac{2}{1+\sqrt{1-\rho(D^{-1}(L+U))^{2}}}. $
 > 
 > *
 

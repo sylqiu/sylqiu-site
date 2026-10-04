@@ -8,11 +8,11 @@ publish: true
 ---
 High-dimensional filtering refers to convolution with kernel depending on more than the spatial variable. Examples include the *bilateral filtering*,  
 
-$ \displaystyle I'\_{i}=\sum\_{j=1}^{N}k(f\_{i}-f\_{j})I\_{j}, $
+$ \displaystyle I'_{i}=\sum_{j=1}^{N}k(f_{i}-f_{j})I_{j}, $
 
 where the kernel $ {k(\cdot)}$ depends on a featrure variable including both the position and the image intensity  
 
-$ \displaystyle f\_{i}=(p\_{i},I\_{i}); $
+$ \displaystyle f_{i}=(p_{i},I_{i}); $
 
 with a similar form there is also the more complicated *non-local mean* filtering. In [a 2009 paper](https://graphics.stanford.edu/papers/permutohedral/) (referred to as the paper below), Adams, Baek and Davis proposed a fast, novel algorithm based on *[permutohedral](https://en.wikipedia.org/wiki/Permutohedron) lattice*, whose memory usage also scales well with dimension. This was later utilized in the mean field inference of the fully connected conditional random field model of Krähenbühl and Koltun. In this post I wish to describe some details of the permutohedral lattice approach.  
 
@@ -51,13 +51,13 @@ Since there are $ {d}$ permutations of $ {(1,2,\dots,d+1)}$ that are closest to 
 
 It will be convenient for us to work with the following definition of the permutohedral lattice, which has integral coordinates in the feature hyperplane.  
 
-> **Definition 1** *Let $ {T:\mathbb{R}^{d+1}\rightarrow H\_{d}}$ be the orthogonal projection onto the feature hyperplane defined by $ {H\_{d}=\{x:\,x\cdot\vec{1}=0\}}$, namely*  
+> **Definition 1** *Let $ {T:\mathbb{R}^{d+1}\rightarrow H_{d}}$ be the orthogonal projection onto the feature hyperplane defined by $ {H_{d}=\{x:\,x\cdot\vec{1}=0\}}$, namely*  
 > 
 > *$ \displaystyle T(x)=x-\left(\frac{x\cdot\vec{1}}{\vec{1}\cdot\vec{1}}\right)\vec{1}. $*
 > 
-> *The permutohedral lattice $ {A\_{d}^{\*}}$ is defined to be*  
+> *The permutohedral lattice $ {A_{d}^{*}}$ is defined to be*  
 > 
-> *$ \displaystyle A\_{d}^{\*}:=\{T(x):\,x\in(d+1)\mathbb{Z}^{d+1}\}. $*
+> *$ \displaystyle A_{d}^{*}:=\{T(x):\,x\in(d+1)\mathbb{Z}^{d+1}\}. $*
 
 Under this choice of lattice, we may write down explicitly the vertices of the Delaunay simplices containing the origin. To do this, we look at the the projection of the cube $ {[0,d+1]^{d+1}}$. Its vertices are columns of the matrix  
 
@@ -87,13 +87,13 @@ Delaunay simplices in the permutohedral lattice of dimension 2. Figure taken fro
 
 The above observations yield an algorithm for finding the Delaunay simplex containing a given feature vector.  
 
-> **Theorem 2** *Given $ {x\in H\_{d}}$, the Delaunay containing it can be found by the following procedure.*  
+> **Theorem 2** *Given $ {x\in H_{d}}$, the Delaunay containing it can be found by the following procedure.*  
 > 
 > *-   Find the nearest remainder $ {0}$ point $ {y}$ of $ {x}$;
 > -   Shift the point $ {x}$ by $ {y}$: $ {\Delta=x-y}$;
-> -   Sort $ {\Delta}$ in decreasing order: $ {\rho(\Delta)}$, $ {\rho\in S\_{d+1}}$;
-> -   The nearest remainder $ {k}$ point of $ {x}$ is given by $ {\rho^{-1}(v\_{k})+y}$, where $ {v\_{k}}$ is the remainder $ {k}$ point in the canonical simplex.*
+> -   Sort $ {\Delta}$ in decreasing order: $ {\rho(\Delta)}$, $ {\rho\in S_{d+1}}$;
+> -   The nearest remainder $ {k}$ point of $ {x}$ is given by $ {\rho^{-1}(v_{k})+y}$, where $ {v_{k}}$ is the remainder $ {k}$ point in the canonical simplex.*
 
-With this way of identifying the Delaunay simplex that contains a given feature vector $ {f\_{i}}$, we can then spread the value assoicated $ {I\_{i}}$ to that feature to the vertices of the simplex according to the barycentric weight of $ {f\_{i}}$. The slicing step is basically the same, except we gather the values from the lattice to the original input feature positions.  
+With this way of identifying the Delaunay simplex that contains a given feature vector $ {f_{i}}$, we can then spread the value assoicated $ {I_{i}}$ to that feature to the vertices of the simplex according to the barycentric weight of $ {f_{i}}$. The slicing step is basically the same, except we gather the values from the lattice to the original input feature positions.  
 
 We must remark that the splatting or the slicing operation can be itself regarded as a blurring operation. This means that the feature vectors must be properly scaled before the splatting step.

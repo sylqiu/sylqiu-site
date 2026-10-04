@@ -24,21 +24,21 @@ And then we will take the *fixed point iteration*
 
 $ \displaystyle Mx^{k+1}=(M-A)x^{k}+b $
 
-since if $ {x^{\*}=A^{-1}b}$, it is a fixed point of the above iteration  
+since if $ {x^{*}=A^{-1}b}$, it is a fixed point of the above iteration  
 
-$ \displaystyle Mx^{\*}=(M-A)x^{\*}+b. $
+$ \displaystyle Mx^{*}=(M-A)x^{*}+b. $
 
-Whether this iteration converges or not needs to be analysed. To do this, we consider the discrepancy of $ {x^{\*}}$ from the $ {k}$-th iteration  
+Whether this iteration converges or not needs to be analysed. To do this, we consider the discrepancy of $ {x^{*}}$ from the $ {k}$-th iteration  
 
-$ \displaystyle \begin{array}{rcl} e^{k+1} & = & x^{\*}-x^{k+1}\\ & = & M^{-1}(M-A)(x^{\*}-x^{k})\\ & = & M^{-1}(M-A)e^{k}\\ & =: & Be^{k}. \end{array} $
+$ \displaystyle \begin{array}{rcl} e^{k+1} & = & x^{*}-x^{k+1}\\ & = & M^{-1}(M-A)(x^{*}-x^{k})\\ & = & M^{-1}(M-A)e^{k}\\ & =: & Be^{k}. \end{array} $
 
 This means the convergence is controled by the powers of the error matrix $ {B}$, and the iteration converges if and only if  
 
 $ \displaystyle B^{n}\rightarrow0\text{ as }n\rightarrow\infty. $
 
-> **Exercise 1** Show that $ {B^{n}\rightarrow0}$ if and only if every eigenvalue $ {\lambda\_{i}}$ of ${B}$ has modulus strictly less than one, i.e.  
+> **Exercise 1** Show that $ {B^{n}\rightarrow0}$ if and only if every eigenvalue $ {\lambda_{i}}$ of ${B}$ has modulus strictly less than one, i.e.  
 > 
-> *$ \displaystyle |\lambda\_{i}|<1\quad\forall i. $*
+> *$ \displaystyle |\lambda_{i}|<1\quad\forall i. $*
 > 
 > (Hint: use the Jordan normal form of $ {B}$.) The largest eigenvalue in modulus governs the rate of convergence, which is called the ***spectral radius,** or **$L^2$ operator norm*** of the matrix $ {B}$.
 
@@ -68,7 +68,7 @@ $ \displaystyle A=\begin{bmatrix}2 & -1\\ -1 & 2 \end{bmatrix}. $
 
 One Jacobi iteration looks like the following  
 
-$ \displaystyle \begin{bmatrix}2\\ & 2 \end{bmatrix}\begin{bmatrix}x\_{0}^{1}\\ x\_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\ 1 \end{bmatrix}\begin{bmatrix}x\_{0}^{0}\\ x\_{1}^{0} \end{bmatrix}+b. $
+$ \displaystyle \begin{bmatrix}2\\ & 2 \end{bmatrix}\begin{bmatrix}x_{0}^{1}\\ x_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\ 1 \end{bmatrix}\begin{bmatrix}x_{0}^{0}\\ x_{1}^{0} \end{bmatrix}+b. $
 
 Note that one has to store the entire $ {x^{0}}$ in order to compute $ {x^{1}}$. This is what happens in general, since $ {M-A}$ is usually not triangular.  
 
@@ -78,13 +78,13 @@ $ \displaystyle B=D^{-1}(D-A), $
 
 where we recognize $ {D-A}$ is the negative non-diagonal part of $ {A}$. So $ {B}$ is the negative non-diagonal part of $ {A}$, with each row divided by the corresponding diagonal entry, which was assumed to be non-zero. The larger the diagonal entries are, the closer to zero $ {B}$ becomes. To make this condition precise, we need the following useful fact.  
 
-> **Exercise 2** (Gershgorin disk) Let $ {A=(a\_{ij})\in\mathbb{R}^{N\times N}}$. Then each eigenvalue of $ {A}$ (which can be complex) lies within at least one of the closed disks $ {\{z:|z-a\_{ii}|\leq R\_{i}\}}$ in $ {\mathbb{C}}$, where the radius $ {R\_{i}}$ is defined by  
+> **Exercise 2** (Gershgorin disk) Let $ {A=(a_{ij})\in\mathbb{R}^{N\times N}}$. Then each eigenvalue of $ {A}$ (which can be complex) lies within at least one of the closed disks $ {\{z:|z-a_{ii}|\leq R_{i}\}}$ in $ {\mathbb{C}}$, where the radius $ {R_{i}}$ is defined by  
 > 
-> *$ \displaystyle R\_{i}=\sum\_{j\neq i}|a\_{ij}|. $*
+> *$ \displaystyle R_{i}=\sum_{j\neq i}|a_{ij}|. $*
 
 > **Exercise 3** What are the Gershgorin disks of the matrix $ {B}$ in the Jacobi iteration? Hence show that Jacobi iteration is convergent if the matrix $ {A}$ is *strictly diagonal dominant (SDD)*, i.e.  
 > 
-> *$ \displaystyle |a\_{ii}|>\sum\_{j\neq i}|a\_{ij}|. $*
+> *$ \displaystyle |a_{ii}|>\sum_{j\neq i}|a_{ij}|. $*
 
 > **Exercise 4** *Show that a SDD matrix is invertible.*
 
@@ -102,9 +102,9 @@ $ \displaystyle A=\begin{bmatrix}2 & -1\\ -1 & 2 \end{bmatrix},\quad M=\begin{bm
 
 one Gauss-Seidel iteration looks like the following  
 
-$ \displaystyle \begin{bmatrix}2\\ -1 & 2 \end{bmatrix}\begin{bmatrix}x\_{0}^{1}\\ x\_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\  \end{bmatrix}\begin{bmatrix}x\_{0}^{0}\\ x\_{1}^{0} \end{bmatrix}+b. $
+$ \displaystyle \begin{bmatrix}2\\ -1 & 2 \end{bmatrix}\begin{bmatrix}x_{0}^{1}\\ x_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\  \end{bmatrix}\begin{bmatrix}x_{0}^{0}\\ x_{1}^{0} \end{bmatrix}+b. $
 
-Note that to obtain $ {x\_{1}^{1}}$, one needs $ {x\_{0}^{1}}$ and $ {x\_{1}^{0}}$ but not $ {x\_{0}^{0}}$, due to our choice that $ {M}$ is the lower triangular part of $ {A}$, and cpnsequently $ {M-A}$ is strictly upper triangular. So, instead of storing the entire $ {x^{0}}$ before $ {x^{1}}$ is obtained, one can replace the entry $ {x\_{0}^{0}}$ with the computed $ {x\_{0}^{1}}$ immediately, hence saving half of the storage.  
+Note that to obtain $ {x_{1}^{1}}$, one needs $ {x_{0}^{1}}$ and $ {x_{1}^{0}}$ but not $ {x_{0}^{0}}$, due to our choice that $ {M}$ is the lower triangular part of $ {A}$, and cpnsequently $ {M-A}$ is strictly upper triangular. So, instead of storing the entire $ {x^{0}}$ before $ {x^{1}}$ is obtained, one can replace the entry $ {x_{0}^{0}}$ with the computed $ {x_{0}^{1}}$ immediately, hence saving half of the storage.  
 
 > **Exercise 5** *Check the case $ {M=D+U}$ using the above $ {2\times2}$ example.*
 
@@ -151,7 +151,7 @@ $ \displaystyle \bar{x}^{T}Mx>0\quad,\forall x\in\mathbb{C}^{N}. $
 
 Also,  
 
-$ \displaystyle \bar{v}^{T}B^{T}v=\left(\bar{v}^{T}Bv\right)^{\*}=\frac{\bar{\lambda}}{\bar{\lambda}-1}\bar{v}^{T}A^{\*}v=\frac{\bar{\lambda}}{\bar{\lambda}-1}\bar{v}^{T}Av. $
+$ \displaystyle \bar{v}^{T}B^{T}v=\left(\bar{v}^{T}Bv\right)^{*}=\frac{\bar{\lambda}}{\bar{\lambda}-1}\bar{v}^{T}A^{*}v=\frac{\bar{\lambda}}{\bar{\lambda}-1}\bar{v}^{T}Av. $
 
 Apply the above observations to $ {M=A-B-B^{T}}$ and $ {M=A}$, with $ {x=v}$, we get  
 

@@ -14,7 +14,7 @@ $ \displaystyle B{\bf x}={\bf c} $
 
 can be recast as a optimization problem  
 
-$ \displaystyle \min\_{{\bf x}\in\mathbb{R}^{n}}f({\bf x})=\|B{\bf x}-{\bf c}\|^{2}.      (1)$
+$ \displaystyle \min_{{\bf x}\in\mathbb{R}^{n}}f({\bf x})=\|B{\bf x}-{\bf c}\|^{2}.      (1)$
 
 One easily sees that a necessary condition for the optimum is  
 
@@ -30,21 +30,21 @@ One simple way to optimize ([1](https://www.blogger.com/blogger.g?blogID=4046755
 
 > **Exercise 1** *(Steepest descent direction) Suppose ${f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is differentiable and let $ {\varphi(t)=f({\bf x}+t{\bf y})}$. Show that*  
 > 
-> *$ \displaystyle -\nabla f(x)=\arg\min\_{\underset{\|y\|=1}{{\bf y}\in\mathbb{R}^{n}}}\varphi'(0)=\nabla f(x)^{T}{\bf {\bf y}}. $*
+> *$ \displaystyle -\nabla f(x)=\arg\min_{\underset{\|y\|=1}{{\bf y}\in\mathbb{R}^{n}}}\varphi'(0)=\nabla f(x)^{T}{\bf {\bf y}}. $*
 
 We are thus led to the update formula  
 
 $ \displaystyle {\bf x}^{(k+1)}={\bf x}^{(k)}+\alpha{\bf p}^{(k)},\quad\alpha>0\text{ small} $
 
-This is known as the **gradient descent** algorithm. The step size requires a choice, and it is natural to find $ {\alpha^{\*}}$ that gives the best result. This is a one dimensional problem, and when the objective function is in simple form such as ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)), we have a closed form formula. Otherwise, it is find by a search algorithm.  
+This is known as the **gradient descent** algorithm. The step size requires a choice, and it is natural to find $ {\alpha^{*}}$ that gives the best result. This is a one dimensional problem, and when the objective function is in simple form such as ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)), we have a closed form formula. Otherwise, it is find by a search algorithm.  
 
 > **Exercise 2** *(Optimal step size) Show that*  
 > 
-> *$ \displaystyle \alpha\_{k}^{\*}=-\frac{(A{\bf x}^{(k)}-{\bf b})^{T}{\bf p}\_{k}}{{\bf p}^{(k)T}A{\bf p}^{(k)}} $*
+> *$ \displaystyle \alpha_{k}^{*}=-\frac{(A{\bf x}^{(k)}-{\bf b})^{T}{\bf p}_{k}}{{\bf p}^{(k)T}A{\bf p}^{(k)}} $*
 > 
 > *where*  
 > 
-> *$ \displaystyle \alpha\_{k}^{\*}=\arg\min\_{\alpha>0}f({\bf x}^{(k)}+\alpha{\bf p}^{(k)}). $*
+> *$ \displaystyle \alpha_{k}^{*}=\arg\min_{\alpha>0}f({\bf x}^{(k)}+\alpha{\bf p}^{(k)}). $*
 
 Gradient descent and its variants can be applied to quite general objective functions (even differentiablity can be somewhat relaxed), and is thus widely used in practice. But when the objective function is quadratic as in ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)), there is a lot of room for improvement. We shall next turn to the most widely used method for solving SPD linear system.  
 
@@ -58,20 +58,20 @@ $ \displaystyle T{\bf y}={\bf f} $
 
 where  
 
-$ \displaystyle T=\begin{pmatrix}d\_{1} & u\_{1}\\ u\_{1} & d\_{2} & u\_{2}\\ & \ddots & \ddots & \ddots\\ & & u\_{n-2} & d\_{n-1} & u\_{n-1}\\ & & & u\_{n-1} & d\_{n} \end{pmatrix},\quad{\bf f}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ \\ 0 \end{pmatrix}. $
+$ \displaystyle T=\begin{pmatrix}d_{1} & u_{1}\\ u_{1} & d_{2} & u_{2}\\ & \ddots & \ddots & \ddots\\ & & u_{n-2} & d_{n-1} & u_{n-1}\\ & & & u_{n-1} & d_{n} \end{pmatrix},\quad{\bf f}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ \\ 0 \end{pmatrix}. $
 
 The choice of $ {{\bf f}}$ is not important.  
 We could solve for the $ {{\bf y}}$ directly, but that misses the point of conjugate gradient. The idea now is that in each step, we only use a principle submatrix of $ {T}$ to solve for the iterate $ {{\bf y}^{(k)}}$. In the first step, we have  
 
-$ \displaystyle d\_{1}y\_{1}^{(1)}=\|{\bf b}\|,\quad{\bf y}^{(1)}=\begin{pmatrix}y\_{1}^{(1)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
+$ \displaystyle d_{1}y_{1}^{(1)}=\|{\bf b}\|,\quad{\bf y}^{(1)}=\begin{pmatrix}y_{1}^{(1)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
 
 in the second step,  
 
-$ \displaystyle \begin{pmatrix}d\_{1} & u\_{1}\\ u\_{1} & d\_{2} \end{pmatrix}\begin{pmatrix}y\_{1}^{(2)}\\ y\_{2}^{(2)} \end{pmatrix}=\begin{pmatrix}\|{\bf b}\|\\ 0 \end{pmatrix},\quad{\bf y}^{(2)}=\begin{pmatrix}y\_{1}^{(2)}\\ y\_{2}^{(2)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
+$ \displaystyle \begin{pmatrix}d_{1} & u_{1}\\ u_{1} & d_{2} \end{pmatrix}\begin{pmatrix}y_{1}^{(2)}\\ y_{2}^{(2)} \end{pmatrix}=\begin{pmatrix}\|{\bf b}\|\\ 0 \end{pmatrix},\quad{\bf y}^{(2)}=\begin{pmatrix}y_{1}^{(2)}\\ y_{2}^{(2)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
 
 and in the third step,  
 
-$ \displaystyle \begin{pmatrix}d\_{1} & u\_{1} & 0\\ u\_{1} & d\_{2} & u\_{2}\\ 0 & u\_{2} & d\_{3} \end{pmatrix}\begin{pmatrix}y\_{1}^{(3)}\\ y\_{2}^{(3)}\\ y\_{3}^{(3)} \end{pmatrix}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ 0 \end{pmatrix},\quad{\bf y}^{(3)}=\begin{pmatrix}y\_{1}^{(3)}\\ y\_{2}^{(3)}\\ y\_{3}^{(3)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
+$ \displaystyle \begin{pmatrix}d_{1} & u_{1} & 0\\ u_{1} & d_{2} & u_{2}\\ 0 & u_{2} & d_{3} \end{pmatrix}\begin{pmatrix}y_{1}^{(3)}\\ y_{2}^{(3)}\\ y_{3}^{(3)} \end{pmatrix}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ 0 \end{pmatrix},\quad{\bf y}^{(3)}=\begin{pmatrix}y_{1}^{(3)}\\ y_{2}^{(3)}\\ y_{3}^{(3)}\\ 0\\ \vdots\\ 0 \end{pmatrix} $
 
 and so on. We would like to relate $ {{\bf y}^{(k+1)}}$ to the previous $ {{\bf y}^{(k)}}$, and it is the basic step of the conjugate gradient method.  
 
@@ -80,7 +80,7 @@ and so on. We would like to relate $ {{\bf y}^{(k+1)}}$ to the previous $ {{\bf 
 > *-   By definition, the exact solution $ {{\bf y}={\bf y}^{(n)}}$ is reached in at most $ {n}$ steps.
 > -   Each $ {{\bf y}^{(k)}}$ is the "least square'' choice among all vectors whose last $ {n-k}$ components are zero. In other words,
 >     
->     $ \displaystyle {\bf y}^{(k)}=\arg\min\_{\underset{y\_{i}=0\,\forall i>k}{{\bf y}\in\mathbb{R}^{n}}}\frac{1}{2}{\bf y}^{T}T{\bf y}-{\bf f}^{T}{\bf y}. $
+>     $ \displaystyle {\bf y}^{(k)}=\arg\min_{\underset{y_{i}=0\,\forall i>k}{{\bf y}\in\mathbb{R}^{n}}}\frac{1}{2}{\bf y}^{T}T{\bf y}-{\bf f}^{T}{\bf y}. $
 >     
 > -   The direction of change $ {{\bf y}^{(k+1)}-{\bf y}^{(k)}}$ is "$ {T}$-conjugate'' to all previous and later directions:
 >     
@@ -93,11 +93,11 @@ and so on. We would like to relate $ {{\bf y}^{(k+1)}}$ to the previous $ {{\bf 
 
 The third remark is not trivial and requires a proof. By symmetry of $ {T}$, it suffices to prove the statement for $ {j>k}$. We compare the entries of the vectors $ {{\bf y}^{(k+1)}-{\bf y}^{(k)}}$ and $ {T({\bf y}^{(j+1)}-{\bf y}^{(j)})}$. The vector $ {{\bf y}^{(k+1)}-{\bf y}^{(k)}}$ is nonzero only at the first $ {k+1}$ entries. As for the other vector, we observe that  
 
-$ \displaystyle T{\bf y}^{(j)}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ f\_{j+1}^{(j)}\\ 0\\ \vdots \end{pmatrix}, $
+$ \displaystyle T{\bf y}^{(j)}=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ f_{j+1}^{(j)}\\ 0\\ \vdots \end{pmatrix}, $
 
 and so  
 
-$ \displaystyle T({\bf y}^{(j+1)}-{\bf y}^{(j)})=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ 0\\ f\_{j+2}^{(j+1)}\\ \vdots \end{pmatrix}-\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ f\_{j+1}^{(j)}\\ 0\\ \vdots \end{pmatrix}=\begin{pmatrix}0\\ 0\\ \vdots\\ 0\\\* \\\* \\ 0\\ \vdots \end{pmatrix} $
+$ \displaystyle T({\bf y}^{(j+1)}-{\bf y}^{(j)})=\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ 0\\ f_{j+2}^{(j+1)}\\ \vdots \end{pmatrix}-\begin{pmatrix}\|{\bf b}\|\\ 0\\ \vdots\\ 0\\ f_{j+1}^{(j)}\\ 0\\ \vdots \end{pmatrix}=\begin{pmatrix}0\\ 0\\ \vdots\\ 0\\* \\* \\ 0\\ \vdots \end{pmatrix} $
 
 is nonzero only at the $ {(j+1)}$ and $ {(j+2)}$-th entries. We see that the nonzero entries of the two vectors don't overlap, hence the remark is proved. By the way, we also see that the nonzero entries of $ {T{\bf y}^{(k)}-{\bf f}}$ and $ {T{\bf y}^{(j)}-{\bf f}}$ does not overlap, so they are orthogonal as well, proving the last remark.  
 It turns out the above method can be extended to all SPD matrices as well, by *tridiagonalizing* the SPD matrices. There is a general technique that applies to all such matrices. We won't need to go into the full theory here. But the point is that the technique involves orthogonalizing the set of vectors produced by the matrix powers  
@@ -106,13 +106,13 @@ $ \displaystyle \begin{pmatrix}{\bf b} & A{\bf b} & A^{2}{\bf b} & \cdots & A^{n
 
 This leads us to the *Krylov subspace method*.  
 
-> **Definition 1** A sequence of nested subspaces ${\mathcal{K}\_{0}\subset\mathcal{K}\_{1}\subset\cdots}$ is called the *Krylov subspaces* associated to the equation $ {A{\bf x}={\bf b}}$ if  
+> **Definition 1** A sequence of nested subspaces ${\mathcal{K}_{0}\subset\mathcal{K}_{1}\subset\cdots}$ is called the *Krylov subspaces* associated to the equation $ {A{\bf x}={\bf b}}$ if  
 > 
-> $ \displaystyle \mathcal{K}\_{0}=\{0\},\quad\mathcal{K}\_{k}=\text{span}\{b,Ab,\dots A^{k-1}b\}. $
+> $ \displaystyle \mathcal{K}_{0}=\{0\},\quad\mathcal{K}_{k}=\text{span}\{b,Ab,\dots A^{k-1}b\}. $
 > 
-> Note that if $ {\mathcal{K}\_{k+1}=\mathcal{K}\_{k}}$ for some ${k}$, then $ {\mathcal{K}\_{j}=\mathcal{K}\_{k}}$ for all $ {j>k}$. The sequence of vectors  
+> Note that if $ {\mathcal{K}_{k+1}=\mathcal{K}_{k}}$ for some ${k}$, then $ {\mathcal{K}_{j}=\mathcal{K}_{k}}$ for all $ {j>k}$. The sequence of vectors  
 > 
-> $ \displaystyle {\bf x}^{(k)}=\arg\min\_{{\bf x}\in\mathcal{K}\_{k}}\frac{1}{2}{\bf x}^{T}A{\bf x}-{\bf b}^{T}{\bf x} $
+> $ \displaystyle {\bf x}^{(k)}=\arg\min_{{\bf x}\in\mathcal{K}_{k}}\frac{1}{2}{\bf x}^{T}A{\bf x}-{\bf b}^{T}{\bf x} $
 > 
 > is called a *Krylov sequence*.
 
@@ -120,7 +120,7 @@ Conjugate gradient is a recursive method for computing the Krylov sequence. One 
 
 > **Proposition 2** *Using the same notation from above, the following statements hold*  
 > 
-> *-   The residual $ {{\bf r}^{(k)}}$ is such that $ {{\bf r}^{(k)}\in\mathcal{K}\_{k}^{\perp}}$ and $ {{\bf r}^{(k)}\in\mathcal{K}\_{k+1}}$. Hence the residuals form an orthogonal basis of the corresponding Krylov subspaces.
+> *-   The residual $ {{\bf r}^{(k)}}$ is such that $ {{\bf r}^{(k)}\in\mathcal{K}_{k}^{\perp}}$ and $ {{\bf r}^{(k)}\in\mathcal{K}_{k+1}}$. Hence the residuals form an orthogonal basis of the corresponding Krylov subspaces.
 > -   The steps $ {{\bf d}^{(k)}={\bf x}^{(k)}-{\bf x}^{(k-1)}}$ are "$ {A}$-conjugate'' to each other
 >     
 >     $ \displaystyle {\bf d}^{(k)T}A{\bf d}^{(j)}=0,\quad j\neq k. $
@@ -133,7 +133,7 @@ Conjugate gradient is a recursive method for computing the Krylov sequence. One 
 
 From the first and second statements above, we can see that $ {{\bf d}^{(k)}}$ can be expressed in terms of $ {{\bf d}^{(1)},\dots,{\bf d}^{(k-1)}}$ and $ {{\bf r}^{(k-1)}}$, since  
 
-$ \displaystyle {\bf d}^{(k)}\in\mathcal{K}\_{k}=\text{span}\{{\bf d}^{(1)},\dots,{\bf d}^{(k-1)},{\bf r}^{(k-1)}\}. $
+$ \displaystyle {\bf d}^{(k)}\in\mathcal{K}_{k}=\text{span}\{{\bf d}^{(1)},\dots,{\bf d}^{(k-1)},{\bf r}^{(k-1)}\}. $
 
 In fact, if we write  
 

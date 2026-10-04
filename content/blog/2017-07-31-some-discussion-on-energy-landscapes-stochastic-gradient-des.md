@@ -8,13 +8,13 @@ publish: true
 ---
 In supervised learning, where we have a training set, namely an input-output correspondence $ {(x,y)}$ for a sample of the input data, the "empirical loss function'' of a deep learning model (a particular neural network) $ {f}$, is of the form  
 
-$ \displaystyle J(\theta) = \mathbb{E}\_{(x,y)\sim \hat{p}} L(f(x,\theta),y), $
+$ \displaystyle J(\theta) = \mathbb{E}_{(x,y)\sim \hat{p}} L(f(x,\theta),y), $
 
 where $ {\theta \in\mathbb{R}^{n}}$ is the parameter vector, or *weights* of $ {f}$. This is only evaluated on the training set and the validation set. Hence it seems to me that the geometric properties of this loss function is related to the training data feed to the model.  
 
 This function is a non-convex function defined on a high-dimensional space ($ {n}$ is, say, of the order $ {10^{7}}$). Our task is to find an optimal weight  
 
-$ \displaystyle x^{\*}=\arg\min\_{x}f\_{M}(x). $
+$ \displaystyle x^{*}=\arg\min_{x}f_{M}(x). $
 
 At optimal weights we should have a low level of loss. Hence, the level of the loss function, when computed on the training set with the some weights $ {x}$, measures the quality of the weights $ {x}$, but only with respect to the training set.  
 
@@ -44,13 +44,13 @@ In regard to the model selection and data aspects, there are some important obse
 Can we improve upon SGD? This question was studied by (Chaudhari, 2016), motivated by the observations above.  
 The modified energy now looks like  
 
-$ \displaystyle \begin{array}{rcl} f\_{\gamma,\beta}(x) \propto -\log(G\_{\beta^{-1}\gamma}\*e^{(-\beta f)}(x))\\ \propto \log\int\exp(-\beta(y)-\frac{|x-y|^{2}}{2\beta^{-1}\gamma})\thinspace dy\\ = \log\int\rho^{\infty}(y,x)dy \end{array} $
+$ \displaystyle \begin{array}{rcl} f_{\gamma,\beta}(x) \propto -\log(G_{\beta^{-1}\gamma}*e^{(-\beta f)}(x))\\ \propto \log\int\exp(-\beta(y)-\frac{|x-y|^{2}}{2\beta^{-1}\gamma})\thinspace dy\\ = \log\int\rho^{\infty}(y,x)dy \end{array} $
 
 where $ {\beta}$ is a parameter,  
 
-$ \displaystyle G\_{\beta^{-1}\gamma}(x)=\frac{1}{(\sqrt{2\pi\beta^{-1}\gamma})^{d}}e^{-\frac{|x|^{2}}{2\beta^{-1}\gamma}} $
+$ \displaystyle G_{\beta^{-1}\gamma}(x)=\frac{1}{(\sqrt{2\pi\beta^{-1}\gamma})^{d}}e^{-\frac{|x|^{2}}{2\beta^{-1}\gamma}} $
 
-is the Gaussian kernel, or heat kernel. We would like to think of $ {\gamma}$ as some oscillation frequency (or time), and $ {\beta^{-1}}$ as temparature. In fact, $ {f\_{t}(x)}$ is the solution of the following *viscous Hamilton-Jacobi PDE* at time $ {t}$  
+is the Gaussian kernel, or heat kernel. We would like to think of $ {\gamma}$ as some oscillation frequency (or time), and $ {\beta^{-1}}$ as temparature. In fact, $ {f_{t}(x)}$ is the solution of the following *viscous Hamilton-Jacobi PDE* at time $ {t}$  
 
 $ \displaystyle \frac{\partial u}{\partial t}=-\frac{1}{2}|\nabla u|^{2}+\frac{\beta^{-1}}{2}\Delta u $
 
@@ -62,7 +62,7 @@ $ \displaystyle p(x)\propto e^{(-\beta f(x))} $
 is known as the *Gibbs distribution*. Roughly speaking, at temperature $ {\beta^{-1}}$, in a large amount of particles, the number of particles has energy $ {f(x)}$ is proportional to $ {p(x)}$. The convolution represents the fact that there is a independent Gaussian noise added to the particle systems, and so diffuses. It should be clear that the new distribution is smoother.  
 How to compute it? One can find that  
 
-$ \displaystyle \begin{array}{rcl} \nabla\_{x}f\_{\gamma}(x) = \int\frac{y-x}{\gamma}\rho^{\infty}(y,x)dy, \end{array} $
+$ \displaystyle \begin{array}{rcl} \nabla_{x}f_{\gamma}(x) = \int\frac{y-x}{\gamma}\rho^{\infty}(y,x)dy, \end{array} $
 
 where remember that  
 
@@ -90,6 +90,6 @@ $ \displaystyle dy(s)=\frac{1}{\epsilon}\left(-\nabla f(y)+\frac{1}{\gamma}(x-y)
 where $ {y}$ is a "fast variable'', experiences white noise.  
 The Fokker-Planck equation of $ {y(s)}$ is  
 
-$ \displaystyle \frac{\partial\rho}{\partial t}=\nabla\_{y}\cdot(\nabla\_{y}H\rho)+\beta^{-1}\Delta\_{y}\rho $
+$ \displaystyle \frac{\partial\rho}{\partial t}=\nabla_{y}\cdot(\nabla_{y}H\rho)+\beta^{-1}\Delta_{y}\rho $
 
 whose invariant measure is $ {\rho^{\infty}\propto\exp(-\beta f(y)-\beta\frac{|x-y|^{2}}{2\gamma})!}$ Results from multiscale analysis say that the dynamics can be approximated by the entropy-SGD.

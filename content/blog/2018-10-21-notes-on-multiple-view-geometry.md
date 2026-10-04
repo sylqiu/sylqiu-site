@@ -32,27 +32,27 @@ The advantage of using 2D homogeneous coordinate is that it allows us to incorpo
 
 The coordinate systems of $ {\mathbb{R}^{3}}$ and the image may not always be chosen as above, in particular multiple cameras are present. We describe the situation begining from the simpliest variation. First of all, image coordinates may have slightly different scales in the horizontal and vertical direction. If so then  
 
-$ \displaystyle \mathbf{P}=\begin{pmatrix}f\_{x}\\ & f\_{y}\\ & & 1 \end{pmatrix}. $
+$ \displaystyle \mathbf{P}=\begin{pmatrix}f_{x}\\ & f_{y}\\ & & 1 \end{pmatrix}. $
 
-If furthermore the image coordinate origin taken but the principal point is shifted to $ {(c\_{x},c\_{y},1)}$ in $ {\mathbb{R}^{3}}$, then  
+If furthermore the image coordinate origin taken but the principal point is shifted to $ {(c_{x},c_{y},1)}$ in $ {\mathbb{R}^{3}}$, then  
 
-$ \displaystyle [\mathbf{P}\mathbf{x}]=(fx/z+c\_{x},fy/z+c\_{y},1)^{T}, $
+$ \displaystyle [\mathbf{P}\mathbf{x}]=(fx/z+c_{x},fy/z+c_{y},1)^{T}, $
 
 so  
 
-$ \displaystyle \mathbf{P}=\begin{pmatrix}f\_{x} & & c\_{x}\\ & f\_{y} & c\_{y}\\ & & 1 \end{pmatrix}. $
+$ \displaystyle \mathbf{P}=\begin{pmatrix}f_{x} & & c_{x}\\ & f_{y} & c_{y}\\ & & 1 \end{pmatrix}. $
 
-If furthermore the origin of $ {\mathbb{R}^{3}}$ is chosen differently from the camera center, say which is at $ {\mathbf{t}=(t\_{x},t\_{y},t\_{z})}$, while the image plane is still parallel to the $ {xy}$-plane, then a point $ {\mathbf{x}=(x,y,z)}$ under this new coordinate has image coordinate  
+If furthermore the origin of $ {\mathbb{R}^{3}}$ is chosen differently from the camera center, say which is at $ {\mathbf{t}=(t_{x},t_{y},t_{z})}$, while the image plane is still parallel to the $ {xy}$-plane, then a point $ {\mathbf{x}=(x,y,z)}$ under this new coordinate has image coordinate  
 
-$ \displaystyle (f\frac{x-t\_{x}}{z-t\_{z}}+c\_{x},f\frac{y-t\_{y}}{z-t\_{z}}+c\_{y},1)^{T}. $
+$ \displaystyle (f\frac{x-t_{x}}{z-t_{z}}+c_{x},f\frac{y-t_{y}}{z-t_{z}}+c_{y},1)^{T}. $
 
-This translation in 3D $ {(x,y,z)\mapsto(x-t\_{x},y-t\_{y},z-t\_{z})}$ maybe expressed as matrix multiplication in 3D homogeneous coordinates  
+This translation in 3D $ {(x,y,z)\mapsto(x-t_{x},y-t_{y},z-t_{z})}$ maybe expressed as matrix multiplication in 3D homogeneous coordinates  
 
-$ \displaystyle \begin{pmatrix}1 & & & -t\_{x}\\ & 1 & & -t\_{y}\\ & & 1 & -t\_{z} \end{pmatrix}\begin{pmatrix}x\\ y\\ z\\ 1 \end{pmatrix}. $
+$ \displaystyle \begin{pmatrix}1 & & & -t_{x}\\ & 1 & & -t_{y}\\ & & 1 & -t_{z} \end{pmatrix}\begin{pmatrix}x\\ y\\ z\\ 1 \end{pmatrix}. $
 
 It follows that the camera model is a composition of two matrices  
 
-$ \displaystyle \mathbf{P}=\begin{pmatrix}f\_{x} & & c\_{x}\\ & f\_{y} & c\_{y}\\ & & 1 \end{pmatrix}\begin{pmatrix}1 & & & -t\_{x}\\ & 1 & & -t\_{y}\\ & & 1 & -t\_{z} \end{pmatrix}=:\mathbf{K}(\mathbf{I\,}|\,-\mathbf{t}) $
+$ \displaystyle \mathbf{P}=\begin{pmatrix}f_{x} & & c_{x}\\ & f_{y} & c_{y}\\ & & 1 \end{pmatrix}\begin{pmatrix}1 & & & -t_{x}\\ & 1 & & -t_{y}\\ & & 1 & -t_{z} \end{pmatrix}=:\mathbf{K}(\mathbf{I\,}|\,-\mathbf{t}) $
 
 and the imaged point will thus be $ {[\mathbf{P}(\mathbf{x};1)]}$ in matlab notation. More generally, one may need to transform the coordinates of $ {\mathbb{R}^{3}}$ by a rigid motion (a rotation and a translation) before applying the matrix $ {K}$, resulting in the camera matrix  
 
@@ -64,9 +64,9 @@ We call $ {\mathbf{K}}$ the internel parameters, which gives the image coordinat
 
 We now return to the geometric objects defined in the previous section. In the model, light rays coming from the scene focus at the camera center, forming a light cone with vertex being the camera center. The geometry of its imaging is projective: points on the same ray are equivalent, and an image is obtained by slicing the cone with the image plane. Two images obtained from two different image planes (or if with coordinates, cameras) but with the same camera center are related to each other by a 2D *projective transform*, also called *homography*. They form the isomorphism group of the projective space (a homography transform a projective space into another projective space). For example, "radial translation'' of the image plane is a zoom with amplication factor being the ratio of their focal lengths.
 
-General projective transfroms are linear transforms defined up to scales, and the scale ambiguity can be fixed when one normalize the image coordinate for a particular choice of image plane. To see it concretely, suppose two cameras share the same camera center, one with camera matrix $ {\mathbf{P}\_{1}=\mathbf{K}\_{1}(\mathbf{I}\,|\,\mathbf{0})}$ and the other $ {\mathbf{P}\_{2}=\mathbf{K}\_{2}(\mathbf{R}\,|\,\mathbf{0})}$. And suppose the ray between $ {\mathbf{x}}$ and camera center $ {\mathbf{0}}$ intersect the image planes at $ {[\mathbf{P}\_{1}(\mathbf{x};1)]}$ and $ {[\mathbf{P}\_{2}({\bf x};1)]}$. The mapping that transforms $ {\mathbf{P}\_{1}(\mathbf{x};1)}$ to $ {\mathbf{P}\_{2}(\mathbf{x};1)}$ is given by the invertible $ {3\times3}$ matrix  
+General projective transfroms are linear transforms defined up to scales, and the scale ambiguity can be fixed when one normalize the image coordinate for a particular choice of image plane. To see it concretely, suppose two cameras share the same camera center, one with camera matrix $ {\mathbf{P}_{1}=\mathbf{K}_{1}(\mathbf{I}\,|\,\mathbf{0})}$ and the other $ {\mathbf{P}_{2}=\mathbf{K}_{2}(\mathbf{R}\,|\,\mathbf{0})}$. And suppose the ray between $ {\mathbf{x}}$ and camera center $ {\mathbf{0}}$ intersect the image planes at $ {[\mathbf{P}_{1}(\mathbf{x};1)]}$ and $ {[\mathbf{P}_{2}({\bf x};1)]}$. The mapping that transforms $ {\mathbf{P}_{1}(\mathbf{x};1)}$ to $ {\mathbf{P}_{2}(\mathbf{x};1)}$ is given by the invertible $ {3\times3}$ matrix  
 
-$ \displaystyle \mathbf{K}\_{2}\mathbf{R}\mathbf{K}\_{1}^{-1} $
+$ \displaystyle \mathbf{K}_{2}\mathbf{R}\mathbf{K}_{1}^{-1} $
 
 and the scale is determined by rescaling the third coordinate to $ {1}$.
 
@@ -85,23 +85,23 @@ where $ {a,b,c}$ not simutaneously all zeros. Thus the triple $ {(a,b,c)}$ can b
 
 $ \displaystyle \begin{pmatrix}a & b & c\end{pmatrix}\begin{pmatrix}x\\ y\\ z \end{pmatrix}=0. $
 
-Two lines $ {{\bf l}\_{1}=(a,b,c)}$ and $ {{\bf l}\_{2}=(d,e,f)}$ meet at $ {{\bf x}=(x,y,z)^{T}}$ if  
+Two lines $ {{\bf l}_{1}=(a,b,c)}$ and $ {{\bf l}_{2}=(d,e,f)}$ meet at $ {{\bf x}=(x,y,z)^{T}}$ if  
 
 $ \displaystyle \begin{pmatrix}a & b & c\\ d & e & f \end{pmatrix}\begin{pmatrix}x\\ y\\ z \end{pmatrix}=0. $
 
-This means when viewing these vectors in $ {\mathbb{R}^{3}}$, $ {{\bf x}}$ is orthogonal to both $ {\mathbf{l}\_{1}}$ and $ {\mathbf{l}\_{2}}$. In this case $ {{\bf x}}$ can be calculated up to a scale by  
+This means when viewing these vectors in $ {\mathbb{R}^{3}}$, $ {{\bf x}}$ is orthogonal to both $ {\mathbf{l}_{1}}$ and $ {\mathbf{l}_{2}}$. In this case $ {{\bf x}}$ can be calculated up to a scale by  
 
-$ \displaystyle \mathbf{l}\_{1}\wedge\mathbf{l}\_{2}:=\begin{pmatrix} & -c & b\\ c & & -a\\ -b & a \end{pmatrix}\begin{pmatrix}d\\ e\\ f \end{pmatrix}. $
+$ \displaystyle \mathbf{l}_{1}\wedge\mathbf{l}_{2}:=\begin{pmatrix} & -c & b\\ c & & -a\\ -b & a \end{pmatrix}\begin{pmatrix}d\\ e\\ f \end{pmatrix}. $
 
-On the dual side, we see that the line $ {\mathbf{l}}$ going through $ {\mathbf{x}\_{1}}$ and $ {\mathbf{x}\_{2}}$ is calculated up to a scale by  
+On the dual side, we see that the line $ {\mathbf{l}}$ going through $ {\mathbf{x}_{1}}$ and $ {\mathbf{x}_{2}}$ is calculated up to a scale by  
 
-$ \displaystyle \mathbf{l}=\mathbf{x}\_{1}\wedge\mathbf{x}\_{2}. $
+$ \displaystyle \mathbf{l}=\mathbf{x}_{1}\wedge\mathbf{x}_{2}. $
 
 **Euclidean parallel lines intersect at infinity in projective space.** Points at infinity, or *ideal points*, are represented in homogeneous coordinate with the last coordinate zero. The set of points at inifity form a codimension-1 projective space. It is easy to check using the above intersection formula that the last coordinate is zero for the intersection of two parallel lines.  
 
 **3\. Two-view geometry**
 
-Here we consider two cameras with distinct camera centers. The fundamental difference is that points on a ray that are not distinguishable in Camera 1 (since they lie on the same ray through the camera center 1 and are imaged as **$ {[\mathbf{y}]}$**), become distinguishable in Camera 2. That ray will have its image in Camera 2, called the *epipolar line* **$ {\mathbf{l}\_{[\mathbf{y}]}'}$**. Here we will always use primed notations to denote quantities in Camera 2. Further inspection shows that all epipolar lines intersect at one point in the image plane (which may be at infinity), this point is called the *epipole* $ {[\mathbf{e}']}$. It is also the point of intersection of the line connecting two camera centers and the image plane of Camera 2. In a word, the epipolar lines in Camera 2 are the image of the imaging of Camera 1.
+Here we consider two cameras with distinct camera centers. The fundamental difference is that points on a ray that are not distinguishable in Camera 1 (since they lie on the same ray through the camera center 1 and are imaged as **$ {[\mathbf{y}]}$**), become distinguishable in Camera 2. That ray will have its image in Camera 2, called the *epipolar line* **$ {\mathbf{l}_{[\mathbf{y}]}'}$**. Here we will always use primed notations to denote quantities in Camera 2. Further inspection shows that all epipolar lines intersect at one point in the image plane (which may be at infinity), this point is called the *epipole* $ {[\mathbf{e}']}$. It is also the point of intersection of the line connecting two camera centers and the image plane of Camera 2. In a word, the epipolar lines in Camera 2 are the image of the imaging of Camera 1.
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhXTrkwCqzC9zZehJWTHEEOIqcExNnVzzh_2F4L9H-VlgQlF3umfb19JhXdM8ClQ9T3DK6jc2_MnS-HPBMdO-0oc-e0AWzRQM_aXBP-p3URrQtvPeCahqAXt8sxOEKdTbU-vfzh7GNowcE/s640/epipolar1.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhXTrkwCqzC9zZehJWTHEEOIqcExNnVzzh_2F4L9H-VlgQlF3umfb19JhXdM8ClQ9T3DK6jc2_MnS-HPBMdO-0oc-e0AWzRQM_aXBP-p3URrQtvPeCahqAXt8sxOEKdTbU-vfzh7GNowcE/s1600/epipolar1.png)
 
@@ -109,11 +109,11 @@ Figure taken from \[1\]
 
 **The fundamental matrix.** We are interested in the mapping, defined up to scale  
 
-$ \displaystyle \mathbf{F}:[\mathbf{y}]\mapsto\mathbf{l}\_{[\mathbf{y}]}'^{T} $
+$ \displaystyle \mathbf{F}:[\mathbf{y}]\mapsto\mathbf{l}_{[\mathbf{y}]}'^{T} $
 
-that maps a imaged point $ {[\mathbf{y}]}$ in Camera 1 to the epipolar line $ {\mathbf{l}\_{[\mathbf{y}]}}$ in Camera 2. The mapping is in fact linear. Knowledge of this mapping will reduce significantly the search space of corresponding points $ {[\mathbf{y}]\leftrightarrow[\mathbf{y}']}$ in two cameras. First of all, since $ {[\mathbf{y}']}$ is on the line $ {\mathbf{l}\_{[\mathbf{y}]}'}$, we have  
+that maps a imaged point $ {[\mathbf{y}]}$ in Camera 1 to the epipolar line $ {\mathbf{l}_{[\mathbf{y}]}}$ in Camera 2. The mapping is in fact linear. Knowledge of this mapping will reduce significantly the search space of corresponding points $ {[\mathbf{y}]\leftrightarrow[\mathbf{y}']}$ in two cameras. First of all, since $ {[\mathbf{y}']}$ is on the line $ {\mathbf{l}_{[\mathbf{y}]}'}$, we have  
 
-$ \displaystyle [\mathbf{y}']^{T}\mathbf{l}\_{[\mathbf{y}]}'^{T}=[\mathbf{y}']^{T}\mathbf{F}[\mathbf{y}]=0. $
+$ \displaystyle [\mathbf{y}']^{T}\mathbf{l}_{[\mathbf{y}]}'^{T}=[\mathbf{y}']^{T}\mathbf{F}[\mathbf{y}]=0. $
 
 This maybe taken as the defining property of the *fundamental matrix* $ {\mathbf{F}}$. In particular, since the epipole is on every epipolar lines, we deduce  
 
@@ -143,9 +143,9 @@ In this way we find the fundamental matrix up to scale
 
 $ \displaystyle \mathbf{K}'\mathbf{t}\wedge\mathbf{P}'\mathbf{P}^{+}=\mathbf{K}'\mathbf{t}\wedge\mathbf{K}'\mathbf{R}\mathbf{K}^{-1}. $
 
-We now go to the derivation using planar homography. Let us choose the plane at infinity $ {\mathbf{\pi}\_{\infty}}$. The transformation for points $ {(\mathbf{d};0}$) in $ {\pi\_{\infty}}$ between two cameras does not depend on the camera center but only the internal paramters and relative pose. It is given by  
+We now go to the derivation using planar homography. Let us choose the plane at infinity $ {\mathbf{\pi}_{\infty}}$. The transformation for points $ {(\mathbf{d};0}$) in $ {\pi_{\infty}}$ between two cameras does not depend on the camera center but only the internal paramters and relative pose. It is given by  
 
-$ \displaystyle \mathbf{H}\_{\infty}=\mathbf{K}'\mathbf{R}\mathbf{K}^{-1}. $
+$ \displaystyle \mathbf{H}_{\infty}=\mathbf{K}'\mathbf{R}\mathbf{K}^{-1}. $
 
 Using this, we find the fundamental matrix to be  
 

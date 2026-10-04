@@ -21,7 +21,7 @@ As is the trend today, one would like to have a *universal model* for different 
 
 Figure taken from \[1\].
 
-Let $ {{\bf I}}$ be an image of size $ {N}$. We want to segment it into $ {\mathcal{L}=\{l\_{1},\cdots l\_{k}\}}$ semantic classes. That is, each spatial pixel $ {p\_{j}}$ is assigned with a label $ {X\_{j}\in\mathcal{L}}$. The entire labeling of the image $ {{\bf I}}$ is denoted $ {{\bf X}=(X\_{j})\_{j}}$. The problem is to find a good way to assign $ {{\bf X}}$ to $ {{\bf I}}$.  
+Let $ {{\bf I}}$ be an image of size $ {N}$. We want to segment it into $ {\mathcal{L}=\{l_{1},\cdots l_{k}\}}$ semantic classes. That is, each spatial pixel $ {p_{j}}$ is assigned with a label $ {X_{j}\in\mathcal{L}}$. The entire labeling of the image $ {{\bf I}}$ is denoted $ {{\bf X}=(X_{j})_{j}}$. The problem is to find a good way to assign $ {{\bf X}}$ to $ {{\bf I}}$.  
 
 From a statistical point of view, $ {{\bf X}}$ can be modeled as a *conditional random field (CRF)* defined on the image pixels, where the conditioning is on the image $ {{\bf I}}$. In the paper of Krähenbühl & Koltun (2013) it is defined by a Gibbs distribution  
 
@@ -29,34 +29,34 @@ $ \displaystyle P({\bf X}|{\bf I})=\frac{1}{Z({\bf I})}\exp(-E({\bf X},{\bf I}))
 
 where  
 
--   $ {E({\bf X},{\bf I})=\sum\_{c\in\mathcal{C}\_{\mathcal{G}}}\phi\_{c}({\bf X}\,|\,{\bf I})}$ is called the Gibbs energy.
+-   $ {E({\bf X},{\bf I})=\sum_{c\in\mathcal{C}_{\mathcal{G}}}\phi_{c}({\bf X}\,|\,{\bf I})}$ is called the Gibbs energy.
 -   $ {\mathcal{G}=(V,E)}$ is a fully connected graph, where vertex set $ {V}$ is the set of pixels of $ {{\bf I}}$. In orther words, for every two different pixels there is an edge connecting them.
--   $ {\mathcal{C}\_{\mathcal{G}}}$ is a subset of $ {V\cup E}$, the elements of which are called *cliques*.
--   $ {\phi\_{c}}$ is called the potential/cost function associated to the clique $ {c}$.
--   $ {Z({\bf I})}$ is a normalization constant, $ {Z({\bf I})=\sum\_{x\in\mathcal{L}^{N}}\exp(-E(x,{\bf I})}$.
+-   $ {\mathcal{C}_{\mathcal{G}}}$ is a subset of $ {V\cup E}$, the elements of which are called *cliques*.
+-   $ {\phi_{c}}$ is called the potential/cost function associated to the clique $ {c}$.
+-   $ {Z({\bf I})}$ is a normalization constant, $ {Z({\bf I})=\sum_{x\in\mathcal{L}^{N}}\exp(-E(x,{\bf I})}$.
 
 Once the probability distribution is set, the optimal labeling of the image $ {{\bf I}}$ is obtained by MAP estimation  
 
-$ \displaystyle x^{\*}=\arg\max\_{x\in\mathcal{L}^{N}}P(x|{\bf I}) $
+$ \displaystyle x^{*}=\arg\max_{x\in\mathcal{L}^{N}}P(x|{\bf I}) $
 
-In the case $ {\mathcal{C}\_{\mathcal{G}}=V\cup E}$, the model is called a *fully connected CRF, or dense CRF*. And  
+In the case $ {\mathcal{C}_{\mathcal{G}}=V\cup E}$, the model is called a *fully connected CRF, or dense CRF*. And  
 
--   if $ {c=u\in V}$, $ {\phi\_{u}}$ is called a unary potential;
--   if $ {c=p\in E}$, $ {\phi\_{p}}$ is called an edge/pairwise potential.
+-   if $ {c=u\in V}$, $ {\phi_{u}}$ is called a unary potential;
+-   if $ {c=p\in E}$, $ {\phi_{p}}$ is called an edge/pairwise potential.
 
 In their model, the unary potentials are given by an extended version of TextonBoost. Future work replaces it by output of CNNs.  
 
 The edge potentials have the form  
 
-$ \displaystyle \begin{array}{rcl} & & \phi\_{p}(x\_{i},x\_{j}\,|\,{\bf I})\\ & = & \frac{1}{2}\mu(x\_{i},x\_{j})\left(w^{(1)}\exp\left(-\frac{|p\_{i}-p\_{j}|^{2}}{2\theta\_{\alpha}^{2}}-\frac{|I\_{i}-I\_{j}|^{2}}{2\theta\_{\beta}^{2}}\right)+w^{(2)}\exp\left(-\frac{|p\_{i}-p\_{j}|^{2}}{2\theta\_{\gamma}^{2}}\right)\right)\\ & =: & \frac{1}{2}\mu(x\_{i},x\_{j})\sum\_{m=1}^{2}w^{(m)}k(f\_{i},f\_{j}) \end{array} $
+$ \displaystyle \begin{array}{rcl} & & \phi_{p}(x_{i},x_{j}\,|\,{\bf I})\\ & = & \frac{1}{2}\mu(x_{i},x_{j})\left(w^{(1)}\exp\left(-\frac{|p_{i}-p_{j}|^{2}}{2\theta_{\alpha}^{2}}-\frac{|I_{i}-I_{j}|^{2}}{2\theta_{\beta}^{2}}\right)+w^{(2)}\exp\left(-\frac{|p_{i}-p_{j}|^{2}}{2\theta_{\gamma}^{2}}\right)\right)\\ & =: & \frac{1}{2}\mu(x_{i},x_{j})\sum_{m=1}^{2}w^{(m)}k(f_{i},f_{j}) \end{array} $
 
 where  
 
--   $ {x\_{i}}$ is the label given to the pixel $ {p\_{i}}$;
--   $ {I\_{i}}$ is the color vector of the pixel $ {p\_{i}}$;
--   $ {\mu(\cdot,\cdot)}$ is a symmetric label compatibility function, the weights $ {w^{(1)}}$, $ {w^{(2)}}$, and $ {\theta\_{\alpha},\theta\_{\beta},\theta\_{\gamma}}$ are learnable parameter; $ {f\_{i}}$ is the feature vector which in this case consists of $ {p\_{i}}$ and $ {I\_{i}}$.
+-   $ {x_{i}}$ is the label given to the pixel $ {p_{i}}$;
+-   $ {I_{i}}$ is the color vector of the pixel $ {p_{i}}$;
+-   $ {\mu(\cdot,\cdot)}$ is a symmetric label compatibility function, the weights $ {w^{(1)}}$, $ {w^{(2)}}$, and $ {\theta_{\alpha},\theta_{\beta},\theta_{\gamma}}$ are learnable parameter; $ {f_{i}}$ is the feature vector which in this case consists of $ {p_{i}}$ and $ {I_{i}}$.
 
-Commonly $ {\mu(\cdot,\cdot)}$ is chosen to be the Potts model, which is $ {0}$ when the pixel $ {p\_{i}}$ and $ {p\_{j}}$ have the same label, otherwise $ {1}$. It is also possible to make it learnable and non-symmetric. This model thus penalises pixels assigned with the different labels but have similar features.  
+Commonly $ {\mu(\cdot,\cdot)}$ is chosen to be the Potts model, which is $ {0}$ when the pixel $ {p_{i}}$ and $ {p_{j}}$ have the same label, otherwise $ {1}$. It is also possible to make it learnable and non-symmetric. This model thus penalises pixels assigned with the different labels but have similar features.  
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEizZWuhE7pkI1p5KndGHGIR-vqWne0xlSYiOEFoZsFQH_5wppm8zKQx-bFpACjn0Fxlf1i1oT8y2GkLZnjCs6MJopgOryMBDtfxlCy6xXqRhL-1WzS9FfGUZ2aOQlJBA3zRurJU9N4njAA/s640/gCRF3.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEizZWuhE7pkI1p5KndGHGIR-vqWne0xlSYiOEFoZsFQH_5wppm8zKQx-bFpACjn0Fxlf1i1oT8y2GkLZnjCs6MJopgOryMBDtfxlCy6xXqRhL-1WzS9FfGUZ2aOQlJBA3zRurJU9N4njAA/s1600/gCRF3.png)
 
@@ -74,34 +74,34 @@ However, the distribution $ {P}$ is computationally infeasible.
 
 Figure taken from \[1\].
 
-The mean field approximation computes a distribution $ {Q}$ of the form $ {Q({\bf X})=\prod\_{i}Q\_{i}(X\_{i})}$ that minimises the KL-divergence  
+The mean field approximation computes a distribution $ {Q}$ of the form $ {Q({\bf X})=\prod_{i}Q_{i}(X_{i})}$ that minimises the KL-divergence  
 
-$ \displaystyle \begin{array}{rcl} Div(Q\|P) & = & \sum\_{x\in\mathcal{L}^{N}}Q(x)\log\left(\frac{Q(x)}{P(x)}\right)\\ & = & -\mathbb{E}\_{{\bf U}\sim Q}\left[\log P({\bf U})\right]+\mathbb{E}\_{{\bf U}\sim Q}\left[\log Q({\bf U})\right]\\ & = & \mathbb{E}\_{{\bf U}\sim Q}\left[E({\bf U},{\bf I})\right]+\log Z({\bf I})+\sum\_{i=1}^{N}\mathbb{E}\_{U\_{i}\sim Q\_{i}}\left[\log Q\_{i}(U\_{i})\right]. \end{array} $
+$ \displaystyle \begin{array}{rcl} Div(Q\|P) & = & \sum_{x\in\mathcal{L}^{N}}Q(x)\log\left(\frac{Q(x)}{P(x)}\right)\\ & = & -\mathbb{E}_{{\bf U}\sim Q}\left[\log P({\bf U})\right]+\mathbb{E}_{{\bf U}\sim Q}\left[\log Q({\bf U})\right]\\ & = & \mathbb{E}_{{\bf U}\sim Q}\left[E({\bf U},{\bf I})\right]+\log Z({\bf I})+\sum_{i=1}^{N}\mathbb{E}_{U_{i}\sim Q_{i}}\left[\log Q_{i}(U_{i})\right]. \end{array} $
 
 To minimize the above expression, mean field approximation takes the update  
 
-$ \displaystyle \begin{array}{rcl} Q\_{i}(x\_{i}) & = & \frac{1}{Z\_{i}}\exp\left(-\phi\_{u}(x\_{i}\,|\,{\bf I})-2\sum\_{j\neq i}\mathbb{E}\_{U\_{j}\sim Q\_{j}}\left[\phi\_{p}(x\_{i},U\_{j}\,|\,{\bf I})\right]\right) \end{array} $
+$ \displaystyle \begin{array}{rcl} Q_{i}(x_{i}) & = & \frac{1}{Z_{i}}\exp\left(-\phi_{u}(x_{i}\,|\,{\bf I})-2\sum_{j\neq i}\mathbb{E}_{U_{j}\sim Q_{j}}\left[\phi_{p}(x_{i},U_{j}\,|\,{\bf I})\right]\right) \end{array} $
 
 where  
 
-$ \displaystyle \begin{array}{rcl} \mathbb{E}\_{U\_{j}\sim Q\_{j}}\left[\phi\_{p}(x\_{i},U\_{j}\,|\,{\bf I})\right] & = & \sum\_{x\in\mathcal{L}^{N}}Q\_{j}(x)\phi\_{p}(x\_{i},x\,|\,{\bf I}). \end{array} $
+$ \displaystyle \begin{array}{rcl} \mathbb{E}_{U_{j}\sim Q_{j}}\left[\phi_{p}(x_{i},U_{j}\,|\,{\bf I})\right] & = & \sum_{x\in\mathcal{L}^{N}}Q_{j}(x)\phi_{p}(x_{i},x\,|\,{\bf I}). \end{array} $
 
 This update can be broken into smaller substeps:  
 
--   Message passing step: $ {\tilde{Q}\_{i}^{(m)}(l)\leftarrow\sum\_{j\neq i}k^{(m)}(f\_{i},f\_{j})Q\_{j}(l)}$, $ {m=1,2}$.
--   Filter weighting: $ {\bar{Q}\_{i}(l)=\sum\_{m=1}^{2}w^{(m)}\tilde{Q}\_{i}^{(m)}(l)}$.
--   Compatibility transform: $ {\hat{Q}\_{i}(x\_{i})\leftarrow\sum\_{l\in\mathcal{L}}\mu(x\_{i},l)\bar{Q}\_{i}(l)}$.
--   Local update: $ {Q\_{i}(x\_{i})\leftarrow\exp\left(-\phi\_{u}(x\_{i}\,|\,{\bf I})-\hat{Q}\_{i}(x\_{i})\right)}$.
--   Normalization: $ {Q\_{i}(x\_{i})\leftarrow Q\_{i}(x\_{i})/\sum\_{x\in\mathcal{L}^{N}}Q\_{i}(x)}$
+-   Message passing step: $ {\tilde{Q}_{i}^{(m)}(l)\leftarrow\sum_{j\neq i}k^{(m)}(f_{i},f_{j})Q_{j}(l)}$, $ {m=1,2}$.
+-   Filter weighting: $ {\bar{Q}_{i}(l)=\sum_{m=1}^{2}w^{(m)}\tilde{Q}_{i}^{(m)}(l)}$.
+-   Compatibility transform: $ {\hat{Q}_{i}(x_{i})\leftarrow\sum_{l\in\mathcal{L}}\mu(x_{i},l)\bar{Q}_{i}(l)}$.
+-   Local update: $ {Q_{i}(x_{i})\leftarrow\exp\left(-\phi_{u}(x_{i}\,|\,{\bf I})-\hat{Q}_{i}(x_{i})\right)}$.
+-   Normalization: $ {Q_{i}(x_{i})\leftarrow Q_{i}(x_{i})/\sum_{x\in\mathcal{L}^{N}}Q_{i}(x)}$
 
 The computation cost concentrates at the message passing step. One of the main contributions of the paper is to note that this step can be efficiently computed using high dimensional filtering techniques.  
 More precisely,  
 
-$ \displaystyle \begin{array}{rcl} \tilde{Q}\_{i}^{(m)}(l) & = & G\_{\Theta^{(m)}}\*Q\,(l)-G\_{\Lambda^{(m)}}(0)Q\_{i}(l)\\ & = & G\_{\Theta^{(m)}}\*Q\,(l)-Q\_{i}(l), \end{array} $
+$ \displaystyle \begin{array}{rcl} \tilde{Q}_{i}^{(m)}(l) & = & G_{\Theta^{(m)}}*Q\,(l)-G_{\Lambda^{(m)}}(0)Q_{i}(l)\\ & = & G_{\Theta^{(m)}}*Q\,(l)-Q_{i}(l), \end{array} $
 
 where  
 
-$ \displaystyle \begin{array}{rcl} G\_{\Theta^{(1)}}(f\_{i}-f\_{j}) & = & w^{(1)}\exp\left(-\frac{|p\_{i}-p\_{j}|^{2}}{2\theta\_{\alpha}^{2}}-\frac{|I\_{i}-I\_{j}|^{2}}{2\theta\_{\beta}^{2}}\right)\\ G\_{\Theta^{(2)}}(f\_{i}-f\_{j}) & = & w^{(2)}\exp\left(-\frac{|p\_{i}-p\_{j}|^{2}}{2\theta\_{\gamma}^{2}}\right) \end{array} $
+$ \displaystyle \begin{array}{rcl} G_{\Theta^{(1)}}(f_{i}-f_{j}) & = & w^{(1)}\exp\left(-\frac{|p_{i}-p_{j}|^{2}}{2\theta_{\alpha}^{2}}-\frac{|I_{i}-I_{j}|^{2}}{2\theta_{\beta}^{2}}\right)\\ G_{\Theta^{(2)}}(f_{i}-f_{j}) & = & w^{(2)}\exp\left(-\frac{|p_{i}-p_{j}|^{2}}{2\theta_{\gamma}^{2}}\right) \end{array} $
 
 There are very efficient ways to do high dimensional filtering, which will not be our focus here.  
 
@@ -205,7 +205,7 @@ Figure taken from \[4\]
 
 **Message passing step.** The following operation is performed  
 
-$ \displaystyle \tilde{Q}\_{i}^{(m)}(l)\leftarrow\sum\_{j\neq i}k^{(m)}(f\_{i},f\_{j})Q\_{j}(l) $
+$ \displaystyle \tilde{Q}_{i}^{(m)}(l)\leftarrow\sum_{j\neq i}k^{(m)}(f_{i},f_{j})Q_{j}(l) $
 
 which as explained before, can be seen as a high-dimensional filtering. In matrix notations, it can be written as  
 
@@ -213,21 +213,21 @@ $ \displaystyle \tilde{Q}^{(m)}(l)=K(\Theta^{(m)})Q(l). $
 
 The differential with respect to parameters of this equation is  
 
-$ \displaystyle d\tilde{Q}\_{i}^{(m)}(l)=Q(l)^{T}dK\_{i}^{T}(\Theta^{(m)}),\quad i=1,\dots,N $
+$ \displaystyle d\tilde{Q}_{i}^{(m)}(l)=Q(l)^{T}dK_{i}^{T}(\Theta^{(m)}),\quad i=1,\dots,N $
 
-where we think of $ {d\tilde{Q}\_{i}^{(m)}(l)}$ as a row vector. The backpropagation algorithm, utilizing the computational graph of the permutohedral lattice algorithm, is used to compute these matrices $ {d\tilde{Q}^{(m)}(l)}$ implicitly.  
+where we think of $ {d\tilde{Q}_{i}^{(m)}(l)}$ as a row vector. The backpropagation algorithm, utilizing the computational graph of the permutohedral lattice algorithm, is used to compute these matrices $ {d\tilde{Q}^{(m)}(l)}$ implicitly.  
 
 **Filter weighting.**  
 
-$ \displaystyle \bar{Q}\_{i}(l)=\sum\_{m=1}^{2}w^{(m)}\tilde{Q}\_{i}^{(m)}(l). $
+$ \displaystyle \bar{Q}_{i}(l)=\sum_{m=1}^{2}w^{(m)}\tilde{Q}_{i}^{(m)}(l). $
 
 For each label $ {l}$, we can think of it as a layer where input has two channels, which are convolved with filters of size $ {1\times1}$ respectively and summed together. It is also possible to increase the number of learnable parameters, by giving different labels different weights.  
 
 **Compatibility transform.**  
 
-$ \displaystyle \hat{Q}\_{i}(x\_{i})\leftarrow\sum\_{l\in\mathcal{L}}\mu(x\_{i},l)\bar{Q}\_{i}(l). $
+$ \displaystyle \hat{Q}_{i}(x_{i})\leftarrow\sum_{l\in\mathcal{L}}\mu(x_{i},l)\bar{Q}_{i}(l). $
 
-We can think of it as a layer with $ {k}$ input channels, where each chanel represents a label. Each channel is convolved with a filter of size $ {1\times1}$ respectively and summed together. It is also possible to increase the number of learnable parameters, by giving different pairs $ {(x\_{i},l)}$ different compatibility function values.  
+We can think of it as a layer with $ {k}$ input channels, where each chanel represents a label. Each channel is convolved with a filter of size $ {1\times1}$ respectively and summed together. It is also possible to increase the number of learnable parameters, by giving different pairs $ {(x_{i},l)}$ different compatibility function values.  
 
 **Local update and normalization.** These are standard operations which do not involve parameters.  
 
@@ -243,13 +243,13 @@ Figure taken from \[5\]
 
 Here we consider the fully convolutional siamese network proposed by J. Valmadre and L. Bertinetto. Let us denote the feature map by  
 
-$ \displaystyle f\_{\theta}:(x',z')\mapsto(f\_{\theta}(x'),f\_{\theta}(z')) $
+$ \displaystyle f_{\theta}:(x',z')\mapsto(f_{\theta}(x'),f_{\theta}(z')) $
 
 where $ {x'}$ is the reference object image, and $ {z'}$ is the image containing objects to be detected. Cross correlation is used to find the the patch position of similarity  
 
-$ \displaystyle g\_{\theta}(f\_{\theta}(x'),f\_{\theta}(z'))=f\_{\theta}(x')\*f\_{\theta}(z')+b. $
+$ \displaystyle g_{\theta}(f_{\theta}(x'),f_{\theta}(z'))=f_{\theta}(x')*f_{\theta}(z')+b. $
 
-Here, $ {g\_{\theta}}$ effectively output a score map that tells where possibly the object lies in $ {z'}$.  
+Here, $ {g_{\theta}}$ effectively output a score map that tells where possibly the object lies in $ {z'}$.  
 An interesting extension of this work is to include a correlation filter module and trained end-to-end, which enables a much more light-weight network and fast processing.  
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2nYuyrXxz1-RA_Xp49e8Bq3zA6qky0RrnPB6J4oTsO8yuY8navLbQ0LHlVOz9K5K7rtoRw1ufrFpJU7-9RteRIB2uEnNiGeZo-_tm0ioYSaeqQqqXI2sgG1B9KS63CHsGeGFmcnaYod4/s640/CFnet1.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2nYuyrXxz1-RA_Xp49e8Bq3zA6qky0RrnPB6J4oTsO8yuY8navLbQ0LHlVOz9K5K7rtoRw1ufrFpJU7-9RteRIB2uEnNiGeZo-_tm0ioYSaeqQqqXI2sgG1B9KS63CHsGeGFmcnaYod4/s1600/CFnet1.png)
@@ -268,9 +268,9 @@ Figure taken from \[7\]
 
 One simple formulation of the correlation filter suitable for online object tracking is the following  
 
-$ \displaystyle w^{\*}=\arg\min\_{w}\frac{1}{N}\|w\*x-y\|^{2}+\frac{\lambda}{2}\|w\|^{2} $
+$ \displaystyle w^{*}=\arg\min_{w}\frac{1}{N}\|w*x-y\|^{2}+\frac{\lambda}{2}\|w\|^{2} $
 
-where $ {w^{\*}}$ is the desired correlation filter, $ {x}$ is the input image and $ {N}$ is its size, and $ {y}$ is the desired response.  
+where $ {w^{*}}$ is the desired correlation filter, $ {x}$ is the input image and $ {N}$ is its size, and $ {y}$ is the desired response.  
 
 This type of optimization problem is known as a *ridge regression*. In this case, simple closed form solution can be obtained. We will stress here the computational graph of this solution, where we backpropagate the gradient.  
 
@@ -280,7 +280,7 @@ Figure taken from \[6\]
 
 It involves two additional variables, $ {k}$ and $ {\alpha}$(Lagrange multiplier). Together with $ {x,y,w}$, they satisfy the system of equations  
 
-$ \displaystyle \begin{cases} k=\frac{1}{N}(x\*x)+\lambda\delta\\ k\*\alpha=\frac{1}{N}y\\ w=\alpha\*x \end{cases}. $
+$ \displaystyle \begin{cases} k=\frac{1}{N}(x*x)+\lambda\delta\\ k*\alpha=\frac{1}{N}y\\ w=\alpha*x \end{cases}. $
 
 With FFT, in the freqeuncy domain the above computations are extremely efficient  
 
@@ -288,7 +288,7 @@ $ \displaystyle \begin{cases} \hat{k}=\frac{1}{N}(\hat{x}\odot\hat{x})+\lambda\m
 
 where $ {\odot}$ means element-wise multiplication. And the following backpropagation rule can easily be derived  
 
-$ \displaystyle \begin{cases} \widehat{\nabla\_{\alpha}\ell}=\hat{x}\odot\overline{\widehat{\nabla\_{w}\ell}}\\ \widehat{\nabla\_{y}\ell}=\frac{1}{N}\overline{\hat{k}^{-1}}\odot\widehat{\nabla\_{\alpha}\ell}\\ \widehat{\nabla\_{k}\ell}=-\overline{\hat{k}^{-1}}\odot\overline{\widehat{\alpha}}\odot\widehat{\nabla\_{\alpha}\ell}\\ \widehat{\nabla\_{k}\ell}=\widehat{\alpha}\odot\widehat{\nabla\_{w}\ell}+\frac{2}{N}\hat{x}\odot\text{Re}(\widehat{\nabla\_{k}\ell}) \end{cases}. $
+$ \displaystyle \begin{cases} \widehat{\nabla_{\alpha}\ell}=\hat{x}\odot\overline{\widehat{\nabla_{w}\ell}}\\ \widehat{\nabla_{y}\ell}=\frac{1}{N}\overline{\hat{k}^{-1}}\odot\widehat{\nabla_{\alpha}\ell}\\ \widehat{\nabla_{k}\ell}=-\overline{\hat{k}^{-1}}\odot\overline{\widehat{\alpha}}\odot\widehat{\nabla_{\alpha}\ell}\\ \widehat{\nabla_{k}\ell}=\widehat{\alpha}\odot\widehat{\nabla_{w}\ell}+\frac{2}{N}\hat{x}\odot\text{Re}(\widehat{\nabla_{k}\ell}) \end{cases}. $
 
 **3.2. Some more discussion on the results of CF-net**
 

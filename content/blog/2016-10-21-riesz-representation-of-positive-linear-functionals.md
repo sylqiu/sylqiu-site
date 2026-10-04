@@ -12,13 +12,13 @@ With a *topology* on $ {X}$ and some extra assumptions on it, one can start with
 
 It is of interest to ask whether one can *complete* this "Riemann model'' to the "Lebesgue model'' in a standard way; the answer is affirmative, given by the Riesz representation, and even more is true.  
 
-Taking a slight abstraction, the data of the "Riemann model'' can be thought of as a *positive linear functional* as follows. Denote by $ {C\_{c}(X)=C\_{c}(X\rightarrow\mathbb{R})}$ to be the space of real-valued continuous functions with compact support in $ {X}$. A linear functional $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{\mathbb{R}}}$ is said to be *positive* if  
+Taking a slight abstraction, the data of the "Riemann model'' can be thought of as a *positive linear functional* as follows. Denote by $ {C_{c}(X)=C_{c}(X\rightarrow\mathbb{R})}$ to be the space of real-valued continuous functions with compact support in $ {X}$. A linear functional $ {\Lambda:C_{c}(X)\rightarrow\mathbb{\mathbb{R}}}$ is said to be *positive* if  
 
 $ \displaystyle \Lambda f\geq0\text{ whenever }f\geq0. $
 
 Given any open subset $ {G\subset X}$, consider the class of continuous functions $ {f}$ such that $ {0\leq f\leq1}$ on $ {G}$ and $ {f=0}$ outside of $ {G}$, denoted by $ {f\prec G}$. To get some idea, we can first define the "measure'' of the set $ {G}$ by  
 
-$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f.      $
+$ \displaystyle \mu(G)=\sup_{f\prec G}\Lambda f.      $
 
 In fact, one can use open sets as a gauge to construct an outer measure using the above definition. The Riesz representation theorem says that there corresponds a unique *unsigned Borel measure* that "does the same thing'' with the linear functional. Notice that an unsigned Borel measure can be obviously ensembled to be a linear functional.  
 
@@ -38,31 +38,31 @@ Let $ {X}$ be a topological space. It is not always possible to approximate the 
 
 > **Lemma 1** *(Urysohn) The following are equivalent:*  
 > 
-> *-   Every pair of disjoint closed sets $ {F\_{1},F\_{2}}$ in $ {X}$ can be separated by disjoint open neighborhoods $ {G\_{1}\supset F\_{1}}$, $ {G\_{2}\supset F\_{2}}$.
+> *-   Every pair of disjoint closed sets $ {F_{1},F_{2}}$ in $ {X}$ can be separated by disjoint open neighborhoods $ {G_{1}\supset F_{1}}$, $ {G_{2}\supset F_{2}}$.
 > -   For every closed set $ {F}$ in $ {X}$ and every open neighborhood $ {G}$ of $ {F}$, there exists a continuous function $ {f:X\rightarrow[0,1]}$ such that
 >     
->     $ \displaystyle \chi\_{F}(x)\leq f(x)\leq\chi\_{G}(x), $
+>     $ \displaystyle \chi_{F}(x)\leq f(x)\leq\chi_{G}(x), $
 >     
 >     for which we will also write $ {F\prec f\prec G}$.*
 
 A topological space satisfying one of the above properties is said to be *normal*.  
-*Proof:* Assume the first statement. By noticing that the complement of open set is closed, it is equivalent to the statement for every closed set $ {{F\_{1}}}$ in $ {X}$ and every open neighborhood $ {G\_{0}}$ of $ {F\_{1}}$, there exists an open set $ {G\_{1/2}}$ and a closed set $ {F\_{1/2}}$ such that  
+*Proof:* Assume the first statement. By noticing that the complement of open set is closed, it is equivalent to the statement for every closed set $ {{F_{1}}}$ in $ {X}$ and every open neighborhood $ {G_{0}}$ of $ {F_{1}}$, there exists an open set $ {G_{1/2}}$ and a closed set $ {F_{1/2}}$ such that  
 
-$ \displaystyle F\_{1}\subset G\_{1/2}\subset F\_{1/2}\subset G\_{0}. $
+$ \displaystyle F_{1}\subset G_{1/2}\subset F_{1/2}\subset G_{0}. $
 
 We can continue  
 
-$ \displaystyle {F\_{1}\subset G\_{3/4}\subset F\_{3/4}\subset G\_{1/2}\subset F\_{1/2}\subset G\_{1/4}\subset F\_{1/4}\subset G\_{0}}, $
+$ \displaystyle {F_{1}\subset G_{3/4}\subset F_{3/4}\subset G_{1/2}\subset F_{1/2}\subset G_{1/4}\subset F_{1/4}\subset G_{0}}, $
 
-and so on. In the iteratrions we have the indices for each $ {G\_{q}\subset F\_{q}}$ are just dyadic rationals between $ {[0,1]}$. Define  
+and so on. In the iteratrions we have the indices for each $ {G_{q}\subset F_{q}}$ are just dyadic rationals between $ {[0,1]}$. Define  
 
-$ \displaystyle f(x)=\sup\_{x\in G\_{q}}q=\inf\_{x\in F\_{q}}q. $
+$ \displaystyle f(x)=\sup_{x\in G_{q}}q=\inf_{x\in F_{q}}q. $
 
 Since dyadic rationals are dense in $ {[0,1]}$, we have for $ {a\in[0,1]}$, sets such as  
 
-$ \displaystyle \begin{array}{rcl} f^{-1}(x>a) & = & \bigcup\_{q>a}G\_{q}\\ f^{-1}(x<a) & = & X-\bigcap\_{q<a}F\_{q} \end{array} $
+$ \displaystyle \begin{array}{rcl} f^{-1}(x>a) & = & \bigcup_{q>a}G_{q}\\ f^{-1}(x<a) & = & X-\bigcap_{q<a}F_{q} \end{array} $
 
-are open, and consequently $ {f}$ is continuous. Conversely, the second statement is equivalent to that for every pair of disjoint closed sets $ {F\_{1},F\_{2}}$, there is a continuous function $ {f:X\rightarrow[0,1]}$ such that $ {f=1}$ on $ {F\_{1}}$ and $ {f=0}$ on $ {F\_{2}}$. Then the sets $ {f^{-1}(x>2/3)}$ and $ {f^{-1}(x<1/3)}$ are open and disjoint, and containing $ {F\_{1}}$ and $ {F\_{2}}$ respectively.$ \Box$  
+are open, and consequently $ {f}$ is continuous. Conversely, the second statement is equivalent to that for every pair of disjoint closed sets $ {F_{1},F_{2}}$, there is a continuous function $ {f:X\rightarrow[0,1]}$ such that $ {f=1}$ on $ {F_{1}}$ and $ {f=0}$ on $ {F_{2}}$. Then the sets $ {f^{-1}(x>2/3)}$ and $ {f^{-1}(x<1/3)}$ are open and disjoint, and containing $ {F_{1}}$ and $ {F_{2}}$ respectively.$ \Box$  
 
 > **Remark 1** A topological space $ {X}$ being normal is a *separation property*, viz. the ability to distinguish distinct sets via *topological methods*. It turns out that the study of separation properties is a quite delicate matter. For instance, listed in an order of increasing strength, two subsets $ {A,B}$ are said to be *separated* if each is disjoint from the other's closure; to be *separated by neighborhoods* if they have disjoint neighborhoods; to be *separated by closed neighborhoods*; to be *separated by continuous function* if there exists a continuous function from $ {X}$ to $ {\mathbb{R}}$ taking distinct constant values on each set; to be *precisely separated by continuous functions* if there exists a continuous function with each pre-image of two distinct singleton being exactly each set respectively. Urysohn's lemma thus establishes the equivalence between the separation of closed sets by neighborhoods and by continuous functions.
 
@@ -78,17 +78,17 @@ Now back to the "Riemann model''. Besides separation property, as in integration
 
 In light of Lemma [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemA-compact-Hausdorff), one can establish a Urysohn type of result for LCH spaces.  
 
-> **Lemma 4** *(Urysohn's lemma)Let $ {X}$ be a LCH space, $ {K\subset X}$ a compact subset, and $ {G}$ be a open neighborhood of $ {K}$. Then there exists a function $ {f\in C\_{c}(X)}$ such that $ {K\prec f\prec G}$.*
+> **Lemma 4** *(Urysohn's lemma)Let $ {X}$ be a LCH space, $ {K\subset X}$ a compact subset, and $ {G}$ be a open neighborhood of $ {K}$. Then there exists a function $ {f\in C_{c}(X)}$ such that $ {K\prec f\prec G}$.*
 
-*Proof:* Let $ {U\_{x}}$ be a open neighborhood of $ {x}$ with compact closure. Then the collection $ {\{U\_{x}\}\_{x\in K}}$ forms an open cover of $ {K}$. Since $ {K}$ is compact, there exists a finite subfamily $ {\{U\_{1},\dots,U\_{N}\}}$ that forms a cover of $ {K}$, whose union has compact closure. Let $ {G'=\bigcup\_{n=1}^{N}U\_{n}\cap G}$. Then $ {\overline{G'}}$ is a compact Hausdorff space. Now apply Lemma [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemA-compact-Hausdorff) to get a continuous function $ {f}$ on $ {\overline{G'}}$, and define $ {f=0}$ outside of $ {\overline{G'}}$. $ \Box$  
+*Proof:* Let $ {U_{x}}$ be a open neighborhood of $ {x}$ with compact closure. Then the collection $ {\{U_{x}\}_{x\in K}}$ forms an open cover of $ {K}$. Since $ {K}$ is compact, there exists a finite subfamily $ {\{U_{1},\dots,U_{N}\}}$ that forms a cover of $ {K}$, whose union has compact closure. Let $ {G'=\bigcup_{n=1}^{N}U_{n}\cap G}$. Then $ {\overline{G'}}$ is a compact Hausdorff space. Now apply Lemma [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemA-compact-Hausdorff) to get a continuous function $ {f}$ on $ {\overline{G'}}$, and define $ {f=0}$ outside of $ {\overline{G'}}$. $ \Box$  
 
-Here we see that LCH spaces are desirable for approximation using functions in $ {C\_{c}(X)}$.  
+Here we see that LCH spaces are desirable for approximation using functions in $ {C_{c}(X)}$.  
 
-Sometimes it is convenient to have spaces that allows us to extend local construction globally, using *partition of unity*. The property we need in addition is that the open cover $ {\{U\_{\alpha}\}\_{\alpha\in A}}$ is *finitely overlapping*, meaning that every $ {x\in X}$ belongs to at most finitely many $ {U\_{\alpha}}$. Topological spaces that have for every open cover a finitely overlapping refinement will be called *paracompact*. The construction of partition of unity follows straightforwardly from Lemma [4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemLCH%20urysohn).  
+Sometimes it is convenient to have spaces that allows us to extend local construction globally, using *partition of unity*. The property we need in addition is that the open cover $ {\{U_{\alpha}\}_{\alpha\in A}}$ is *finitely overlapping*, meaning that every $ {x\in X}$ belongs to at most finitely many $ {U_{\alpha}}$. Topological spaces that have for every open cover a finitely overlapping refinement will be called *paracompact*. The construction of partition of unity follows straightforwardly from Lemma [4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemLCH%20urysohn).  
 
-> **Lemma 5** *Let $ {X}$ be a LCH space, and let $ {\{U\_{\alpha}\}\_{\alpha\in A}}$ be an open cover of $ {X}$ such that each $ {U\_{\alpha}}$ is relatively compact, and the cover is finitely overlapping. Then there exists a family of continuous functions $ {\{f\_{\alpha}\}\_{\alpha\in A}}$ such that each $ {f\_{\alpha}}$ has support contained in $ {U\_{\alpha}}$, and*  
+> **Lemma 5** *Let $ {X}$ be a LCH space, and let $ {\{U_{\alpha}\}_{\alpha\in A}}$ be an open cover of $ {X}$ such that each $ {U_{\alpha}}$ is relatively compact, and the cover is finitely overlapping. Then there exists a family of continuous functions $ {\{f_{\alpha}\}_{\alpha\in A}}$ such that each $ {f_{\alpha}}$ has support contained in $ {U_{\alpha}}$, and*  
 > 
-> *$ \displaystyle \sum\_{\alpha\in A}f\_{\alpha}(x)=1 $*
+> *$ \displaystyle \sum_{\alpha\in A}f_{\alpha}(x)=1 $*
 > 
 > *for all $ {x\in X}$.*
 
@@ -108,9 +108,9 @@ As we will see later, $ {X}$ being merely LCH will give rise to some *regularity
 
 > **Remark 2** *Note that in the construction of outer measures, outer regularity is built-in for *any* set. There also exist constructions of Radon measures on spaces that are not $\sigma$-compact or not LCH, but we will not touch this point.*
 
-Now we start our construction. Given a positive linear functional $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$, for every open set $ {G\subset X}$, we define as in ([$\star$](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)):  
+Now we start our construction. Given a positive linear functional $ {\Lambda:C_{c}(X)\rightarrow\mathbb{R}}$, for every open set $ {G\subset X}$, we define as in ([$\star$](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)):  
 
-$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f.      (2)$
+$ \displaystyle \mu(G)=\sup_{f\prec G}\Lambda f.      (2)$
 
 Positivity of $ {\Lambda}$ implies the monotonicity of $ {\mu}$ on open sets. Using open sets as a gauge, we can define for every subset $ {E\subset X}$ an outer measure,  
 
@@ -118,105 +118,105 @@ $ \displaystyle \mu(E)=\inf\{\mu(G):G\supset E,\text{ and }G\text{ open}\}.     
 
 The countable sub-additivity of $ {\mu}$ thus follows from this definition. As Caratheodory's measurability suggests, we need sets that can be "approximated from below'', i.e. those inner regular ones to form a $ {\sigma}$-algebra and thus a measure space. Then by Caratheodory's extension theorem, the measure space will be complete. So define  
 
-$ \displaystyle \mathfrak{M}\_{c}=\{E\subset X:\mu(E)<+\infty\text{ and }E\text{ is inner regular}\}, $
+$ \displaystyle \mathfrak{M}_{c}=\{E\subset X:\mu(E)<+\infty\text{ and }E\text{ is inner regular}\}, $
 
-that is, $ {E\in\mathfrak{M}\_{c}}$ is such that $ {\mu(E)<+\infty}$ and  
+that is, $ {E\in\mathfrak{M}_{c}}$ is such that $ {\mu(E)<+\infty}$ and  
 
 $ \displaystyle \mu(E)=\sup\{\mu(K):K\subset E,\text{ and }K\text{ compact}\}.      (4)$
 
 and  
 
-$ \displaystyle \mathfrak{M}=\{E\subset X:E\cap K\in\mathfrak{M}\_{c}\text{ for all compact }K\subset X\} $
+$ \displaystyle \mathfrak{M}=\{E\subset X:E\cap K\in\mathfrak{M}_{c}\text{ for all compact }K\subset X\} $
 
-> **Theorem 8** *(Riesz representation theorem for positive linear functionals; general case) Let $ {X}$ be a LCH space, and $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ a positive linear functional. Let $ {\mu}$ and $ {\mathfrak{M}}$ be construced as above. Then $ {\mathfrak{M}}$ is a complete $ {\sigma}$-algebra containing the Borel $ {\sigma}$-algebra $ {\mathcal{B}}$, and $ {\mu}$ is the unique measure on $ {\mathfrak{M}}$ such that $ {\Lambda=I\_{\mu}}$, i.e. for any $ {f\in C\_{c}(X)}$,*  
+> **Theorem 8** *(Riesz representation theorem for positive linear functionals; general case) Let $ {X}$ be a LCH space, and $ {\Lambda:C_{c}(X)\rightarrow\mathbb{R}}$ a positive linear functional. Let $ {\mu}$ and $ {\mathfrak{M}}$ be construced as above. Then $ {\mathfrak{M}}$ is a complete $ {\sigma}$-algebra containing the Borel $ {\sigma}$-algebra $ {\mathcal{B}}$, and $ {\mu}$ is the unique measure on $ {\mathfrak{M}}$ such that $ {\Lambda=I_{\mu}}$, i.e. for any $ {f\in C_{c}(X)}$,*  
 > 
-> *$ \displaystyle \Lambda f=\int\_{X}fd\mu.      (5)$*
+> *$ \displaystyle \Lambda f=\int_{X}fd\mu.      (5)$*
 > 
 > *In addition, $ {\mu}$ is locally finite, outer regular for all $ {E\in\mathfrak{M}}$ and inner regular for every open set and every $ {E\in\mathfrak{M}}$ such that $ {\mu(E)<\infty}$.*
 
-*Proof:* Let us first prove the uniqueness part. Since Property ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) holds for every open set and every set of finite measure, it suffices to prove that whenever $ {\mu\_{1}}$ and $ {\mu\_{2}}$ satisfy the theorem, then  
+*Proof:* Let us first prove the uniqueness part. Since Property ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) holds for every open set and every set of finite measure, it suffices to prove that whenever $ {\mu_{1}}$ and $ {\mu_{2}}$ satisfy the theorem, then  
 
-$ \displaystyle \mu\_{1}(K)=\mu\_{2}(K) $
+$ \displaystyle \mu_{1}(K)=\mu_{2}(K) $
 
 for all $ {K}$ compact. Fix $ {K}$ and $ {\epsilon>0}$, there exists an open set $ {G\subset X}$ such that  
 
-$ \displaystyle \mu\_{2}(K)+\epsilon>\mu\_{2}(G). $
+$ \displaystyle \mu_{2}(K)+\epsilon>\mu_{2}(G). $
 
 By Urysohn's lemma, there exists a continuous function such that $ {K\prec f\prec G}$. Hence  
 
-$ \displaystyle \begin{array}{rcl} \mu\_{1}(K)=\int\_{X}\chi\_{K}d\mu & \leq & \int\_{X}fd\mu\_{1}\\ & = & \int\_{X}fd\mu\_{2}\\ & \leq & \int\_{X}\chi\_{G}d\mu\_{2}\\ & = & \mu\_{2}(G)<\mu\_{2}(K)+\epsilon. \end{array} $
+$ \displaystyle \begin{array}{rcl} \mu_{1}(K)=\int_{X}\chi_{K}d\mu & \leq & \int_{X}fd\mu_{1}\\ & = & \int_{X}fd\mu_{2}\\ & \leq & \int_{X}\chi_{G}d\mu_{2}\\ & = & \mu_{2}(G)<\mu_{2}(K)+\epsilon. \end{array} $
 
-Exchanging the role of $ {\mu\_{1}}$ and $ {\mu\_{2}}$, and since $ {\epsilon}$ is arbitrary, we get $ {\mu\_{1}=\mu\_{2}}$.  
+Exchanging the role of $ {\mu_{1}}$ and $ {\mu_{2}}$, and since $ {\epsilon}$ is arbitrary, we get $ {\mu_{1}=\mu_{2}}$.  
 
-It is clear that defining $ {\mu(E)}$ by ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) gives us an outer measure. And from ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), if $ {K}$ is compact and $ {K\prec f}$, letting $ {G\_{a}=f^{-1}(x>a)}$, we have  
+It is clear that defining $ {\mu(E)}$ by ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) gives us an outer measure. And from ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), if $ {K}$ is compact and $ {K\prec f}$, letting $ {G_{a}=f^{-1}(x>a)}$, we have  
 
-$ \displaystyle \mu(K)\leq\mu(G\_{a})=\sup\_{g\prec G\_{a}}\Lambda g\leq a^{-1}\Lambda f. $
+$ \displaystyle \mu(K)\leq\mu(G_{a})=\sup_{g\prec G_{a}}\Lambda g\leq a^{-1}\Lambda f. $
 
 Taking $ {a\rightarrow1}$, we have $ {\mu(K)\leq\Lambda f}$ and hence $ {\mu}$ is also locally finite. In fact, we have  
 
 $ \displaystyle \mu(K)=\inf\{\Lambda f:K\prec f\} $
 
-for $ {K}$ compact.  Indeed, ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) shows that for any $ {\epsilon>0}$, there exists $ {G}$ open such that $ {\mu(K)+\epsilon>\mu(G)}$. Using Urysohn's lemma, there exists $ {f\in C\_{c}(X)}$ such that $ {K\prec f\prec G}$. Thus  
+for $ {K}$ compact.  Indeed, ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) shows that for any $ {\epsilon>0}$, there exists $ {G}$ open such that $ {\mu(K)+\epsilon>\mu(G)}$. Using Urysohn's lemma, there exists $ {f\in C_{c}(X)}$ such that $ {K\prec f\prec G}$. Thus  
 
 $ \displaystyle \Lambda f\leq\mu(G)<\mu(K)+\epsilon. $
 
 Next we show that $ {\mathfrak{M}}$ is a complete $ {\sigma}$-algebra containing all Borel sets.  
 
-**Step 1**: $ {\mathfrak{M}\_{c}}$ contains all open sets of finite measure.  
+**Step 1**: $ {\mathfrak{M}_{c}}$ contains all open sets of finite measure.  
 Let $ {G}$ be open with $ {\mu(G)<+\infty}$. To check the inner regularity of $ {G}$, it suffices to find  for any $ {\epsilon>0}$, a compact $ {K\subset G}$ such that,  
 
 $ \displaystyle \mu(G)<\mu(K)+\epsilon. $
 
-Note that by ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) there exists $ {f\in C\_{c}(X)}$ with $ {f\prec G}$ such that $ {\mu(G)<\Lambda f+\epsilon}$. Let $ {K}$ be the support of $ {f}$. We have $ {K\subset G}$, and clearly $ {\Lambda f\leq\mu(K)}$.  
+Note that by ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) there exists $ {f\in C_{c}(X)}$ with $ {f\prec G}$ such that $ {\mu(G)<\Lambda f+\epsilon}$. Let $ {K}$ be the support of $ {f}$. We have $ {K\subset G}$, and clearly $ {\Lambda f\leq\mu(K)}$.  
 
-**Step 2**: $ {\mu}$ is countably additive restricted to $ {\mathfrak{M}\_{c}}$, and $ {\mathfrak{M}\_{c}}$ is a Boolean ring, i.e. closed under finite set operations within.  
-Suppose $ {E=\bigcup\_{i=1}^{\infty}E\_{i}}$, where $ {\{E\_{i}\}\_{i=1}^{\infty}}$ is a collection of mutually disjoint members of $ {\mathfrak{M}\_{c}}$. We are to show  
+**Step 2**: $ {\mu}$ is countably additive restricted to $ {\mathfrak{M}_{c}}$, and $ {\mathfrak{M}_{c}}$ is a Boolean ring, i.e. closed under finite set operations within.  
+Suppose $ {E=\bigcup_{i=1}^{\infty}E_{i}}$, where $ {\{E_{i}\}_{i=1}^{\infty}}$ is a collection of mutually disjoint members of $ {\mathfrak{M}_{c}}$. We are to show  
 
-$ \displaystyle \mu(E)\geq\sum\_{i=1}^{\infty}\mu(E\_{i}). $
+$ \displaystyle \mu(E)\geq\sum_{i=1}^{\infty}\mu(E_{i}). $
 
-If $ {\mu(E)=+\infty}$, there is nothing to prove. Assume $ {\mu(E)<+\infty}$. Since $ {E\_{i}}$ can be approximated from below by compact sets (inner regular), we first notice that  
+If $ {\mu(E)=+\infty}$, there is nothing to prove. Assume $ {\mu(E)<+\infty}$. Since $ {E_{i}}$ can be approximated from below by compact sets (inner regular), we first notice that  
 
-$ \displaystyle \mu(K\_{1}\cup K\_{2})=\mu(K\_{1})+\mu(K\_{2})      (6)$
+$ \displaystyle \mu(K_{1}\cup K_{2})=\mu(K_{1})+\mu(K_{2})      (6)$
 
-for disjoint compact sets $ {K\_{1}}$ and $ {K\_{2}}$. Indeed, we can approximate them using continuous functions: for any $ {\epsilon>0}$, there is $ {K\_{1}\cup K\_{2}\prec g}$ such that ,  
+for disjoint compact sets $ {K_{1}}$ and $ {K_{2}}$. Indeed, we can approximate them using continuous functions: for any $ {\epsilon>0}$, there is $ {K_{1}\cup K_{2}\prec g}$ such that ,  
 
-$ \displaystyle \Lambda g<\mu(K\_{1}\cup K\_{2})+\epsilon. $
+$ \displaystyle \Lambda g<\mu(K_{1}\cup K_{2})+\epsilon. $
 
-Using Urysohn's lemma, two compact sets can be separated by continuous functions: there is $ {f\in C\_{c}(X)}$ such that $ {f=1}$ on $ {K\_{1}}$ and $ {f=0}$ on $ {K\_{2}}$ . Then $ {K\_{1}\prec fg}$ and $ {K\_{2}\prec(1-f)g}$. Hence  
+Using Urysohn's lemma, two compact sets can be separated by continuous functions: there is $ {f\in C_{c}(X)}$ such that $ {f=1}$ on $ {K_{1}}$ and $ {f=0}$ on $ {K_{2}}$ . Then $ {K_{1}\prec fg}$ and $ {K_{2}\prec(1-f)g}$. Hence  
 
-$ \displaystyle \begin{array}{rcl} \mu(K\_{1})+\mu(K\_{2}) & \leq & \Lambda(fg)+\Lambda(g-fg)\\ & = & \Lambda g<\mu(K\_{1}\cup K\_{2})+\epsilon. \end{array} $
+$ \displaystyle \begin{array}{rcl} \mu(K_{1})+\mu(K_{2}) & \leq & \Lambda(fg)+\Lambda(g-fg)\\ & = & \Lambda g<\mu(K_{1}\cup K_{2})+\epsilon. \end{array} $
 
 Thus ([6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)) is established.  
-Let again $ {\epsilon>0}$. For each $ {E\_{i}}$, there is a compact set $ {K\_{i}\subset E\_{i}}$ such that  
+Let again $ {\epsilon>0}$. For each $ {E_{i}}$, there is a compact set $ {K_{i}\subset E_{i}}$ such that  
 
-$ \displaystyle \mu(E\_{i})<\mu(K\_{i})+\frac{\epsilon}{2^{i}}. $
+$ \displaystyle \mu(E_{i})<\mu(K_{i})+\frac{\epsilon}{2^{i}}. $
 
 Induction on ([6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we obtain  
 
-$ \displaystyle \begin{array}{rcl} \mu(E)\geq\mu(\bigcup\_{i=1}^{n}K\_{i}) & = & \sum\_{i=1}^{n}\mu(K\_{i})\\ & > & \sum\_{i=1}^{n}\mu(E\_{i})-\epsilon \end{array} $
+$ \displaystyle \begin{array}{rcl} \mu(E)\geq\mu(\bigcup_{i=1}^{n}K_{i}) & = & \sum_{i=1}^{n}\mu(K_{i})\\ & > & \sum_{i=1}^{n}\mu(E_{i})-\epsilon \end{array} $
 
-for all $ {n>0}$. Thus $ {\mu}$ is countably additive restricted to $ {\mathfrak{M}\_{c}}$. This also shows that $ {E\in\mathfrak{M}\_{c}}$ when $ {\mu(E)<+\infty}$. Now given any $ {E\in\mathfrak{M}\_{c}}$, we can approximate it from above and below: if $ {\epsilon>0}$, there exists $ {K}$ compact and $ {G}$ open such that $ {K\subset E\subset G}$ with $ {G-V\in\mathfrak{M}\_{c}}$ and $ {\mu(G-V)<\epsilon}$. So for any $ {E\_{1},E\_{2}\in\mathfrak{M}\_{c}}$, there is $ {G\_{i},K\_{i}}$ as described for $ {i=1,2}$. First, notice that  
+for all $ {n>0}$. Thus $ {\mu}$ is countably additive restricted to $ {\mathfrak{M}_{c}}$. This also shows that $ {E\in\mathfrak{M}_{c}}$ when $ {\mu(E)<+\infty}$. Now given any $ {E\in\mathfrak{M}_{c}}$, we can approximate it from above and below: if $ {\epsilon>0}$, there exists $ {K}$ compact and $ {G}$ open such that $ {K\subset E\subset G}$ with $ {G-V\in\mathfrak{M}_{c}}$ and $ {\mu(G-V)<\epsilon}$. So for any $ {E_{1},E_{2}\in\mathfrak{M}_{c}}$, there is $ {G_{i},K_{i}}$ as described for $ {i=1,2}$. First, notice that  
 
-$ \displaystyle E\_{1}-E\_{2}\subset G\_{1}-K\_{2}\subset(G\_{1}-K\_{1})\cup(K\_{1}-G\_{2})\cup(G\_{2}-K\_{2}). $
+$ \displaystyle E_{1}-E_{2}\subset G_{1}-K_{2}\subset(G_{1}-K_{1})\cup(K_{1}-G_{2})\cup(G_{2}-K_{2}). $
 
 It follows that  
 
-$ \displaystyle \mu(E\_{1}-E\_{2})\leq\epsilon+\mu(K\_{1}-G\_{2})+\epsilon. $
+$ \displaystyle \mu(E_{1}-E_{2})\leq\epsilon+\mu(K_{1}-G_{2})+\epsilon. $
 
-Since $ {K\_{1}-G\_{2}}$ is compact, we have $ {E\_{1}-E\_{2}\in\mathfrak{M}\_{c}}$. In case of $ {E\_{1}\cup E\_{2}}$, we can write it as a disjoint union $ {(E\_{1}-E\_{2})\cup E\_{2}}$ of sets in $ {\mathfrak{M}\_{c}}$. This shows $ {E\_{1}\cup E\_{2}\in\mathfrak{M}\_{c}}$. Finally,  
+Since $ {K_{1}-G_{2}}$ is compact, we have $ {E_{1}-E_{2}\in\mathfrak{M}_{c}}$. In case of $ {E_{1}\cup E_{2}}$, we can write it as a disjoint union $ {(E_{1}-E_{2})\cup E_{2}}$ of sets in $ {\mathfrak{M}_{c}}$. This shows $ {E_{1}\cup E_{2}\in\mathfrak{M}_{c}}$. Finally,  
 
-$ \displaystyle {E\_{1}\cap E\_{2}=E\_{1}-(E\_{1}-E\_{2})\in\mathfrak{M}\_{c}}$.
+$ \displaystyle {E_{1}\cap E_{2}=E_{1}-(E_{1}-E_{2})\in\mathfrak{M}_{c}}$.
 
 **Step 3**: $ {\mathfrak{M}}$ is a $ {\sigma}$-algebra containing all Borel sets.  
-Let $ {K}$ be compact and $ {A\in\mathfrak{M}}$. First, we have $ {A^{c}\cap K=K-(A\cap K)\in\mathfrak{M}\_{c}}$. If $ {F}$ is closed in $ {X}$, since $ {F\cap K}$ is compact, $ {F\in\mathfrak{M}}$, in particular $ {X\in\mathfrak{M}}$.  
-Now it suffices to show closure under countable unions. Suppose $ {\tilde{E}=\bigcup\_{i=1}^{\infty}\tilde{E}\_{i}}$ where $ {\tilde{E}\_{i}\in\mathfrak{M}}$. Consider the set $ {E\cap K}$. We want to write it as a disjoint union of sets in $ {\mathfrak{M}\_{c}}$ so that $ {E\cap K\in\mathfrak{M}\_{c}}$. Hence we define $ {E\_{1}=\tilde{E}\_{1}\cap K}$, $ {E\_{n}=(A\_{n}-K)-\bigcup\_{i=1}^{n-1}E\_{i}}$, and we are done.  
+Let $ {K}$ be compact and $ {A\in\mathfrak{M}}$. First, we have $ {A^{c}\cap K=K-(A\cap K)\in\mathfrak{M}_{c}}$. If $ {F}$ is closed in $ {X}$, since $ {F\cap K}$ is compact, $ {F\in\mathfrak{M}}$, in particular $ {X\in\mathfrak{M}}$.  
+Now it suffices to show closure under countable unions. Suppose $ {\tilde{E}=\bigcup_{i=1}^{\infty}\tilde{E}_{i}}$ where $ {\tilde{E}_{i}\in\mathfrak{M}}$. Consider the set $ {E\cap K}$. We want to write it as a disjoint union of sets in $ {\mathfrak{M}_{c}}$ so that $ {E\cap K\in\mathfrak{M}_{c}}$. Hence we define $ {E_{1}=\tilde{E}_{1}\cap K}$, $ {E_{n}=(A_{n}-K)-\bigcup_{i=1}^{n-1}E_{i}}$, and we are done.  
 
-**Step 4**: $ {\mathfrak{M}\_{c}}$ consists of precisely the sets $ {E\in\mathfrak{M}}$ with $ {\mu(E)<+\infty}$. Hence $ {\mu}$ is outer regular for all $ {E\in\mathfrak{M}}$ and inner regular for every open set and every $ {E\in\mathfrak{M}}$ such that $ {\mu(E)<\infty}$. And finally, $ {\mu}$ satisfies ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq6)) for all $ {f\in C\_{c}(X)}$.  
-It is clear that $ {\mathfrak{M}\_{c}\subset\mathfrak{M}}$. Let $ {E\in\mathfrak{M}}$ with $ {\mu(E)<+\infty}$. By definition ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), for any $ {\epsilon>0}$, there exists an open set $ {G\supset E}$ with $ {\mu(G)<\mu(E)+\epsilon<\infty}$. Since $ {G\in\mathfrak{M}\_{c}}$, there exists $ {K\subset G}$ compact such that  
+**Step 4**: $ {\mathfrak{M}_{c}}$ consists of precisely the sets $ {E\in\mathfrak{M}}$ with $ {\mu(E)<+\infty}$. Hence $ {\mu}$ is outer regular for all $ {E\in\mathfrak{M}}$ and inner regular for every open set and every $ {E\in\mathfrak{M}}$ such that $ {\mu(E)<\infty}$. And finally, $ {\mu}$ satisfies ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq6)) for all $ {f\in C_{c}(X)}$.  
+It is clear that $ {\mathfrak{M}_{c}\subset\mathfrak{M}}$. Let $ {E\in\mathfrak{M}}$ with $ {\mu(E)<+\infty}$. By definition ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), for any $ {\epsilon>0}$, there exists an open set $ {G\supset E}$ with $ {\mu(G)<\mu(E)+\epsilon<\infty}$. Since $ {G\in\mathfrak{M}_{c}}$, there exists $ {K\subset G}$ compact such that  
 
 $ \displaystyle \mu(G-K)<\epsilon. $
 
-Since $ {E\cap K\in\mathfrak{M}\_{c}}$, it can be approximated from below by, say, $ {H\subset E\cap K}$:  
+Since $ {E\cap K\in\mathfrak{M}_{c}}$, it can be approximated from below by, say, $ {H\subset E\cap K}$:  
 
 $ \displaystyle \mu(E\cap K)<\mu(H)+\epsilon. $
 
@@ -224,11 +224,11 @@ Thus $ {E}$ can be approximated by $ {H}$ from below:
 
 $ \displaystyle \mu(E)\leq\mu(E\cap K)+\mu(G-K)<\mu(H)+2\epsilon $
 
-and thus $ {E\in\mathfrak{M}\_{c}}$. It remains to check ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq6)). By linearity, it suffices to show  
+and thus $ {E\in\mathfrak{M}_{c}}$. It remains to check ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq6)). By linearity, it suffices to show  
 
-$ \displaystyle \Lambda f\leq\int\_{X}fd\mu. $
+$ \displaystyle \Lambda f\leq\int_{X}fd\mu. $
 
-Since $ {f}$ is compactly supported, it is bounded and its range is contained in a compact subset of $ {\mathbb{R}}$, say the interval $ {[a,b]}$. The idea is simple: subdivide the interval $ {[a,b]}$ and define a partition of unity $ {h\_{i}}$ sitting on a slightly bigger open set containing the corresponding preimages of the subintervals. By Urysohn's lemma, on each preimage one can bound $ {\Lambda h\_{i}f}$ from above by the integration of a simple function, valued as the upper limit of the subinterval increased by $ {\epsilon}$ that goes to zero when the subdivision is finer by continuity. Finally rearrange the expression of the upper bound to involve a term that can be bounded by $ {\int\_{X}fd\mu}$, with the remaining terms can be chosen arbitrarily small. See \[R\]. $ \Box$  
+Since $ {f}$ is compactly supported, it is bounded and its range is contained in a compact subset of $ {\mathbb{R}}$, say the interval $ {[a,b]}$. The idea is simple: subdivide the interval $ {[a,b]}$ and define a partition of unity $ {h_{i}}$ sitting on a slightly bigger open set containing the corresponding preimages of the subintervals. By Urysohn's lemma, on each preimage one can bound $ {\Lambda h_{i}f}$ from above by the integration of a simple function, valued as the upper limit of the subinterval increased by $ {\epsilon}$ that goes to zero when the subdivision is finer by continuity. Finally rearrange the expression of the upper bound to involve a term that can be bounded by $ {\int_{X}fd\mu}$, with the remaining terms can be chosen arbitrarily small. See \[R\]. $ \Box$  
 
 As noted before, there are examples when $ {X}$ is LCH and the $ {\mu}$ contructed is not inner regular for all Borel sets. Such regularity issues can be avoided if we assume $ {X}$ is $ {\sigma}$-compact (or $\sigma$-finite). A first consequence is that under $ {\sigma}$-compactness, sets in the $ {\sigma}$-algebra defined in Theorem [8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm\(Riesz-representation-theorem) can now be approximated from below by closed sets.  
 
@@ -238,6 +238,6 @@ As noted before, there are examples when $ {X}$ is LCH and the $ {\mu}$ contruct
 
 The idea is to first use compactness, and then the "$\epsilon /2^i$-trick". Since closed sets in $ {X}$ are also $ {\sigma}$-compact, this immediately implies  
 
-> **Theorem 10** *(Riesz representation theorem for positive linear functionals; $ {\sigma}$-compact case) Let $ {X}$ be $ {LCH}$ and also $ {\sigma}$-compact. Let $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ be a positive linear functional. Then there exists a unique Radon measure $ {\mu}$ on $ {X}$ such that $ {\Lambda=I\_{\mu}}$ (and in fact, every measurable set is inner regular).*
+> **Theorem 10** *(Riesz representation theorem for positive linear functionals; $ {\sigma}$-compact case) Let $ {X}$ be $ {LCH}$ and also $ {\sigma}$-compact. Let $ {\Lambda:C_{c}(X)\rightarrow\mathbb{R}}$ be a positive linear functional. Then there exists a unique Radon measure $ {\mu}$ on $ {X}$ such that $ {\Lambda=I_{\mu}}$ (and in fact, every measurable set is inner regular).*
 
 > **Remark 3** *Using the uniqueness part of Theorem [10](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm\(Riesz-representation-theorem-1), one can prove that a locally finite Borel measure is always a Radon measure with the extra assumption that every open set in $ {X}$ is also $ {\sigma}$-compact (such as a LCH and $ {\sigma}$-compact metric space). However, it is NOT true when the assumption does not hold. See \[R\], Exercise 18, Chapter 2.*

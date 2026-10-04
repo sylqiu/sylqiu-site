@@ -26,40 +26,40 @@ $ \displaystyle u(x)=\text{dist}(x,\partial\Omega) $
 
 which is general not differentiable at every point. For simplicity, let us assume we are in $ {1}$-D, $ {\Omega=(-1,1)}$. The equation is simplified to  
 
-$ \displaystyle |u\_{x}|-1=0      (1)$
+$ \displaystyle |u_{x}|-1=0      (1)$
 
 with $ {u(-1)=u(1)=0}$. A solution is given by $ {1-|x|}$, which is not differentiable at zero. At first, one can ask for a "weak'' solution, by relaxing $ {u}$ to be only Lipschitz continuous and that ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) holds almost everywhere. However, we then lose the uniqueness of the solution: there are infinitely many weak solutions to the Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
 On the other hand, one can obtain a solution (also in the "weak'' sense) via the method of *vanishing viscosity*. The viscosity approximation to Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1))  
 
-$ \displaystyle |u\_{x}^{\epsilon}|-1=\epsilon u\_{xx}^{\epsilon} $
+$ \displaystyle |u_{x}^{\epsilon}|-1=\epsilon u_{xx}^{\epsilon} $
 
-which as a parabolic PDE has smooth solutions. The term $ {\epsilon u\_{xx}^{\epsilon}}$ is considered as a *regulizer* of the equation. Assuming the family of solutions $ {\{u^{\epsilon}\}\_{\epsilon>0}}$ is bounded and equicontinuous on compact seubsets of $ {\Omega}$, we can conclude via *Arzela-Ascoli theorem* that  
+which as a parabolic PDE has smooth solutions. The term $ {\epsilon u_{xx}^{\epsilon}}$ is considered as a *regulizer* of the equation. Assuming the family of solutions $ {\{u^{\epsilon}\}_{\epsilon>0}}$ is bounded and equicontinuous on compact seubsets of $ {\Omega}$, we can conclude via *Arzela-Ascoli theorem* that  
 
-$ \displaystyle u^{\epsilon\_{j}}\rightarrow u $
+$ \displaystyle u^{\epsilon_{j}}\rightarrow u $
 
-locally uniformly in $ {\Omega}$, for some subsequence $ {\epsilon\_{j}\rightarrow0^{+}}$ and limit function $ {u\in\mathcal{C}(\overline{\Omega})}$. One can find in this case $ {u(x)=1-|x|}$. The method of vanishing viscosity is sometimes sensible with intuition supplied from physics. However, as the technique is not always available, one search for some characterising properties of the solutions. We will make this idea more precise in what follows.  
+locally uniformly in $ {\Omega}$, for some subsequence $ {\epsilon_{j}\rightarrow0^{+}}$ and limit function $ {u\in\mathcal{C}(\overline{\Omega})}$. One can find in this case $ {u(x)=1-|x|}$. The method of vanishing viscosity is sometimes sensible with intuition supplied from physics. However, as the technique is not always available, one search for some characterising properties of the solutions. We will make this idea more precise in what follows.  
 
 **1.2. A review of the Laplace equation $ {\Delta u=0}$**
 
 The Laplacian $ {\Delta}$, expressed in the Euclidean coordinate  
 
-$ \displaystyle \Delta=\sum\_{i}\frac{\partial^{2}}{\partial x\_{i}^{2}} $
+$ \displaystyle \Delta=\sum_{i}\frac{\partial^{2}}{\partial x_{i}^{2}} $
 
 can be interpreted as follows. Suppose $ {f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is $ {\mathcal{C}^{2}}$ in a neighborhood of $ {0}$. We obtain its Taylor expansion around $ {0}$:  
 
-$ \displaystyle f(x)-f(0)=\sum\_{i}f\_{x\_{i}}(0)x\_{i}+\frac{1}{2}\sum\_{i,k}f\_{ik}(0)x\_{i}x\_{k}+o(|x|^{2}) $
+$ \displaystyle f(x)-f(0)=\sum_{i}f_{x_{i}}(0)x_{i}+\frac{1}{2}\sum_{i,k}f_{ik}(0)x_{i}x_{k}+o(|x|^{2}) $
 
-Integrating over the ball $ {B\_{r}}$,  
+Integrating over the ball $ {B_{r}}$,  
 
-$ \displaystyle \begin{array}{rcl} \int\_{B\_{r}}(f(x)-f(0)dx & = & \frac{1}{2}\sum\_{i}f\_{ii}(0)\int\_{B\_{r}}x\_{i}^{2}dx+o(r^{2+n})\\ & = & \frac{1}{2}\Delta f(0)\int\_{B\_{r}}x\_{i}^{2}dx+o(r^{2+n}) \end{array} $
+$ \displaystyle \begin{array}{rcl} \int_{B_{r}}(f(x)-f(0)dx & = & \frac{1}{2}\sum_{i}f_{ii}(0)\int_{B_{r}}x_{i}^{2}dx+o(r^{2+n})\\ & = & \frac{1}{2}\Delta f(0)\int_{B_{r}}x_{i}^{2}dx+o(r^{2+n}) \end{array} $
 
-The integrals $ {\int\_{B\_{r}}x\_{i}^{2}dx}$ are equal for all $ {i}$, so we set it to be $ {c\_{n}r^{n+2}}$. Now, absorbing the constant $ {{\displaystyle \frac{1}{2}}}$ into $ {c\_{n}}$, the above equality turns into  
+The integrals $ {\int_{B_{r}}x_{i}^{2}dx}$ are equal for all $ {i}$, so we set it to be $ {c_{n}r^{n+2}}$. Now, absorbing the constant $ {{\displaystyle \frac{1}{2}}}$ into $ {c_{n}}$, the above equality turns into  
 
-$ \displaystyle \int\_{B\_{r}}(f(x)-f(0)dx=c\_{n}r^{n+2}\Delta f(0)+o(r^{2+n}) $
+$ \displaystyle \int_{B_{r}}(f(x)-f(0)dx=c_{n}r^{n+2}\Delta f(0)+o(r^{2+n}) $
 
 Finally, rearranging and taking $ {r\rightarrow0^{+}}$, we get  
 
-$ \displaystyle \Delta f(0)=\lim\_{r\rightarrow0^{+}}\frac{1}{c\_{n}r^{n+2}}\int\_{B\_{r}}(f(x)-f(0)dx. $
+$ \displaystyle \Delta f(0)=\lim_{r\rightarrow0^{+}}\frac{1}{c_{n}r^{n+2}}\int_{B_{r}}(f(x)-f(0)dx. $
 
 This says the laplacian $ {\Delta f(0)}$ measures the second order rate of change of the averages with respect to the radius (the first order vanishes, due to symmetry of the domain). One can expect the solutions to the Laplace equation  
 
@@ -67,47 +67,47 @@ $ \displaystyle \Delta u=0 $
 
 namely the *harmonic functions*, enjoy a kind of *mean value property*. Indeed, we have the following characterisation of harmonic functions:  
 
-$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S\_{r}(x)}u(y)dS(y)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{B\_{r}(x)}u(y)dy      (2)$
+$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S_{r}(x)}u(y)dS(y)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint_{B_{r}(x)}u(y)dy      (2)$
 
-where we assume $ {u\in\mathcal{C}^{2}(\Omega)}$, and $ {\textstyle \def\avint{\mathop{\rlap{\raise.15em{\scriptstyle -}}\kern-.2em\int}\nolimits} \avint\_{A}}$ means averaged integral $ {{\displaystyle \frac{1}{|A|}\int\_{A}}}$. Changing the equality in ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) to  
+where we assume $ {u\in\mathcal{C}^{2}(\Omega)}$, and $ {\textstyle \def\avint{\mathop{\rlap{\raise.15em{\scriptstyle -}}\kern-.2em\int}\nolimits} \avint_{A}}$ means averaged integral $ {{\displaystyle \frac{1}{|A|}\int_{A}}}$. Changing the equality in ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) to  
 
-$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{S\_{r}(x)}u(y)dS(y) $
+$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint_{S_{r}(x)}u(y)dS(y) $
 
 we obtain a characterisation of *subharmonic functions*.  
 
 > **Proposition 1** *(Characterisation of subharmonic functions) Let $ {u\in\mathcal{C}^{2}(\Omega)}$, $ {x\in\Omega}$. Then $ {\Delta u\geq0}$ if and only if*  
 > 
-> *$ \displaystyle u(x)\leq \def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S\_{r}(x)}u(y)dS(y) $*
+> *$ \displaystyle u(x)\leq \def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S_{r}(x)}u(y)dS(y) $*
 > 
-> *for all $ {r}$ such that $ {S\_{r}(x)\subset\Omega}$. The same holds true if we replace $ {S\_{r}(x)}$ by $ {B\_{r}(x)}$.*
+> *for all $ {r}$ such that $ {S_{r}(x)\subset\Omega}$. The same holds true if we replace $ {S_{r}(x)}$ by $ {B_{r}(x)}$.*
 
-*Proof:* If $ {u\in\mathcal{C}^{2}(\Omega)}$ with $ {\Delta u\geq0}$ in $ {\Omega}$, and $ {B\_{r}(x)\subset\Omega}$, then the Stoke's theorem implies that  
+*Proof:* If $ {u\in\mathcal{C}^{2}(\Omega)}$ with $ {\Delta u\geq0}$ in $ {\Omega}$, and $ {B_{r}(x)\subset\Omega}$, then the Stoke's theorem implies that  
 
-$ \displaystyle \begin{array}{rcl} \int\_{B\_{r}(x)}\Delta udx & = & \int\_{S\_{r}(x)}\frac{\partial u}{\partial\nu}dS\\ & = & r^{n-1}\int\_{S\_{1}(0)}\frac{\partial u}{\partial r}(x+ry)dS(y)\\ & = & r^{n-1}\frac{\partial}{\partial r}\int\_{S\_{1}(0)}u(x+ry)dS(y)\geq0 \end{array} $
+$ \displaystyle \begin{array}{rcl} \int_{B_{r}(x)}\Delta udx & = & \int_{S_{r}(x)}\frac{\partial u}{\partial\nu}dS\\ & = & r^{n-1}\int_{S_{1}(0)}\frac{\partial u}{\partial r}(x+ry)dS(y)\\ & = & r^{n-1}\frac{\partial}{\partial r}\int_{S_{1}(0)}u(x+ry)dS(y)\geq0 \end{array} $
 
-Since $ {u}$ is differentiable, $ {\int\_{S\_{r}(x)}u(x)\rightarrow u(x)}$ as $ {r\rightarrow0^{+}}$, hence we obtain  
+Since $ {u}$ is differentiable, $ {\int_{S_{r}(x)}u(x)\rightarrow u(x)}$ as $ {r\rightarrow0^{+}}$, hence we obtain  
 
-$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{S\_{r}(x)}u(y)dS(y). $
+$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint_{S_{r}(x)}u(y)dS(y). $
 
-Conversely, if $ {\Delta u(x\_{0})\leq0}$ for some $ {x\_{0}\in\Omega}$, then the above argument shows that in a small neighborhood of $ {x\_{0}}$ the average is decreasing. $ \Box$  
+Conversely, if $ {\Delta u(x_{0})\leq0}$ for some $ {x_{0}\in\Omega}$, then the above argument shows that in a small neighborhood of $ {x_{0}}$ the average is decreasing. $ \Box$  
 
 In light of this characterisation, we may now *define* subharmonic functions, or in other words $ {\Delta u\geq0}$, in a *weak* sense, to be the functions $ {u}$ such that  
 
-$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{S\_{r}(x)}u(y)dS(y) $
+$ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint_{S_{r}(x)}u(y)dS(y) $
 
-is satisfied, for for all $ {r}$ such that $ {S\_{r}(x)\subset\Omega}$. Equivalently we may replace $ {S\_{r}(x)}$ by $ {B\_{r}(x)}$. One can show that under this definition the subharmonic functions are in general only *upper semi-continuous*. We can also define *superharmonic functions* to be the functions $ {u}$ such that $ {-u}$ is subharmonic. It follows that they are *lower semi-continuous*. Thus we see that if a function $ {u}$ is both subharmonic and superharmonic in the weak sense, then $ {u}$ will satisfy the mean value property  
+is satisfied, for for all $ {r}$ such that $ {S_{r}(x)\subset\Omega}$. Equivalently we may replace $ {S_{r}(x)}$ by $ {B_{r}(x)}$. One can show that under this definition the subharmonic functions are in general only *upper semi-continuous*. We can also define *superharmonic functions* to be the functions $ {u}$ such that $ {-u}$ is subharmonic. It follows that they are *lower semi-continuous*. Thus we see that if a function $ {u}$ is both subharmonic and superharmonic in the weak sense, then $ {u}$ will satisfy the mean value property  
 
-$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{S\_{r}(x)}u(y)dS(y) $
+$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint_{S_{r}(x)}u(y)dS(y) $
 
 or in other words, $ {\Delta u=0}$ in a weak sense, and $ {u}$ will be continuous (so even *weakly harmonic* functions are smooth). We shall illustrate some usefulness of this formulation.  
 
 > **Theorem 2** *(Maximal principle) Suppose $ {\Omega\subset\mathbb{R}^{n}}$ is open and bounded. If $ {u}$ is subharmonic in $ {\Omega}$ and $ {u\in\mathcal{C}(\overline{\Omega})}$, then*  
 > 
-> *$ \displaystyle \max\_{\partial\Omega}u=\max\_{\overline{\Omega}}u. $*
+> *$ \displaystyle \max_{\partial\Omega}u=\max_{\overline{\Omega}}u. $*
 
-*Proof:* Suppose $ {x\_{0}\in\Omega}$ is such that $ {u(x\_{0})=\max\_{\overline{\Omega}}u=M.}$ Then the mean value property says that  
+*Proof:* Suppose $ {x_{0}\in\Omega}$ is such that $ {u(x_{0})=\max_{\overline{\Omega}}u=M.}$ Then the mean value property says that  
 
-$ \displaystyle M=u(x\_{0})\leq\int\_{B\_{r}(x)}u(y)dy\leq M. $
+$ \displaystyle M=u(x_{0})\leq\int_{B_{r}(x)}u(y)dy\leq M. $
 
 Hence the set $ {\{x\in\Omega:u(x)=M\}}$ is both open and relatively closed. It follows that $ {u}$ is constant in $ {\Omega}$ and hence in $ {\overline{\Omega}}$ by continuity. $ \Box$  
 
@@ -137,37 +137,37 @@ where $ {F:\Omega\times\mathbb{R}\times\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is 
 
 $ \displaystyle u+H(x,\nabla u)=0. $
 
-To motivate the notions, suppose $ {u\in\mathcal{C}^{1}(\Omega)}$ is a classical *subsolution* at $ {x\_{0}\in\Omega}$, i.e.  
+To motivate the notions, suppose $ {u\in\mathcal{C}^{1}(\Omega)}$ is a classical *subsolution* at $ {x_{0}\in\Omega}$, i.e.  
 
 $ \displaystyle F(x,u,\nabla u)\leq0 $
 
-holds for all points in a neighborhood $ {U}$ of $ {x\_{0}}$. Let $ {\varphi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u(x\_{0})-\varphi(x\_{0})=0}$ and $ {u-\varphi}$ attains local maximum at $ {x\_{0}}$ in $ {U}$. Then calculus implies that  
+holds for all points in a neighborhood $ {U}$ of $ {x_{0}}$. Let $ {\varphi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u(x_{0})-\varphi(x_{0})=0}$ and $ {u-\varphi}$ attains local maximum at $ {x_{0}}$ in $ {U}$. Then calculus implies that  
 
-$ \displaystyle \nabla u(x\_{0})=\nabla\varphi(x\_{0}) $
+$ \displaystyle \nabla u(x_{0})=\nabla\varphi(x_{0}) $
 
 and hence  
 
-$ \displaystyle F(x\_{0},u,\nabla u)=F(x\_{0},\varphi,\nabla\varphi)\leq0      (4)$
+$ \displaystyle F(x_{0},u,\nabla u)=F(x_{0},\varphi,\nabla\varphi)\leq0      (4)$
 
-in $ {U}$. Similarly, if $ {u}$ is a classical *supersolution* at $ {x\_{0}}$, and let $ {\psi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u-\psi}$ attains local minimum at $ {x\_{0}}$ in $ {U}$, we have  
+in $ {U}$. Similarly, if $ {u}$ is a classical *supersolution* at $ {x_{0}}$, and let $ {\psi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u-\psi}$ attains local minimum at $ {x_{0}}$ in $ {U}$, we have  
 
-$ \displaystyle \nabla u(x\_{0})=\nabla\psi(x\_{0}) $
+$ \displaystyle \nabla u(x_{0})=\nabla\psi(x_{0}) $
 
 and  
 
 $ \displaystyle 0\leq F(x,\psi,\nabla\psi)=F(x,u,\nabla u)      (5)$
 
-Combining the two, we conclude that $ {u}$ is a classical solution locally at $ {x\_{0}}$. However, since a solution in the classical sense (namely, a differentiable one) to the Drichilet problem ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) does not exist in general, one seeks to formulate a "weak'' problem. In light of inequalities ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) and ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we will try to formulate their equivalents in a non-differentiable setting.  
+Combining the two, we conclude that $ {u}$ is a classical solution locally at $ {x_{0}}$. However, since a solution in the classical sense (namely, a differentiable one) to the Drichilet problem ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) does not exist in general, one seeks to formulate a "weak'' problem. In light of inequalities ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) and ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we will try to formulate their equivalents in a non-differentiable setting.  
 
 **1.4. One sided differentials**
 
 > **Definition 5** *Let $ {u:\Omega\rightarrow\mathbb{R}}$ be a function. The set of *super-differentials* of $ {u}$ at $ {x\in\Omega}$ is defined as*  
 > 
-> *$ \displaystyle D^{+}u(x):=\left\{ p\in\mathbb{R}^{n}:\limsup\_{y\rightarrow x}\frac{u(y)-u(x)-\langle p,y-x\rangle}{|y-x|}\leq0\right\} $*
+> *$ \displaystyle D^{+}u(x):=\left\{ p\in\mathbb{R}^{n}:\limsup_{y\rightarrow x}\frac{u(y)-u(x)-\langle p,y-x\rangle}{|y-x|}\leq0\right\} $*
 > 
 > *and the set of *sub-differentials* of $ {u}$ at $ {x\in\Omega}$ is defined as*  
 > 
-> *$ \displaystyle D^{-}u(x):=\left\{ p\in\mathbb{R}^{n}:\liminf\_{y\rightarrow x}\frac{u(y)-u(x)-\langle p,y-x\rangle}{|y-x|}\geq0\right\} $*
+> *$ \displaystyle D^{-}u(x):=\left\{ p\in\mathbb{R}^{n}:\liminf_{y\rightarrow x}\frac{u(y)-u(x)-\langle p,y-x\rangle}{|y-x|}\geq0\right\} $*
 
 Roughly speaking, locally the function sits below the plane situated at $ {x}$ defined by $ {p\in D^{+}u(x)}$, and sits above the plane defined by $ {p\in D^{-}u(x)}$, whenever the sets are nonempty. They are linear approximations to the behavior of the function at certain point, although they are not neccessarily unique unless the function is differentiable. But we are able to extract a lot of information, by comparing the function to the more regular ones, with the same *linear behavior* (in fact, we can even get quadratic information).  
 
@@ -183,9 +183,9 @@ Assume $ {p\in D^{+}u(x)}$. By definition, there exist $ {\delta>0}$ and a conti
 
 $ \displaystyle u(y)\leq u(x)+\langle p,y-x\rangle+\sigma(|y-x|)|y-x| $
 
-for $ {|y-x|<\delta}$. Define $ {\rho(r)=\int\_{0}^{r}\sigma(t)dt}$. We have obviously $ {\rho(0)=0}$, $ {\rho'(0)=\sigma(0)=0}$. Observe that  
+for $ {|y-x|<\delta}$. Define $ {\rho(r)=\int_{0}^{r}\sigma(t)dt}$. We have obviously $ {\rho(0)=0}$, $ {\rho'(0)=\sigma(0)=0}$. Observe that  
 
-$ \displaystyle \begin{array}{rcl} \rho(2r) & = & \int\_{0}^{2r}\sigma(t)dt\\ & \geq & \int\_{0}^{r}\sigma(t)dt+r\sigma(r)\geq r\sigma(r) \end{array} $
+$ \displaystyle \begin{array}{rcl} \rho(2r) & = & \int_{0}^{2r}\sigma(t)dt\\ & \geq & \int_{0}^{r}\sigma(t)dt+r\sigma(r)\geq r\sigma(r) \end{array} $
 
 since $ {\sigma}$ is increasing. Hence the function  
 
@@ -201,7 +201,7 @@ $ \displaystyle u(y)-\varphi(x)\leq\sigma(|y-x|)|y-x|-\rho(2|x-y|)\leq0 $
 
 Hence $ {u-\varphi}$ attains a local maximum at $ {x}$. By posibly adding $ {|x-y|^{2}}$ to $ {\varphi(x)}$, we get that $ {u-\varphi}$ attains a strict local maximum at $ {x}$. $ \Box$  
 
-> **Remark 1** *In the following we would be considering the simple scenario when a sequence of solutions $ {u\_{m}\rightarrow u}$ converging uniformly. We would prefer strict local extrema because they are more stable under small perturbations. Imagine in a long and flat valley where any point could be chosen as a local minimum. Then it is clear that by a small perturbation one could get a drastically different location for the new local minimum. But if $ {x}$ is a strict local maximum of $ {u-\varphi}$, one can show that there is a sequence of points $ {x\_{m}\rightarrow x}$ such that $ {u\_{m}-\varphi}$ has a local maximum at $ {x\_{m}}$ for all $ {m}$ large enough.*
+> **Remark 1** *In the following we would be considering the simple scenario when a sequence of solutions $ {u_{m}\rightarrow u}$ converging uniformly. We would prefer strict local extrema because they are more stable under small perturbations. Imagine in a long and flat valley where any point could be chosen as a local minimum. Then it is clear that by a small perturbation one could get a drastically different location for the new local minimum. But if $ {x}$ is a strict local maximum of $ {u-\varphi}$, one can show that there is a sequence of points $ {x_{m}\rightarrow x}$ such that $ {u_{m}-\varphi}$ has a local maximum at $ {x_{m}}$ for all $ {m}$ large enough.*
 
 The formulation in Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemequiv%20def) allows us to do some quick check about our intuitions.  
 
@@ -215,19 +215,19 @@ The formulation in Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691
 > -   The sets $ {\Omega^{+}=\{x\in\Omega:D^{+}u(x)\neq\emptyset\}}$ and $ {\Omega^{-}=\{x\in\Omega:D^{-}u(x)\neq\emptyset\}}$ are dense in $ {\Omega}$.*
 
 *Proof:* To see (1), assume $ {u}$ is differentiable at $ {x}$. Then $ {\nabla u(x)\in D^{+}u(x)}$ is obvious. Suppose a $ {\mathcal{C}^{1}}$ function $ {\varphi}$ is such that $ {u-\varphi}$ attains local maximum at $ {x}$. Then calculus implies that $ {\nabla\varphi(x)=\nabla u(x)}$. For $ {D^{-1}u(x)}$ the argument is the same.  
-For (2), if $ {p\in D^{+}u(x)\cap D^{-}u(x)}$, then there exist $ {\mathcal{C}^{1}}$ functions $ {\varphi\_{1}}$, $ {\varphi\_{2}}$ and $ {\delta>0}$ such that for all $ {|x-y|<\delta}$,  
+For (2), if $ {p\in D^{+}u(x)\cap D^{-}u(x)}$, then there exist $ {\mathcal{C}^{1}}$ functions $ {\varphi_{1}}$, $ {\varphi_{2}}$ and $ {\delta>0}$ such that for all $ {|x-y|<\delta}$,  
 
-$ \displaystyle \varphi\_{1}(y)\leq u(y)\leq\varphi\_{2}(y) $
+$ \displaystyle \varphi_{1}(y)\leq u(y)\leq\varphi_{2}(y) $
 
 and the equality holds when $ {y=x}$. Then  
 
-$ \displaystyle   p=\liminf\_{y\rightarrow x}\frac{\varphi\_{1}(y)-\varphi\_{1}(x)}{|y-x|}\leq\liminf\_{y\rightarrow x}\frac{u(y)-u(x)}{|y-x|}\leq\limsup\_{y\rightarrow x}\frac{\varphi\_{2}(y)-\varphi\_{2}(x)}{|y-x|}=p $
+$ \displaystyle   p=\liminf_{y\rightarrow x}\frac{\varphi_{1}(y)-\varphi_{1}(x)}{|y-x|}\leq\liminf_{y\rightarrow x}\frac{u(y)-u(x)}{|y-x|}\leq\limsup_{y\rightarrow x}\frac{\varphi_{2}(y)-\varphi_{2}(x)}{|y-x|}=p $
 
-shows that $ {u}$ is differentiable at $ {x}$. Finally, to show that $ {\Omega^{+}}$ is dense, for all $ {B(x\_{0},\epsilon)\subset\Omega}$ we need to find $ {y\in\Omega^{+}\cap B(x\_{0},\epsilon)}$. To this end we consider the function  
+shows that $ {u}$ is differentiable at $ {x}$. Finally, to show that $ {\Omega^{+}}$ is dense, for all $ {B(x_{0},\epsilon)\subset\Omega}$ we need to find $ {y\in\Omega^{+}\cap B(x_{0},\epsilon)}$. To this end we consider the function  
 
-$ \displaystyle \varphi(x)=\frac{1}{\epsilon^{2}-|x-x\_{0}|^{2}} $
+$ \displaystyle \varphi(x)=\frac{1}{\epsilon^{2}-|x-x_{0}|^{2}} $
 
-so that $ {\varphi(x)\rightarrow+\infty}$ as $ {x}$ approches $ {\partial B(x\_{0},\epsilon)}$. Hence $ {u-\varphi}$ must attain a maximum, say at $ {y\in B(x\_{0},\epsilon)}$. Then $ {\nabla\varphi(y)\in D^{+}u(y)}$ by Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemequiv%20def). The proof for $ {\Omega^{-}}$ is the same. $ \Box$  
+so that $ {\varphi(x)\rightarrow+\infty}$ as $ {x}$ approches $ {\partial B(x_{0},\epsilon)}$. Hence $ {u-\varphi}$ must attain a maximum, say at $ {y\in B(x_{0},\epsilon)}$. Then $ {\nabla\varphi(y)\in D^{+}u(y)}$ by Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemequiv%20def). The proof for $ {\Omega^{-}}$ is the same. $ \Box$  
 
 **1.5. Viscosity solutions**
 
@@ -254,15 +254,15 @@ The definition encompasses several situations. Notice that, using Lemma [7](http
 > *$ \displaystyle u(x)=1-|x| $*
 > 
 > *is a viscosity solution. Any other "weak'' solution will have a local minimum in the interior $ {(-1,1)}$, where it is not differentiable. It is at such points the requirement for a supersolution fails. The viscosity solution is in fact unique, which we can easily derive form a *comparison principle* that we will illustrate later.  
-> Similarly, notice also that the solutions to the viscosity approximations can never have a local minimum. Indeed, let us suppose $ {x\_{1}\in(-1,1)}$ is a local minimum of $ {u^{\epsilon}}$. Then  
+> Similarly, notice also that the solutions to the viscosity approximations can never have a local minimum. Indeed, let us suppose $ {x_{1}\in(-1,1)}$ is a local minimum of $ {u^{\epsilon}}$. Then  
 > *  
 > 
-> *$ \displaystyle |u^{\epsilon}(x\_{1})|-1=-1=\epsilon u\_{xx}^{\epsilon}>0 $*
+> *$ \displaystyle |u^{\epsilon}(x_{1})|-1=-1=\epsilon u_{xx}^{\epsilon}>0 $*
 > 
 > *is a contradiction. There is also a somewhat important asymmetry, appearing both in the definition of viscosity solution, as well as finding the solutions of viscosity approximation: if we replace Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) with  
 > *  
 > 
-> *$ \displaystyle 1-|u\_{x}|=0, $*
+> *$ \displaystyle 1-|u_{x}|=0, $*
 > 
 > *there is virtually no change of the equation itself, but the viscosity solution, as well as the solutions to the viscosity approximation are "flipped''. In particular, they can never have local maximum.  
 >   
@@ -270,11 +270,11 @@ The definition encompasses several situations. Notice that, using Lemma [7](http
 
 It is plasuible to believe, and in fact it is true, that the solution obtained by vanishing viscosity will coincide with our viscosity solution. To get this result, we need a lemma concerning the stability of viscosity solutions.  
 
-> **Lemma 10** *If $ {u\_{m}\in\mathcal{C}(\overline{\Omega})}$ is a sequence of viscosity subsolutions to*  
+> **Lemma 10** *If $ {u_{m}\in\mathcal{C}(\overline{\Omega})}$ is a sequence of viscosity subsolutions to*  
 > 
-> *$ \displaystyle F\_{m}(x,u\_{m},\nabla u\_{m})=0\quad x\in\Omega $*
+> *$ \displaystyle F_{m}(x,u_{m},\nabla u_{m})=0\quad x\in\Omega $*
 > 
-> *such that $ {u\_{m}\rightarrow u}$ uniformly, and $ {F\_{m}\rightarrow F}$ locally uniformly, then $ {u}$ is a viscosity subsolution of [(3)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3).*
+> *such that $ {u_{m}\rightarrow u}$ uniformly, and $ {F_{m}\rightarrow F}$ locally uniformly, then $ {u}$ is a viscosity subsolution of [(3)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3).*
 
 > **Theorem 11** *Let $ {u^{\epsilon}}$ be a family of smooth subsolutions to the viscous equation*  
 > 
@@ -296,30 +296,30 @@ where $ {\omega:[0,\infty)\rightarrow[0,\infty)}$ is such that $ {\omega(r)\righ
 
 $ \displaystyle u(x)=g(x)\quad x\in\partial\Omega. $
 
-We are now interested in the uniqueness problem. As before, let us assume we have a classical subsolution $ {u\_{1}}$ and a supersolution $ {u\_{2}}$ such that  
+We are now interested in the uniqueness problem. As before, let us assume we have a classical subsolution $ {u_{1}}$ and a supersolution $ {u_{2}}$ such that  
 
-$ \displaystyle u\_{1}(x)\leq u(x)\quad x\in\partial\Omega. $
+$ \displaystyle u_{1}(x)\leq u(x)\quad x\in\partial\Omega. $
 
-And suppose $ {u\_{1}-u\_{2}}$ attains a positive local maximum at $ {x\_{0}}$ in the interior $ {\Omega}$. Then calculus shows that  
+And suppose $ {u_{1}-u_{2}}$ attains a positive local maximum at $ {x_{0}}$ in the interior $ {\Omega}$. Then calculus shows that  
 
-$ \displaystyle \nabla u\_{1}(x\_{0})=\nabla u\_{2}(x\_{0}). $
+$ \displaystyle \nabla u_{1}(x_{0})=\nabla u_{2}(x_{0}). $
 
 On the other hand, we have  
 
-$ \displaystyle \begin{array}{rcl} u\_{1}(x\_{0})+H(x\_{0},\nabla u\_{1}(x\_{0})) & \leq & 0\\ u\_{2}(x\_{0})+H(x\_{0},\nabla u\_{2}(x\_{0})) & \geq & 0 \end{array} $
+$ \displaystyle \begin{array}{rcl} u_{1}(x_{0})+H(x_{0},\nabla u_{1}(x_{0})) & \leq & 0\\ u_{2}(x_{0})+H(x_{0},\nabla u_{2}(x_{0})) & \geq & 0 \end{array} $
 
 So, subtracting the second from the first, we get  
 
-$ \displaystyle u\_{1}(x\_{0})-u\_{2}(x\_{0})\leq0 $
+$ \displaystyle u_{1}(x_{0})-u_{2}(x_{0})\leq0 $
 
-This is a contradiction. Hence we conclude that $ {u\_{1}(x)\leq u\_{2}(x)}$ also in the interior. The above idea can be carried over to the non-differentiable setting. For example, there is essentially no change of argument if we have $ {u\_{1}(x\_{0})-u\_{2}(x\_{0})>0}$ and $ {p\in D^{+}u\_{1}(x\_{0})\cap D^{-}u\_{2}(x\_{0})}$, because by definition of viscosity subsolution, we still have  
+This is a contradiction. Hence we conclude that $ {u_{1}(x)\leq u_{2}(x)}$ also in the interior. The above idea can be carried over to the non-differentiable setting. For example, there is essentially no change of argument if we have $ {u_{1}(x_{0})-u_{2}(x_{0})>0}$ and $ {p\in D^{+}u_{1}(x_{0})\cap D^{-}u_{2}(x_{0})}$, because by definition of viscosity subsolution, we still have  
 
-$ \displaystyle \begin{array}{rcl} u\_{1}(x\_{0})+H(x\_{0},p) & \leq & 0\\ u\_{2}(x\_{0})+H(x\_{0},p) & \geq & 0. \end{array} $
+$ \displaystyle \begin{array}{rcl} u_{1}(x_{0})+H(x_{0},p) & \leq & 0\\ u_{2}(x_{0})+H(x_{0},p) & \geq & 0. \end{array} $
 
-But there is no guarantee that $ {D^{+}u\_{1}(x\_{0})\cap D^{-}u\_{2}(x\_{0})}$ is non-empty. So we are facing some technical delicacies here. The argument to get around this issue is known as "doubling the variables''.  
+But there is no guarantee that $ {D^{+}u_{1}(x_{0})\cap D^{-}u_{2}(x_{0})}$ is non-empty. So we are facing some technical delicacies here. The argument to get around this issue is known as "doubling the variables''.  
 
-> **Theorem 12** *Let $ {u\_{1}}$, $ {u\_{2}\in\mathcal{C}(\overline{\Omega})}$ be viscosity subsolution and supersolution of [(6)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7). Suppose that $ {u\_{1}(x)\leq u\_{2}(x)}$ for all $ {x\in\partial\Omega}$. Then*  
+> **Theorem 12** *Let $ {u_{1}}$, $ {u_{2}\in\mathcal{C}(\overline{\Omega})}$ be viscosity subsolution and supersolution of [(6)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7). Suppose that $ {u_{1}(x)\leq u_{2}(x)}$ for all $ {x\in\partial\Omega}$. Then*  
 > 
-> *$ \displaystyle u\_{1}(x)\leq u\_{2}(x)\quad\forall x\in\overline{\Omega} $*
+> *$ \displaystyle u_{1}(x)\leq u_{2}(x)\quad\forall x\in\overline{\Omega} $*
 
 We thus refer to the excellent proof provided in the notes of Bressan.

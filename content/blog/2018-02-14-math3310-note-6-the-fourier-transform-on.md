@@ -8,11 +8,11 @@ publish: true
 ---
 In many ways the Fourier transform on $ {\mathbb{R}}$  
 
-$ \displaystyle f(x)\mapsto\hat{f}(\omega):=\int\_{\mathbb{R}}f(x)e^{-i\omega x}dx,\quad x,\omega\in\mathbb{R} $
+$ \displaystyle f(x)\mapsto\hat{f}(\omega):=\int_{\mathbb{R}}f(x)e^{-i\omega x}dx,\quad x,\omega\in\mathbb{R} $
 
 is similar to the transformation that gets us the Fourier coefficient of a function on $ {[0,2\pi]}$  
 
-$ \displaystyle f(x)\mapsto\hat{f}(n)=\frac{1}{2\pi}\int\_{[0,2\pi]}f(x)e^{-inx}dx,\quad x\in[0,2\pi],n\in\mathbb{Z}. $
+$ \displaystyle f(x)\mapsto\hat{f}(n)=\frac{1}{2\pi}\int_{[0,2\pi]}f(x)e^{-inx}dx,\quad x\in[0,2\pi],n\in\mathbb{Z}. $
 
 We shall see these similarities and comparisons later on. But first of all, just like the study of Fourier series, we need to make clear what is the object of study in the context of Fourier transfrom on $ {\mathbb{R}}$:  
 
@@ -27,7 +27,7 @@ The Fourier transform is easily seen to be a linear transform. Let us see three 
 
 > **Example 1** *$ {\:}$*  
 > 
-> *-   The Fourier transform of the \`\`Dirac delta function'' at the origin $ {\delta\_{0}(x)}$ is
+> *-   The Fourier transform of the \`\`Dirac delta function'' at the origin $ {\delta_{0}(x)}$ is
 >     
 >     $ \\displaystyle \\int\_{\\mathbb{R}}\\delta\_{0}(x)e^{-i\\omega x}dx=e^{0}=1. $
 >     
@@ -37,7 +37,7 @@ The Fourier transform is easily seen to be a linear transform. Let us see three 
 >     
 >     where $ {a>0}$, is
 >     
->     $ \displaystyle \begin{array}{rcl} \hat{f}(x) & = & \int\_{-\infty}^{0}e^{ax}e^{-i\omega x}dx+\int\_{0}^{\infty}e^{-ax}e^{-i\omega x}dx\\ & = & \frac{1}{a-i\omega}+\frac{1}{a+i\omega}\\ & = & \frac{2a}{a^{2}+\omega^{2}}. \end{array} $
+>     $ \displaystyle \begin{array}{rcl} \hat{f}(x) & = & \int_{-\infty}^{0}e^{ax}e^{-i\omega x}dx+\int_{0}^{\infty}e^{-ax}e^{-i\omega x}dx\\ & = & \frac{1}{a-i\omega}+\frac{1}{a+i\omega}\\ & = & \frac{2a}{a^{2}+\omega^{2}}. \end{array} $
 >     
 > -   The Fourier transform of the Gaussian function
 >     
@@ -50,7 +50,7 @@ The Fourier transform is easily seen to be a linear transform. Let us see three 
 
 > **Remark 1** *In fact, the function*  
 > 
-> *$ \displaystyle P\_{a}(x)=\frac{1}{\pi}\frac{a}{a^{2}+x^{2}} $*
+> *$ \displaystyle P_{a}(x)=\frac{1}{\pi}\frac{a}{a^{2}+x^{2}} $*
 > 
 > *is called the Poisson kernel on the real line $ {\mathbb{R}}$. Try to connect what you know about approximation of the delta function with the above Example.*
 
@@ -67,7 +67,7 @@ $ \displaystyle f(x)=\frac{1}{2\pi}\int\hat{f}(\omega)e^{ix\omega}d\omega. $
 
 Now you can compare this with the Fourier series $ {f:[0,2\pi]\rightarrow\mathbb{C}}$  
 
-$ \displaystyle f(x)=\sum\_{n\in\mathbb{Z}}\hat{f}(n)e^{inx}. $
+$ \displaystyle f(x)=\sum_{n\in\mathbb{Z}}\hat{f}(n)e^{inx}. $
 
 We can still think of the function as a superposition of different freqeuncies, $ {e^{ix\omega}}$, each with coefficient $ {\hat{f}(\omega)}$, only that the sum is replaced by an integral. Of course, $ {e^{ix\omega}}$, with variable in $ {x}$, oscillate very much when $ {\omega}$ is large, and is smooth when $ {\omega}$ is small. And the Fourier transform evaluated at $ {\omega}$ just shows how much this frequency is present in the function.  
 Many intuitions about Fourier coefficient thus still hold about the Fourier transform.  
@@ -76,30 +76,30 @@ Many intuitions about Fourier coefficient thus still hold about the Fourier tran
 > 
 > 1.  For a function $ {f:[0,2\pi]\rightarrow\mathbb{C}}$, its zero-th Fourier coefficient $ {\hat{f}(0)}$ is the average of the function $ {f}$ up to dividing by $ {2\pi}$ 
 >     
->     $ \displaystyle \hat{f}(0)=\frac{1}{2\pi}\int\_{[0,2\pi]}f(x)dx. $
+>     $ \displaystyle \hat{f}(0)=\frac{1}{2\pi}\int_{[0,2\pi]}f(x)dx. $
 >     
 > 2.  For a function $ {f:\mathbb{R}\rightarrow\mathbb{C}}$, its Fourier transform evaluated at $ {0}$ is the average of the function 
 >     
->     $ \displaystyle \hat{f}(0)=\int\_{\mathbb{R}}f(x)dx. $ 
+>     $ \displaystyle \hat{f}(0)=\int_{\mathbb{R}}f(x)dx. $ 
 >     
 
 **Interaction with convolution.** We can define convolution of two functions on $ {\mathbb{R}}$,  
 
-$ \displaystyle f\*g(x)=\int\_{\mathbb{R}}f(y)g(x-y)dy $
+$ \displaystyle f*g(x)=\int_{\mathbb{R}}f(y)g(x-y)dy $
 
 whenever the right hand side makes sense (convergent). With straightforward computations we can show  
 
-> **Exercise 2**    *$ {\hat{f}(\omega)\hat{g}(\omega)=\widehat{f\*g}(\omega).}$*
+> **Exercise 2**    *$ {\hat{f}(\omega)\hat{g}(\omega)=\widehat{f*g}(\omega).}$*
 
 Of course this is in spirit the same with the result about the Fourier coefficients. Here we have essentially the same interpretation: the Fourier transform on $ {\mathbb{R}}$ diagonalizes convolution on $ {\mathbb{R}}$.  
 
 **The "unitarity" of the Fourier transform.** Just as in the case of Fourier series, where we have, for a function $ {f:[0,2\pi]\rightarrow\mathbb{C}}$,  
 
-$ \displaystyle \int\_{[0,2\pi]}|f(x)|^{2}dx=2\pi\sum\_{n\in\mathbb{Z}}|\hat{f}(n)|^{2}. $
+$ \displaystyle \int_{[0,2\pi]}|f(x)|^{2}dx=2\pi\sum_{n\in\mathbb{Z}}|\hat{f}(n)|^{2}. $
 
 in the situation of the Fourier transform, we have  
 
-> **Exercise 3**    *$ {2\pi\int\_{\mathbb{R}}|f(x)|^{2}dx=\int\_{\mathbb{R}}|\hat{f}(\omega)|^{2}d\omega}$. (Hint: use Exercise [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#exer4).)*
+> **Exercise 3**    *$ {2\pi\int_{\mathbb{R}}|f(x)|^{2}dx=\int_{\mathbb{R}}|\hat{f}(\omega)|^{2}d\omega}$. (Hint: use Exercise [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#exer4).)*
 
 The right way to see this is to interprete the mapping  
 
@@ -109,13 +109,13 @@ as a unitary mapping, where the mapping is unitary means it preserves the Hermit
 
 **Solving differential equations using Fourier transform.** Because the in the Fourier transform, one must use the whole real line the compute the integral  
 
-$ \displaystyle \hat{f}(\omega)=\int\_{\mathbb{R}}f(x)e^{-i\omega x}dx, $
+$ \displaystyle \hat{f}(\omega)=\int_{\mathbb{R}}f(x)e^{-i\omega x}dx, $
 
 the differential equation that can be solved is always on $ {\mathbb{R}}$, that means there is no boundary term. Because of our object of study is function with \`\`reasonable'' decay near the inifinity, the data term and the solution must also be of such kind.  
 
 > **Exercise 4** *Solve the following heat equation on the real line by taking the Fourier transform in the spatial variable $ {x}$*  
 > 
-> *$ \displaystyle \begin{cases} \frac{\partial u}{\partial t}-\frac{\partial^{2}u}{\partial x^{2}}=0 & (t,x)\in(0,\infty)\times\mathbb{R}\\ u(0,x)=u\_{0}(x) & x\in\mathbb{R} \end{cases}. $*
+> *$ \displaystyle \begin{cases} \frac{\partial u}{\partial t}-\frac{\partial^{2}u}{\partial x^{2}}=0 & (t,x)\in(0,\infty)\times\mathbb{R}\\ u(0,x)=u_{0}(x) & x\in\mathbb{R} \end{cases}. $*
 
 **The sampling theorem.** A function $ {f:\mathbb{R}\rightarrow\mathbb{C}}$ is called $ {(-\pi,\pi)}$-*band-limited* if its Fourier transform $ {\hat{f}:\mathbb{R}\rightarrow\mathbb{C}}$ is supported inside the open interval $ {(-\pi,\pi)}$, that is
 
@@ -125,8 +125,8 @@ Intuitively, we know that this function $ {f}$ cannot oscillate too fast. What i
 
 > **Exercise 5**  
 > 
-> *-   Assume the inverse Fourier transform is valid for the function $ {f}$. Show that *$ \displaystyle f(x)=\frac{1}{2\pi}\int\_{[-\pi,\pi]}\hat{f}(\omega)e^{ix\omega}d\omega. $**  2.  Now that $ {\hat{f}}$ can be thought of as a function defined on the interval $ {[-\pi,\pi]}$, which vanishes on the two end points, we can express $ {\hat{f}}$ in terms of its Fourier series. What are the Fourier coefficients $ {\{a\_{n}\}\_{n\in\mathbb{Z}}}$ of $ {\hat{f}}$?
-> 3.  By substituting the Fourier series expression of $ {\hat{f}}$ inside the Fourier inversion, i.e.*$ \displaystyle f(x)=\frac{1}{2\pi}\int\_{[-\pi,\pi]}\left(\sum\_{n\in\mathbb{Z}}a\_{n}e^{in\omega}\right)e^{ix\omega}d\omega, $*
-> 4.  show that *$ \displaystyle f(x)=\sum\_{n\in\mathbb{Z}}f(n)\frac{\sin\pi(x-n)}{\pi(x-n)}. $*
+> *-   Assume the inverse Fourier transform is valid for the function $ {f}$. Show that *$ \displaystyle f(x)=\frac{1}{2\pi}\int_{[-\pi,\pi]}\hat{f}(\omega)e^{ix\omega}d\omega. $**  2.  Now that $ {\hat{f}}$ can be thought of as a function defined on the interval $ {[-\pi,\pi]}$, which vanishes on the two end points, we can express $ {\hat{f}}$ in terms of its Fourier series. What are the Fourier coefficients $ {\{a_{n}\}_{n\in\mathbb{Z}}}$ of $ {\hat{f}}$?
+> 3.  By substituting the Fourier series expression of $ {\hat{f}}$ inside the Fourier inversion, i.e.*$ \displaystyle f(x)=\frac{1}{2\pi}\int_{[-\pi,\pi]}\left(\sum_{n\in\mathbb{Z}}a_{n}e^{in\omega}\right)e^{ix\omega}d\omega, $*
+> 4.  show that *$ \displaystyle f(x)=\sum_{n\in\mathbb{Z}}f(n)\frac{\sin\pi(x-n)}{\pi(x-n)}. $*
 
 The above is often called the *Shannon-Nyquist sampling theorem*. We can think of $ {f(n)}$ as sampled from the original function $ {f}$. The sampling point are at the integers, where two neighboring sampling points are of distance $ {1=\frac{1}{2}\cdot\frac{\text{length}([-\pi,\pi])}{\pi}}$, which is often called the *Nyquist rate* of sampling. In real life signals may come with very high frequency, to the extent that the equipment at hand cannot capture at this reconstruction rate. This will make some different frequency appears identical to the equipment, producing the *aliasing effect*. But nevertheless, it is possible to sample certain special signals below this criticial Nyquist rate, a subject now known as *compressed sensing*.

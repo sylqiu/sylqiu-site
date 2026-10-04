@@ -26,23 +26,23 @@ The last two categories can be easily seen to be equivalent, while for the first
 
 The $ {n}$-th Fourier coefficient of a continuous function $ {f:[0,2\pi]\rightarrow\mathbb{C}}$ is usually defined as  
 
-$ \displaystyle \hat{f}(n)=\frac{1}{2\pi}\int\_{[0,2\pi]}f(x)e^{-inx}dx. $
+$ \displaystyle \hat{f}(n)=\frac{1}{2\pi}\int_{[0,2\pi]}f(x)e^{-inx}dx. $
 
 and the Fourier series of $ {f}$ is defined to be  
 
-$ \displaystyle \sum\_{n\in\mathbb{Z}}\hat{f}(n)e^{in\theta},\theta\in[0,2\pi] $
+$ \displaystyle \sum_{n\in\mathbb{Z}}\hat{f}(n)e^{in\theta},\theta\in[0,2\pi] $
 
 > **Remark 1** *We can define the Fourier coefficient of a function $ {f(y)}$ on intervals such as $ {[0,L]}$ by a change of variable $ {x=\frac{2\pi}{L}y}$ so that $ {x\in[0,2\pi]}$, and using the above definition*  
 > 
-> *$ \displaystyle \hat{f}(n)=\frac{1}{L}\int\_{[0,L]}f(y)e^{-2\pi iny/L}dy. $*
+> *$ \displaystyle \hat{f}(n)=\frac{1}{L}\int_{[0,L]}f(y)e^{-2\pi iny/L}dy. $*
 > 
-> *If the interval where the function is defined is, for example $ {[c,c+L]}$, then in the definition of its Fourier coefficient one can ignore the constant multiplicative factor $ {e^{-2\pi inc/L}}$ in $ {\frac{e^{-2\pi inc/L}}{L}\int\_{[c,c+L]}f(y)e^{-2\pi iny/L}dy}$ and take $\theta \in [0,L]$. In the following we will mainly focus on the functions defined on $ {[0,2\pi]}$ or $ {[-\pi,\pi]}$.*
+> *If the interval where the function is defined is, for example $ {[c,c+L]}$, then in the definition of its Fourier coefficient one can ignore the constant multiplicative factor $ {e^{-2\pi inc/L}}$ in $ {\frac{e^{-2\pi inc/L}}{L}\int_{[c,c+L]}f(y)e^{-2\pi iny/L}dy}$ and take $\theta \in [0,L]$. In the following we will mainly focus on the functions defined on $ {[0,2\pi]}$ or $ {[-\pi,\pi]}$.*
 
-It is important to note that the limit in $ {\sum\_{n\in\mathbb{Z}}\hat{f}(n)e^{in\theta}}$ should be understood in some appropriate sense, and for certain "bad'' functions the Fourier series of $ {f}$ does not coincide with $ {f}$. Since a rigourous study is out of the scope of this course, we will only briefly remark about this point. See Remark [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#rem1) and [3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#rem2) for details.  
+It is important to note that the limit in $ {\sum_{n\in\mathbb{Z}}\hat{f}(n)e^{in\theta}}$ should be understood in some appropriate sense, and for certain "bad'' functions the Fourier series of $ {f}$ does not coincide with $ {f}$. Since a rigourous study is out of the scope of this course, we will only briefly remark about this point. See Remark [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#rem1) and [3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#rem2) for details.  
 
 > **Exercise 1** *Let $ {C([0,2\pi],\mathbb{C})}$ denote the space of continuous, complex-valued functions. It is a vector space, which can be given the following Hermite inner product*  
 > 
-> *$ \displaystyle \langle f,g\rangle=\int\_{[0,2\pi]}f(x)\overline{g(x)}dx,\quad f,g\in C([0,2\pi],\mathbb{C}) $*
+> *$ \displaystyle \langle f,g\rangle=\int_{[0,2\pi]}f(x)\overline{g(x)}dx,\quad f,g\in C([0,2\pi],\mathbb{C}) $*
 > 
 > *where $ {\overline{g(x)}}$ is the complex conjugate of $ {g(x)}$. Check that*  
 > 
@@ -50,31 +50,31 @@ It is important to note that the limit in $ {\sum\_{n\in\mathbb{Z}}\hat{f}(n)e^{
 > 
 > *so that the Fourier series can be written as*  
 > 
-> *$ \displaystyle \sum\_{n\in\mathbb{Z}}\langle f,\frac{1}{2\pi}e^{inx}\rangle e^{in\theta} $*
+> *$ \displaystyle \sum_{n\in\mathbb{Z}}\langle f,\frac{1}{2\pi}e^{inx}\rangle e^{in\theta} $*
 
-What we have in mind here is that we have a set of "basis vectors'' $ {\{\frac{1}{2\pi}e^{inx}\}\_{n\in\mathbb{Z}}}$. These "basis vectors'' are in fact orthogonal, and the $ {n}$-th Fourier coefficient is basically the coefficient corresponding to the vector $ {\frac{1}{2\pi}e^{inx}}$.  
+What we have in mind here is that we have a set of "basis vectors'' $ {\{\frac{1}{2\pi}e^{inx}\}_{n\in\mathbb{Z}}}$. These "basis vectors'' are in fact orthogonal, and the $ {n}$-th Fourier coefficient is basically the coefficient corresponding to the vector $ {\frac{1}{2\pi}e^{inx}}$.  
 
 > **Exercise 2** *Check that for every $ {n\in\mathbb{Z}}$*  
 > 
-> *$ \displaystyle \frac{1}{2\pi}\int\_{[0,2\pi]}e^{inx}dx=\begin{cases} 1 & \text{if }n=0\\ 0 & \text{otherwise} \end{cases} $*
+> *$ \displaystyle \frac{1}{2\pi}\int_{[0,2\pi]}e^{inx}dx=\begin{cases} 1 & \text{if }n=0\\ 0 & \text{otherwise} \end{cases} $*
 
 > **Exercise 3** *Using Exercise [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#exer3), and $ {e^{inx}=\cos(nx)+i\sin(nx)}$, show that for every pair of integers $ {n,m\geq 1}$,*  
 > 
-> *$ \displaystyle \int\_{[0,2\pi]}\cos(nx)\cos(mx)dx=\begin{cases} \pi & \text{if }n=m\\ 0 & \text{otherwise} \end{cases} $*
+> *$ \displaystyle \int_{[0,2\pi]}\cos(nx)\cos(mx)dx=\begin{cases} \pi & \text{if }n=m\\ 0 & \text{otherwise} \end{cases} $*
 > 
 > *and similarly*  
 > 
-> *$ \displaystyle \int\_{[0,2\pi]}\sin(nx)\sin(mx)dx=\begin{cases} \pi & \text{if }n=m\\ 0 & \text{otherwise} \end{cases}. $*
+> *$ \displaystyle \int_{[0,2\pi]}\sin(nx)\sin(mx)dx=\begin{cases} \pi & \text{if }n=m\\ 0 & \text{otherwise} \end{cases}. $*
 > 
 > *Finally, show that*  
 > 
-> *$ \displaystyle \int\_{[0,2\pi]}\cos(nx)\sin(mx)dx=0\quad\forall n,m\in\mathbb{Z}. $*
+> *$ \displaystyle \int_{[0,2\pi]}\cos(nx)\sin(mx)dx=0\quad\forall n,m\in\mathbb{Z}. $*
 > 
 > *They are easy by observing $ {\cos(nx)=\frac{e^{inx}+e^{-inx}}{2}}$, $ {\sin(nx)=\frac{e^{inx}-e^{-inx}}{2i}}$.*
 
 > **Exercise 4** *In this exercise we show how the symmetries of a function imply certain properties of its Fourier series. Let $ {f\in C([-\pi,\pi],\mathbb{C})}$, and*  
 > 
-> *$ \displaystyle \hat{f}(n)=\frac{1}{2\pi}\int\_{[-\pi,\pi]}f(x)e^{-inx}dx $*
+> *$ \displaystyle \hat{f}(n)=\frac{1}{2\pi}\int_{[-\pi,\pi]}f(x)e^{-inx}dx $*
 > 
 >   
 > 
@@ -86,11 +86,11 @@ What we have in mind here is that we have a set of "basis vectors'' $ {\{\frac{1
 > -   Show that if $ {f}$ is odd, then $ {\hat{f}(n)+\hat{f}(-n)=0}$, so we get a sine series (with possibly complex coefficients).
 > -   Show that $ {f:[-\pi,\pi]\rightarrow\mathbb{R}}$, i.e. real valued, if and only if $ {\overline{\hat{f}(n)}=\hat{f}(-n)}$. So the coefficients of cosines and sines are real. Because of this property, if $ {f}$ is real-valued, sometimes we call
 >     
->     $ \displaystyle \hat{f}(0)+\sum\_{n=1}^{\infty}[\hat{f}(n)+\hat{f}(-n)]\cos\theta+i[\hat{f}(n)-\hat{f}(-n)]\sin\theta $
+>     $ \displaystyle \hat{f}(0)+\sum_{n=1}^{\infty}[\hat{f}(n)+\hat{f}(-n)]\cos\theta+i[\hat{f}(n)-\hat{f}(-n)]\sin\theta $
 >     
 >     the real Fourier series, and
 >     
->     $ \displaystyle \sum\_{n=-\infty}^{\infty}\hat{f}(n)e^{in\theta} $
+>     $ \displaystyle \sum_{n=-\infty}^{\infty}\hat{f}(n)e^{in\theta} $
 >     
 >     the complex Fourier series. They are seen to be equivalent expressions for $ {f\in C([-\pi,\pi],\mathbb{R})}$.*
 
@@ -98,15 +98,15 @@ What we have in mind here is that we have a set of "basis vectors'' $ {\{\frac{1
 
 This example is done in class. Let's compute its Fourier coefficients  
 
-$ \displaystyle \begin{array}{rcl} \hat{f}(n) & = & \frac{1}{2\pi}\int\_{[-\pi,\pi]}xe^{-inx}dx\\ & = & -\frac{1}{2\pi}\int\_{[-\pi,\pi]}-\frac{1}{in}e^{-inx}dx+[-x\frac{1}{2\pi in}e^{-inx}]\_{-\pi}^{\pi}\\ & = & \begin{cases} 0 & \text{if }n=0\\ -\frac{1}{in} & \text{if }n\neq0\text{ is even}\\ \frac{1}{in} & \text{if }n\text{ is odd} \end{cases}. \end{array} $
+$ \displaystyle \begin{array}{rcl} \hat{f}(n) & = & \frac{1}{2\pi}\int_{[-\pi,\pi]}xe^{-inx}dx\\ & = & -\frac{1}{2\pi}\int_{[-\pi,\pi]}-\frac{1}{in}e^{-inx}dx+[-x\frac{1}{2\pi in}e^{-inx}]_{-\pi}^{\pi}\\ & = & \begin{cases} 0 & \text{if }n=0\\ -\frac{1}{in} & \text{if }n\neq0\text{ is even}\\ \frac{1}{in} & \text{if }n\text{ is odd} \end{cases}. \end{array} $
 
 And hence its Fourier series is  
 
-$ \displaystyle \frac{1}{i}\sum\_{n\neq0}\frac{(-1)^{n-1}}{n}e^{in\theta}. $
+$ \displaystyle \frac{1}{i}\sum_{n\neq0}\frac{(-1)^{n-1}}{n}e^{in\theta}. $
 
 > **Exercise 5** *Show that the symmetric partial sum of the above series is equal to*  
 > 
-> *$ \displaystyle \frac{1}{i}\sum\_{0<|n|\leq N}\frac{(-1)^{n-1}}{n}e^{in\theta}=2\sum\_{n=1}^{N}(-1)^{n-1}\frac{\sin(n\theta)}{n} $*
+> *$ \displaystyle \frac{1}{i}\sum_{0<|n|\leq N}\frac{(-1)^{n-1}}{n}e^{in\theta}=2\sum_{n=1}^{N}(-1)^{n-1}\frac{\sin(n\theta)}{n} $*
 
 > **Exercise 6** *Show that, for every $ {\theta\in(-\pi,\pi)}$, the symmetric partial sum of the above series converges. At $ {\theta=\pm\pi}$, the limit of the series is equal to $ {0}$.*
 

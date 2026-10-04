@@ -27,7 +27,11 @@ export function fixMathTeX(tex: string): string {
     .replace(/\\\[/g, '[')
     .replace(/\\\]/g, ']')
     .replace(/\\\(/g, '(')
-    .replace(/\\\)/g, ')');
+    .replace(/\\\)/g, ')')
+    // The archive Markdown-escaped TeX metacharacters: a backslash-underscore
+    // was a subscript and backslash-star a superscript star.
+    .replace(/\\_/g, '_')
+    .replace(/\\\*/g, '*');
 }
 
 interface Span {
@@ -107,7 +111,7 @@ export function cleanBlogspotArtifacts(body: string): string {
       : raw;
     out = out.slice(0, start) + text + out.slice(end);
   }
-  return (
+  out = (
     out
       // Equation tags are meaningless without display math, and KaTeX rejects
       // them inline.
@@ -129,4 +133,18 @@ export function cleanBlogspotArtifacts(body: string): string {
       // \quad is invalid inside \text{...}.
       .replace(/(\\text\{[^}]*?)\\quad/g, '$1')
   );
+
+  // Second pass: unescape the Markdown-escaped TeX metacharacters inside
+  // each math span (backslash-underscore was a subscript, backslash-star a
+  // superscript star).
+  const tree2: any = parser.parse(out);
+  const mathSpans: Span[] = [];
+  collect(tree2, mathSpans);
+  mathSpans.sort((a, b) => b.start - a.start);
+  for (const { start, end } of mathSpans) {
+    const raw = out.slice(start, end);
+    const fixed = raw.split('\\_').join('_').split('\\*').join('*');
+    if (fixed !== raw) out = out.slice(0, start) + fixed + out.slice(end);
+  }
+  return out;
 }

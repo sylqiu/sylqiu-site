@@ -20,9 +20,9 @@ $ \displaystyle \frac{d}{dx}u(x)=f(x).      (1)$
 
 If $ {f}$ is continuous, then the fundamental theorem of calculus tells us there is a differentiable function $ {F:[0,1]\rightarrow\mathbb{R}}$ such that any function of the form $ {u=F+C}$, where $ {C}$ is a constant, is a solution. Why should there be a constant? Because the space of constant functions is inside the kernel of the *linear operator* $ {\frac{d}{dx}}$. You have to tell what you want the solution to be at the initial point $ {u(0)}$ to fix this ambiguity. In other words, you need to give a *boundary/initial condition*. Now that the differential equation with boudary condition can be thought of as a linear equation that goes infinite on one side. For example,  
 
-$ \displaystyle Au=\frac{1}{2\Delta x}\begin{bmatrix}0 & 1\\ -1 & 0 & 1\\ & -1 & 0 & 1\\ & & & & & \ddots\\ & & & & & & \ddots \end{bmatrix}\begin{bmatrix}u\_{1}\\ u\_{2}\\ u\_{3}\\ \vdots\\ \\ \end{bmatrix}=\begin{bmatrix}f\_{1}\\ f\_{2}\\ f\_{3}\\ \vdots\\ \\ \end{bmatrix}=f. $
+$ \displaystyle Au=\frac{1}{2\Delta x}\begin{bmatrix}0 & 1\\ -1 & 0 & 1\\ & -1 & 0 & 1\\ & & & & & \ddots\\ & & & & & & \ddots \end{bmatrix}\begin{bmatrix}u_{1}\\ u_{2}\\ u_{3}\\ \vdots\\ \\ \end{bmatrix}=\begin{bmatrix}f_{1}\\ f_{2}\\ f_{3}\\ \vdots\\ \\ \end{bmatrix}=f. $
 
-Note that the condition $ {u\_{0}=0}$ is built into the matrix $ {A}$! And you can convince yourself that $ {u\_{i}}$ can be solved to arbitrary $ {i\in\mathbb{N}}$ provided the $ {f\_{i}}$'s are all given. Here comes our first slogan  
+Note that the condition $ {u_{0}=0}$ is built into the matrix $ {A}$! And you can convince yourself that $ {u_{i}}$ can be solved to arbitrary $ {i\in\mathbb{N}}$ provided the $ {f_{i}}$'s are all given. Here comes our first slogan  
 
 >  **A differential operator comes with boundary conditions.** 
 
@@ -32,16 +32,16 @@ $ \displaystyle -\frac{d}{dx}=\left(\frac{d}{dx}\right)^{T}=A^{T} $
 
 (the second equality is due to our clever choice of $ {A}$, though the first equality is really the point). So what does $ {\left(\frac{d}{dx}\right)^{T}}$ mean? The transpose, or *adjoint* of a linear operator is defined via the inner product. In our case it is the operatoin of multiplying two functions and then integrate  
 
-$ \displaystyle \langle u,\varphi\rangle=\int\_{[0,1]}u(x)\varphi(x)dx, $
+$ \displaystyle \langle u,\varphi\rangle=\int_{[0,1]}u(x)\varphi(x)dx, $
 
 where $ {\varphi}$ here can be arbitrary differentiable functions. Then by integration by parts  
 
-$ \displaystyle \int\_{[0,1]}\frac{du(x)}{dx}\varphi(x)dx=\int\_{[0,1]}u(x)(-\frac{d\varphi(x)}{dx})dx+[u\varphi]\_{0}^{1}. $
+$ \displaystyle \int_{[0,1]}\frac{du(x)}{dx}\varphi(x)dx=\int_{[0,1]}u(x)(-\frac{d\varphi(x)}{dx})dx+[u\varphi]_{0}^{1}. $
 
-Notice this boundary term $ {[u\varphi]\_{0}^{1}=u(1)\varphi(1)-u(0)\varphi(0)}$. This will capture the boundary conditions of $ {-\frac{d}{dx}}$ given the boundary condition of $ {\frac{d}{dx}}$. *Homogeneous* boundary conditions will have this term to be always zero, *inhomogeneous* boundary conditions are also common and important, so we will try to be general about this.  
+Notice this boundary term $ {[u\varphi]_{0}^{1}=u(1)\varphi(1)-u(0)\varphi(0)}$. This will capture the boundary conditions of $ {-\frac{d}{dx}}$ given the boundary condition of $ {\frac{d}{dx}}$. *Homogeneous* boundary conditions will have this term to be always zero, *inhomogeneous* boundary conditions are also common and important, so we will try to be general about this.  
  To be more concrete, let's say we have $ {u(0)}$ given to the $ {\frac{du}{dx}}$. Then the boundary condition of $ {-\frac{d}{dx}}$ is such that the following identity holds  
 
-$ \displaystyle \int\_{[0,1]}\frac{du(x)}{dx}\varphi(x)dx+u(0)\varphi(0)=\int\_{[0,1]}u(x)(-\frac{d\varphi(x)}{dx})dx+u(1)\varphi(1), $
+$ \displaystyle \int_{[0,1]}\frac{du(x)}{dx}\varphi(x)dx+u(0)\varphi(0)=\int_{[0,1]}u(x)(-\frac{d\varphi(x)}{dx})dx+u(1)\varphi(1), $
 
 hence we see that $ {\varphi(1)}$ should be given to $ {\frac{-d\varphi}{dx}}$ (so that equations e.g. $ {-\frac{d\varphi}{dx}=g}$ can be solved), and nothing more. So the equality will always hold. Because the adjoint is different, we will say that the differential operator $ {\frac{d}{dx}}$ with its boundary condition is NOT *self-adjoint*.  
 
@@ -56,7 +56,7 @@ $ \displaystyle A^{T}CAu=f $
 where $ {C}$ is a diagonal matrix. Now if we are in finite dimension, $ {C=I}$, we have a very nice matrix $ {A^{T}A}$ which is always positive semidefinite. This will be also true for the differential operator provided we give it the right boundary condition.  
  OK, so what boundary conditions can be given to the differential operator, this time $ {-\frac{d}{dx}(c\frac{d}{dx})}$? Again, integrating by part gives  
 
-$ \displaystyle \begin{array}{rcl} \int-\frac{d}{dx}(c\frac{du}{dx})\varphi dx & = & \int c\frac{du}{dx}\frac{d\varphi}{dx}-[\frac{du}{dx}\varphi]\_{0}^{1}\\ & = & -\int u\frac{d}{dx}(c\frac{d\varphi}{dx})+[u\frac{d\varphi}{dx}]\_{0}^{1}-[\frac{du}{dx}\varphi]\_{0}^{1}. \end{array} $
+$ \displaystyle \begin{array}{rcl} \int-\frac{d}{dx}(c\frac{du}{dx})\varphi dx & = & \int c\frac{du}{dx}\frac{d\varphi}{dx}-[\frac{du}{dx}\varphi]_{0}^{1}\\ & = & -\int u\frac{d}{dx}(c\frac{d\varphi}{dx})+[u\frac{d\varphi}{dx}]_{0}^{1}-[\frac{du}{dx}\varphi]_{0}^{1}. \end{array} $
 
 You see the same differential operator pops out on the other side! For boundary conditions this time we have some freedom. We can specify :  
 
@@ -91,40 +91,40 @@ and in 2D it is
 
 $ \displaystyle \int|\nabla u|dxdy=\int\sqrt{\left(\frac{du}{dx}\right)^{2}+\left(\frac{du}{dy}\right)^{2}}dxdy. $
 
-(in class an $ {\epsilon>0}$ was slicked in this energy to prevent non-differentiability, and is complemented by a *data fidelity* term, which it is important in applications). And we would like to find a $ {u^{\*}}$ such that it minimizes the energy $ {E(u)}$  
+(in class an $ {\epsilon>0}$ was slicked in this energy to prevent non-differentiability, and is complemented by a *data fidelity* term, which it is important in applications). And we would like to find a $ {u^{*}}$ such that it minimizes the energy $ {E(u)}$  
 
-$ \displaystyle u^{\*}=\arg\min\_{u}J(u). $
+$ \displaystyle u^{*}=\arg\min_{u}J(u). $
 
 > **Remark 2** *For a mathematician it will be important to ask over which set the minimization is taken. Here we may settle down with the smooth functions, in any case we will be sloppy about this point since a rigorous dicussion will be out of scope.*
 
-But the idea is really simple, if $ {u^{\*}}$ is at minimum, then $ {u^{\*}+v}$ must make the energy larger for any $ {v}$. This means that the *first variation* of the energy $ {J(u)}$ must vanish. More precisely, let  
+But the idea is really simple, if $ {u^{*}}$ is at minimum, then $ {u^{*}+v}$ must make the energy larger for any $ {v}$. This means that the *first variation* of the energy $ {J(u)}$ must vanish. More precisely, let  
 
-$ \displaystyle G\_{v}(t)=J(u+tv) $
+$ \displaystyle G_{v}(t)=J(u+tv) $
 
-and $ {G\_{v}}$ will attain minimum at $ {t=0}$. This leads to the condition  
+and $ {G_{v}}$ will attain minimum at $ {t=0}$. This leads to the condition  
 
-$ \displaystyle \frac{d}{dt}G\_{v}(t)=0\quad\forall v $
+$ \displaystyle \frac{d}{dt}G_{v}(t)=0\quad\forall v $
 
 just as in the case of a function. And this is ture for any $ {v}$, it can be turned into a \`\`infinitesimal'' condition using integration by parts! This condition is a PDE, called the *Euler equation*, subject to certain boundary constraints. Typically the steps to derive this are  
 
--   Set $ {0=\frac{d}{dt}G\_{v}(t)}$ and compute its expression, move all derivatives on $ {v}$ to $ {u}$ by inegration by parts;
+-   Set $ {0=\frac{d}{dt}G_{v}(t)}$ and compute its expression, move all derivatives on $ {v}$ to $ {u}$ by inegration by parts;
 -   Use $ {v}$ is compactly supported (so that the boundary term drops out) to get the Euler equation
 -   Use $ {v}$ supported around the boundary to decide for the boundary condition.
 
 > **Exercise 1** *What is the Euler equation of the energy*  
 > 
-> *$ \displaystyle J(u)=\frac{1}{2}\int\_{[0,1]}c(x)\left(\frac{du}{dx}\right)^{2}dx-\int\_{[0,1]}fu\:dx $*
+> *$ \displaystyle J(u)=\frac{1}{2}\int_{[0,1]}c(x)\left(\frac{du}{dx}\right)^{2}dx-\int_{[0,1]}fu\:dx $*
 > 
 > *with the requirement that $ {u(0)=0}$ ? What are the boundary conditions?*
 
-**Application: cubic spline.** Here we want to talk about an important application of this principle, namely the cubic spline. It is a very common interpolation method, which means that given some data points $ {(x\_{i},y\_{i})}$, $ {i=1,\dots,n}$, you want to draw a smooth curve that goes through these points exactly once, in a prescribed order.  
+**Application: cubic spline.** Here we want to talk about an important application of this principle, namely the cubic spline. It is a very common interpolation method, which means that given some data points $ {(x_{i},y_{i})}$, $ {i=1,\dots,n}$, you want to draw a smooth curve that goes through these points exactly once, in a prescribed order.  
 Let's focus on the building block that interpolate two points. Assume that this curve is a function  
 
 $ \displaystyle u:[0,1]\rightarrow\mathbb{R}. $
 
 The energy is  
 
-$ \displaystyle J(u)=\int\_{[0,1]}\left(\frac{d^{2}u}{dx^{2}}\right)^{2}dx $
+$ \displaystyle J(u)=\int_{[0,1]}\left(\frac{d^{2}u}{dx^{2}}\right)^{2}dx $
 
 > **Exercise 2** *Show that the Euler equation of the above energy is*  
 > 
@@ -143,14 +143,14 @@ This is called the 1D *biharmonic equation*. This equation also has a physical i
 > *called the *Hermite cubic*.*
 
 Now if both the points are given and the slopes at those points are prescribed, then it is natural to use the above piecewise cubic. But what about only points are given? The idea is that we take the slopes as unknowns but require that the curve's second derivative should match up at those points, and at the start and end points the second derivatives should be zero. And we solve for the slopes.  
-Notationally, let $ {u\_{0},\dots,u\_{n}}$ be the y-coordinates of $ {n+1}$ points to be interpolated. These points are assume to have x-coordinate $ {0,1,\dots,n}$. Denote the interpolation function to be $ {u:[0,n]\rightarrow\mathbb{R}}$, and its slope at $ {0,\dots,n}$ to be $ {s\_{0},\dots,s\_{n}.}$ Recall that $ {u}$ is piecewisely a Hermite cubic.  
+Notationally, let $ {u_{0},\dots,u_{n}}$ be the y-coordinates of $ {n+1}$ points to be interpolated. These points are assume to have x-coordinate $ {0,1,\dots,n}$. Denote the interpolation function to be $ {u:[0,n]\rightarrow\mathbb{R}}$, and its slope at $ {0,\dots,n}$ to be $ {s_{0},\dots,s_{n}.}$ Recall that $ {u}$ is piecewisely a Hermite cubic.  
 
 > **Exercise 4** *Check that if $ {\frac{d^{2}u}{dx}(0)=0}$, then*  
 > 
-> *$ \displaystyle 2s\_{0}+s\_{1}=3u\_{1}-3u\_{0}. $*
+> *$ \displaystyle 2s_{0}+s_{1}=3u_{1}-3u_{0}. $*
 > 
 > *And the continuity of second derivative at $ {x=1}$ implies*  
 > 
-> *$ \displaystyle s\_{0}+4s\_{1}+s\_{2}=3u\_{2}-3u\_{0}. $*
+> *$ \displaystyle s_{0}+4s_{1}+s_{2}=3u_{2}-3u_{0}. $*
 > 
-> *Using this, write down the linear system that relates $ {s\_{0},\dots,s\_{n}}$ to $ {u\_{0},\dots,u\_{n}}$,*
+> *Using this, write down the linear system that relates $ {s_{0},\dots,s_{n}}$ to $ {u_{0},\dots,u_{n}}$,*

@@ -38,7 +38,7 @@ The discussion here roughly follows the exposition of Qiaochu. First, note that$
 
 $ \displaystyle {\displaystyle \left[\begin{array}{ccc} 1 & 0 & 0\\ 0 & \cos\theta & -\sin\theta\\ 0 & \sin\theta & \cos\theta \end{array}\right].} $
 
-In this way we see that $ {SO(3)}$ is homeomorphic to the unit tangent bundle $ {UT(S^{2})}$ of the sphere. Since the sphere is simply connected, any closed path in $ {UT(S^{2})}$, that is, a closed curve on $ {S^{2}}$ plus a unit tangent vector continuously assigned to each point of the curve, can be deformed into a trivial curve (a point) with the unit tangent goes around in the circle $ {S^{1}}$. Hence $ {\pi\_{1}(UT(S^{2}))}$ sits inside $ {\pi\_{1}(S^{1})}$ as a subgroup, namely $ {\mathbb{Z}/n\mathbb{Z}}$ for some $ {n\in\mathbb{Z}}$.  
+In this way we see that $ {SO(3)}$ is homeomorphic to the unit tangent bundle $ {UT(S^{2})}$ of the sphere. Since the sphere is simply connected, any closed path in $ {UT(S^{2})}$, that is, a closed curve on $ {S^{2}}$ plus a unit tangent vector continuously assigned to each point of the curve, can be deformed into a trivial curve (a point) with the unit tangent goes around in the circle $ {S^{1}}$. Hence $ {\pi_{1}(UT(S^{2}))}$ sits inside $ {\pi_{1}(S^{1})}$ as a subgroup, namely $ {\mathbb{Z}/n\mathbb{Z}}$ for some $ {n\in\mathbb{Z}}$.  
 
 We will see that $ {n=2}$ . This means there exists a closed path in $ {UT(S^{2})}$ such that the unit tangent goes around twice the circle and yet the path is homotopically trivial. Imagine we walk counterclockwisely along a closed path on the sphere, with our hand pointing to some tangential direction is a continuous way. This path, together with our hand direction, can be thought of as an annulus in the sphere and it is shown below.  
 
@@ -52,7 +52,7 @@ We will see that $ {n=2}$ . This means there exists a closed path in $ {UT(S^{2}
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiYnPnIUmcojJBBoDPJWiiJ0hP-P8xwsbWc5m0DbXiMQgPxc0NtaoIw19NnN0_nEfxHf2s1653U2k4rtbdFGnifIsdxOXa-nUK9vcq4JT-gkE770EEPqwFoCQD13hyrzaujwMJ383uVaYI/s1600/twotwist3.jpg)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiYnPnIUmcojJBBoDPJWiiJ0hP-P8xwsbWc5m0DbXiMQgPxc0NtaoIw19NnN0_nEfxHf2s1653U2k4rtbdFGnifIsdxOXa-nUK9vcq4JT-gkE770EEPqwFoCQD13hyrzaujwMJ383uVaYI/s1600/twotwist3.jpg)
 
-To see this, imagine in the above picture pulling the part behind the "twists'' to the front (there is nothing wrong if the annulus penetrates through itself while deforming). The usual annulus represents the situation that our hand runs around an axis only once. Hence we see that the group $ {SO(3)}$ has fundamental group $ {\mathbb{Z}\_{2}}$, and so it has a universal cover (which is a double covering), called $ {Spin(3)\cong SU(2)}$, which is then isomorphic to the unit quaternions (we won't prove these statements here, these can be found e.g. in Qiaochu's post). The converging map is just the conjugation operation by unit quaternions we have seen in the last section  
+To see this, imagine in the above picture pulling the part behind the "twists'' to the front (there is nothing wrong if the annulus penetrates through itself while deforming). The usual annulus represents the situation that our hand runs around an axis only once. Hence we see that the group $ {SO(3)}$ has fundamental group $ {\mathbb{Z}_{2}}$, and so it has a universal cover (which is a double covering), called $ {Spin(3)\cong SU(2)}$, which is then isomorphic to the unit quaternions (we won't prove these statements here, these can be found e.g. in Qiaochu's post). The converging map is just the conjugation operation by unit quaternions we have seen in the last section  
 
 $ \displaystyle \begin{array}{rcl} \pi:SU(2) & \rightarrow & SO(3)\\ q & \mapsto & q(\cdot)\bar{q}. \end{array} $
 
@@ -81,35 +81,35 @@ Since quaternions allow 3D rotations and uniform scaling to be represented as qu
 
 Let $ {f:M\rightarrow\text{Im}\mathbb{H}\cong\mathbb{R}^{3}}$ be an $ {C^{1}}$ immersion of a differentiable surface. If we start with the Euclidean structure of $ {\mathbb{R}^{3}}$, then it naturally induces a complex structure $ {J:TM\rightarrow TM}$, where $ {J^{2}=-I}$, on $ {M}$, making it a Riemann surface. Automatically, $ {f}$ is conformal. One can also work the other way around. Given $ {J}$ on $ {M}$, the conformality of an immersion $ {f:M\rightarrow\text{Im}\mathbb{H}}$ has a simple infinitesimal criterion: the existence of a map $ {N:M\rightarrow\mathbb{H}}$ such that  
 
-$ \displaystyle \*df=Ndf, $
+$ \displaystyle *df=Ndf, $
 
-where $ {df\in\Gamma(T^{\*}M\otimes f\_{\*}TM)}$ is the differential of the immersion,$ {\*df:=df\circ J}$ is minus the Hodge star operator. This is the Cauchy-Riemann equations for the immersion. $ {N}$ is the called Gauss map of the immersion, and we can check in fact $ {N}$ is a unit imaginary quaternion and  
+where $ {df\in\Gamma(T^{*}M\otimes f_{*}TM)}$ is the differential of the immersion,$ {*df:=df\circ J}$ is minus the Hodge star operator. This is the Cauchy-Riemann equations for the immersion. $ {N}$ is the called Gauss map of the immersion, and we can check in fact $ {N}$ is a unit imaginary quaternion and  
 
 $ \displaystyle N\:df=-df\:N $
 
-i.e. $ {N}$ is orthogonal to $ {f\_{\*}TM}$ in $ {\mathbb{R}^{3}}$.  
-Given a conformal immersion $ {f}$, one can also talk about the conformality of any quaternionic valued 1-form (elements of $ {\Gamma(T^{\*}M\otimes\mathbb{H})}$). In fact, there is a splitting  
+i.e. $ {N}$ is orthogonal to $ {f_{*}TM}$ in $ {\mathbb{R}^{3}}$.  
+Given a conformal immersion $ {f}$, one can also talk about the conformality of any quaternionic valued 1-form (elements of $ {\Gamma(T^{*}M\otimes\mathbb{H})}$). In fact, there is a splitting  
 
-$ \displaystyle \alpha=\alpha\_{+}+\alpha\_{-} $
+$ \displaystyle \alpha=\alpha_{+}+\alpha_{-} $
 
-where $ {\alpha\_{\pm}=\frac{1}{2}(\alpha\mp N\*\alpha)}$, so  
+where $ {\alpha_{\pm}=\frac{1}{2}(\alpha\mp N*\alpha)}$, so  
 
-$ \displaystyle \*\alpha\_{\pm}=\pm N\alpha\_{\pm}. $
+$ \displaystyle *\alpha_{\pm}=\pm N\alpha_{\pm}. $
 
 There is a natural identification of the $ {\text{Im}\mathbb{H}}$ valued anti-conformal one forms with the space of symmetric trace-free covariant 2-tensors. Due to this fact, we have an important geometric formula  
 
-$ \displaystyle dN\_{+}=-Hdf, $
+$ \displaystyle dN_{+}=-Hdf, $
 
 where $ {H}$ is the mean curvature of the immersion, which is an extrinsic geometric quantity.  
-The anti-conformal part of the shape operator $ {\omega=dN\_{-}}$ is called the Hopf form of the immersion. From this we can get the important Codazzi equation  
+The anti-conformal part of the shape operator $ {\omega=dN_{-}}$ is called the Hopf form of the immersion. From this we can get the important Codazzi equation  
 
-$ \displaystyle d\omega=2N(dH)\_{-}df. $
+$ \displaystyle d\omega=2N(dH)_{-}df. $
 
-In the case of constant mean curvature immersion it has intimate connection to the Hopf differential, aka holomorphic quadratic differentials. More precisely, a quadratic differential is a section of the symmetric square $ {K\otimes\_{\mathbb{C}}K}$ of the canonical line bundle of the Riemann surface. In local coordinate, it has representation  
+In the case of constant mean curvature immersion it has intimate connection to the Hopf differential, aka holomorphic quadratic differentials. More precisely, a quadratic differential is a section of the symmetric square $ {K\otimes_{\mathbb{C}}K}$ of the canonical line bundle of the Riemann surface. In local coordinate, it has representation  
 
 $ \displaystyle Q=\alpha dz^{2} $
 
-where $ {\alpha}$ is a complex valued function. It is the $ {(2,0)}$ component of the tensor $ {T\_{Q}=\frac{1}{2}(Q+\bar{Q})}$. And it is called holomorphic if $ {\alpha}$ is holomorphic.  
+where $ {\alpha}$ is a complex valued function. It is the $ {(2,0)}$ component of the tensor $ {T_{Q}=\frac{1}{2}(Q+\bar{Q})}$. And it is called holomorphic if $ {\alpha}$ is holomorphic.  
 
 > **Theorem 2** *The following are equivalent*  
 > 
@@ -119,11 +119,11 @@ where $ {\alpha}$ is a complex valued function. It is the $ {(2,0)}$ component o
 
 **4\. Regular homotopy and spin transform**
 
-So far we only have local descriptions of a conformal immersion. To get a global theory we consider the results on the regular homotopy classes. Two immersions into $ {\mathbb{R}^{3}}$ of a given abstract surface is called regular homotopic if they can be connected by a continuous family of immersions. A regular homotopy class is denoted by $ {[f]}$. Given a $ {\mathbb{R}^{3}}$ valued 1-form $ {\tau}$, it is always possible to find a positive matrix valued function $ {A\_{\tau}}$ such that the frame induced by $ {\tau}$ after compositing with $ {A\_{\tau}}$ becomes the canonical frame on the immersed surface. Hirsch's theorem says that any continuous $ {\mathbb{R}^{3}}$ valued 1-form with rank two is homotopic to the differential $ {df}$, thus the mapping $ {\tau\mapsto A\_{\tau}}$ descends to a bijection $ {[f]\mapsto[A\_{\tau}]\in[M,SO(3)]}$, where the latter denotes the homotopy classes of $ {SO(3)}$ valued functions on $ {M}$. By spin representation, the $ {SO(3)}$ valued function $ {A\_{\tau}}$ on any loop can be lifted into the unit quaternions. One can then find a homotopy invariant with values in $ {\{\pm1\}\cong\mathbb{Z}\_{2}}$ for $ {SO(3)}$ valued functions on $ {M}$, that is a bijection  
+So far we only have local descriptions of a conformal immersion. To get a global theory we consider the results on the regular homotopy classes. Two immersions into $ {\mathbb{R}^{3}}$ of a given abstract surface is called regular homotopic if they can be connected by a continuous family of immersions. A regular homotopy class is denoted by $ {[f]}$. Given a $ {\mathbb{R}^{3}}$ valued 1-form $ {\tau}$, it is always possible to find a positive matrix valued function $ {A_{\tau}}$ such that the frame induced by $ {\tau}$ after compositing with $ {A_{\tau}}$ becomes the canonical frame on the immersed surface. Hirsch's theorem says that any continuous $ {\mathbb{R}^{3}}$ valued 1-form with rank two is homotopic to the differential $ {df}$, thus the mapping $ {\tau\mapsto A_{\tau}}$ descends to a bijection $ {[f]\mapsto[A_{\tau}]\in[M,SO(3)]}$, where the latter denotes the homotopy classes of $ {SO(3)}$ valued functions on $ {M}$. By spin representation, the $ {SO(3)}$ valued function $ {A_{\tau}}$ on any loop can be lifted into the unit quaternions. One can then find a homotopy invariant with values in $ {\{\pm1\}\cong\mathbb{Z}_{2}}$ for $ {SO(3)}$ valued functions on $ {M}$, that is a bijection  
 
-$ \displaystyle [A\_{\tau}]\mapsto\mathbb{Z}\_{2} $
+$ \displaystyle [A_{\tau}]\mapsto\mathbb{Z}_{2} $
 
-called the "twist''. This in turn descends to a group homomorphism between first homology group and $ {\mathbb{Z}\_{2}}$, i.e. the first cohomology group with $ {\mathbb{Z}\_{2}}$ coefficient $ {H^{1}(M,\mathbb{Z}\_{2})}$. Thus the regular homotopy classes are in bijection with $ {H^{1}(M,\mathbb{Z}\_{2})}$. Having this settled, we can apply it to the differentials of two immersions. We are interested in the case that these two immersions induce the same conformal structure on $ {M}$, that means  
+called the "twist''. This in turn descends to a group homomorphism between first homology group and $ {\mathbb{Z}_{2}}$, i.e. the first cohomology group with $ {\mathbb{Z}_{2}}$ coefficient $ {H^{1}(M,\mathbb{Z}_{2})}$. Thus the regular homotopy classes are in bijection with $ {H^{1}(M,\mathbb{Z}_{2})}$. Having this settled, we can apply it to the differentials of two immersions. We are interested in the case that these two immersions induce the same conformal structure on $ {M}$, that means  
 
 $ \displaystyle d\tilde{f}=\bar{\lambda}df\lambda, $
 

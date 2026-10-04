@@ -16,7 +16,7 @@ In Riemann integration theory on $ {\mathbb{R}^{n}}$, one debuts with defining f
 
 > **Definition 1** *(Jordan measurability) A set $ {E\subset\mathbb{R}^{d}}$ is Jordan measurable if*  
 > 
-> *$ \displaystyle \sup\_{A\subset E}m(A)=\inf\_{B\supset E}m(B)      (1)$*
+> *$ \displaystyle \sup_{A\subset E}m(A)=\inf_{B\supset E}m(B)      (1)$*
 > 
 > *where $ {A}$ and $ {B}$ ranges over elementary sets. The supremum and infimum are called *inner Jordam measure* and *outer Jordan measure* respectively.*
 
@@ -27,7 +27,7 @@ Many desirable properties holds for a Jordan measure as listed in the following.
 > 
 > *-   (Boolean closure property) $ {E\cap F}$,$ {E\cup F}$, $ {E\backslash F}$ are Jordan measurable, whence finite elementary set operations on finitely many Jordan measurable sets produce jordan measurable sets. We say that Jordan measurable sets form a Boolean algebra.
 > -   (Non-negativity) $ {m(E)\geq0}$;
-> -   (Finite additivity and sub-additivity) $ {m(E\cup F)\leq m(E)+m(F)}$ with equality holds whenever $ {E\cap F=\emptyset}$. Whence $ {m(\bigcup\_{i=1}^{n}E\_{i})\leq\sum\_{i=1}^{n}m(E\_{i})}$ with equality holds whenever $ {\{E\_{i}\}}$ is mutually disjoint.
+> -   (Finite additivity and sub-additivity) $ {m(E\cup F)\leq m(E)+m(F)}$ with equality holds whenever $ {E\cap F=\emptyset}$. Whence $ {m(\bigcup_{i=1}^{n}E_{i})\leq\sum_{i=1}^{n}m(E_{i})}$ with equality holds whenever $ {\{E_{i}\}}$ is mutually disjoint.
 > -   (Monotonicity) If $ {E\subset F}$, then $ {m(E)\leq m(F)}$;
 > -   (Translation invariance) For any $ {x\in\mathbb{R}^{n}}$, $ {E+x}$ is Jordan measurable, and $ {m(E+x)=m(E)}$.*
 
@@ -53,19 +53,19 @@ As in the case for Jordan measure, we first assign a volume $ {|\cdot|}$ to ever
 
 > **Definition 4** *(Lebesgue outer measure) Let $ {E\subset\mathbb{R}^{n}}$ be any subset. The Lebesgue outer measure of $ {E}$ is defined to be*  
 > 
-> *$ \displaystyle m^{\*}(E)=\inf\_{\bigcup\_{i=1}^{\infty}B\_{i}\supset E}\sum\_{i=1}^{\infty}|B\_{i}| $*
+> *$ \displaystyle m^{*}(E)=\inf_{\bigcup_{i=1}^{\infty}B_{i}\supset E}\sum_{i=1}^{\infty}|B_{i}| $*
 > 
-> *where $ {B\_{i}}$ are open boxes.*
+> *where $ {B_{i}}$ are open boxes.*
 
-Note that a Lebesgue outer measure is given to any subset of $ {\mathbb{R}^{n}}$. We see that an outer measure is a set function $ {m^{\*}:2^{\mathbb{R}^{n}}\rightarrow[0,\infty]}$. The countable sub-additivity is built into the definition, however, it is generally not true even for finite additivity (in fact, from Proposition [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#proplebesgue), such sets have to be non-measurable).  
+Note that a Lebesgue outer measure is given to any subset of $ {\mathbb{R}^{n}}$. We see that an outer measure is a set function $ {m^{*}:2^{\mathbb{R}^{n}}\rightarrow[0,\infty]}$. The countable sub-additivity is built into the definition, however, it is generally not true even for finite additivity (in fact, from Proposition [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#proplebesgue), such sets have to be non-measurable).  
 
 > **Definition 5** *(Lebesgue measurability and Lebesgue measure) A set $ {E\subset\mathbb{R}^{n}}$ is said to be Lebesgue measurable if for any $ {\epsilon>0}$, there exists an open set $ {U\subset\mathbb{R}^{n}}$, $ {E\subset U}$ such that*  
 > 
-> *$ \displaystyle m^{\*}(U\backslash E)\leq\epsilon. $*
+> *$ \displaystyle m^{*}(U\backslash E)\leq\epsilon. $*
 > 
 > *If $ {E}$ is Lebesgue measurable, then the Lebesgue measure of $ {E}$ is defined by*  
 > 
-> *$ \displaystyle m(E)=m^{\*}(E). $*
+> *$ \displaystyle m(E)=m^{*}(E). $*
 
 > **Proposition 6** *(Properties of Lebesgue measure) Let $ {E}$, $ {F}$ be Lebesgue measurable. Then*  
 > 
@@ -73,9 +73,9 @@ Note that a Lebesgue outer measure is given to any subset of $ {\mathbb{R}^{n}}$
 > -   (Non-negativity) $ {m(E)\geq0}$;
 > -   (Countable additivity and sub-additivity)
 >     
->     $ \displaystyle m(\bigcup\_{i=1}^{\infty}E\_{i})\leq\sum\_{i=1}^{\infty}m(E\_{i}) $
+>     $ \displaystyle m(\bigcup_{i=1}^{\infty}E_{i})\leq\sum_{i=1}^{\infty}m(E_{i}) $
 >     
->     with equality holds whenever $ {\{E\_{i}\}}$ is measurable and mutually disjoint.
+>     with equality holds whenever $ {\{E_{i}\}}$ is measurable and mutually disjoint.
 > -   (Monotonicity) If $ {E\subset F}$, then $ {m(E)\leq m(F)}$;
 > -   (Translation invariance) For any $ {x\in\mathbb{R}^{n}}$, $ {E+x}$ is Lebesgue measurable, and $ {m(E+x)=m(E)}$.*
 > 
@@ -87,37 +87,37 @@ Properties (1) - (4) will follow from properties of a more general outer measure
 
 Motivated by the above construction, we axiomatize outer measure:  
 
-> **Definition 7** *Let $ {X}$ be a set. An outer measure is a set function $ {\mu^{\*}:2^{X}\rightarrow[0,\infty]}$ that satisfies*  
+> **Definition 7** *Let $ {X}$ be a set. An outer measure is a set function $ {\mu^{*}:2^{X}\rightarrow[0,\infty]}$ that satisfies*  
 > 
-> *-   $ {\mu^{\*}(\emptyset)=0}$;
-> -   (Monotonicity) If $ {E\subset F\subset X}$, then $ {\mu^{\*}(E)\leq\mu^{\*}(F)}$;
-> -   (Countable sub-additivity) If $ {\{E\_{i}\}\_{i=1}^{\infty}}$ is a countable collection of subsets of $ {X}$, then $ {\mu^{\*}(\bigcup\_{i=1}^{\infty}E\_{i})\leq\sum\_{i=1}^{\infty}\mu^{\*}(E\_{i})}$.*
+> *-   $ {\mu^{*}(\emptyset)=0}$;
+> -   (Monotonicity) If $ {E\subset F\subset X}$, then $ {\mu^{*}(E)\leq\mu^{*}(F)}$;
+> -   (Countable sub-additivity) If $ {\{E_{i}\}_{i=1}^{\infty}}$ is a countable collection of subsets of $ {X}$, then $ {\mu^{*}(\bigcup_{i=1}^{\infty}E_{i})\leq\sum_{i=1}^{\infty}\mu^{*}(E_{i})}$.*
 
 Here $ {X}$ need not be a topological space, and *a priori* there is no prefered \`\`gauge system'' in this abstract setting (although one can define one using a *pre-measure*, but I prefer to delay it, otherwise seems to make things just more confusing). To define the measurability is somewhat tricky at first. Remark [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#remIt-is-worthwhile) and [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#remAn-inner-measure) somewhat explain the following approach taken by Carathéodory.  
 
-> **Definition 8** *(Carathéodory's measurability) Let $ {\mu^{\*}}$ be an outer measure on $ {X}$. A set $ {E\subset X}$ is said to be measurable with respect to $ {\mu^{\*}}$ if for ***any*** set $ {A\subset X}$,*  
+> **Definition 8** *(Carathéodory's measurability) Let $ {\mu^{*}}$ be an outer measure on $ {X}$. A set $ {E\subset X}$ is said to be measurable with respect to $ {\mu^{*}}$ if for ***any*** set $ {A\subset X}$,*  
 > 
-> *$ \displaystyle \mu^{\*}(A)=\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E).      (2)$*
+> *$ \displaystyle \mu^{*}(A)=\mu^{*}(A\cap E)+\mu^{*}(A\backslash E).      (2)$*
 > 
 > **
 
 Note that the issue of $ {\infty-\infty}$ as admitted by the \`\`inner measure'' is cleverly avoided.  
 A first good sign is that null sets are always measurable under this definition.  
 
-> **Proposition 9** *If $ {E}$ is such that $ {\mu^{\*}(E)=0}$, then $ {E}$ is measurable.*
+> **Proposition 9** *If $ {E}$ is such that $ {\mu^{*}(E)=0}$, then $ {E}$ is measurable.*
 
 *Proof:* Let $ {A}$ be any set in $ {X}$. Since $ {A\cap E\subset E}$, $ {A\backslash E\subset A}$, by monotonicity of outer measure we see that  
 
-$ \displaystyle \mu^{\*}(A\cap E)=0,\quad\mu^{\*}(A)\geq\mu^{\*}(A\backslash E) $
+$ \displaystyle \mu^{*}(A\cap E)=0,\quad\mu^{*}(A)\geq\mu^{*}(A\backslash E) $
 
-It now suffices to show $ {\mu^{\*}(A)\leq\mu^{\*}(A\backslash E)}$, but the sub-additivity of ourter measure implies  
+It now suffices to show $ {\mu^{*}(A)\leq\mu^{*}(A\backslash E)}$, but the sub-additivity of ourter measure implies  
 
-$ \displaystyle \mu^{\*}(A)\leq\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E). $
+$ \displaystyle \mu^{*}(A)\leq\mu^{*}(A\cap E)+\mu^{*}(A\backslash E). $
 
 $ \Box$  
 Moreover, the collection of measurable sets form a $ {\sigma}$-algebra.  
 
-> **Theorem 10** *(Carathéodory extension theorem) Let $ {\mu^{\*}}$ be an outer measure on $ {X}$, and $ {\mathcal{B}}$ be the collection of all measurable sets with repect to $ {\mu^{\*}}$. Denote by $ {\mu:\mathcal{B}\rightarrow[0,\infty]}$ to be the restriction of $ {\mu^{\*}}$ to $ {\mathcal{B}}$. Then $ {\mathcal{B}}$ is a $ {\sigma}$-algebra, and $ {\mu}$ is a measure.*
+> **Theorem 10** *(Carathéodory extension theorem) Let $ {\mu^{*}}$ be an outer measure on $ {X}$, and $ {\mathcal{B}}$ be the collection of all measurable sets with repect to $ {\mu^{*}}$. Denote by $ {\mu:\mathcal{B}\rightarrow[0,\infty]}$ to be the restriction of $ {\mu^{*}}$ to $ {\mathcal{B}}$. Then $ {\mathcal{B}}$ is a $ {\sigma}$-algebra, and $ {\mu}$ is a measure.*
 
 By Proposition [9](https://www.blogger.com/blogger.g?blogID=4046755691971152965#propcomplete), the measure $ {\mu}$ is complete.  
 The proof of this theorem is refered to this blog post of Terry. I particularly like his way of indexing when showing ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) implies Boolean closure property.  
@@ -131,26 +131,26 @@ The *extension* from Jordan measurability to Lebesgue measurability can be astra
 > *-   $ {\emptyset\in\mathcal{A}}$;
 > -   (Boolean closure) If $ {E\in\mathcal{A}}$, then $ {E^{c}\in\mathcal{A}}$; If $ {E,F\in\mathcal{A}}$, then $ {E\cup F\in\mathcal{A}}$, $ {E\cap F\in\mathcal{A}}$.*
 > 
-> *A *finite additive measure* $ {\mu\_{0}}$ is a set function on a Boolean algebra such that $ {\mu\_{0}(\emptyset)=0}$ and the finite additivity property in Proposition [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prop2) is satisfied.*
+> *A *finite additive measure* $ {\mu_{0}}$ is a set function on a Boolean algebra such that $ {\mu_{0}(\emptyset)=0}$ and the finite additivity property in Proposition [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prop2) is satisfied.*
 
 It can be checked that the collection of all Jordan measurable sets in $ {\mathbb{R}^{n}}$ is a Boolean algebra, and the Jordan measure is a finite additive measure.  
 We are now interested in the question if one can extend a finite additive measure to a measure. An obvious necessary condition is that the finite additive measure has to be countable additive within the Boolean algebra. The notion of pre-measure makes this precise.  
 
-> **Definition 12** *(Pre-measure) A *pre-measure* on a Boolean algebra $ {\mathcal{A}}$ is a finitely additive measure $ {\mu\_{0}:\mathcal{\mathcal{A}}\rightarrow[0,\infty]}$ such that*  
+> **Definition 12** *(Pre-measure) A *pre-measure* on a Boolean algebra $ {\mathcal{A}}$ is a finitely additive measure $ {\mu_{0}:\mathcal{\mathcal{A}}\rightarrow[0,\infty]}$ such that*  
 > 
-> *$ \displaystyle \mu\_{0}(\bigcup\_{i=1}^{\infty}E\_{i})=\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}) $*
+> *$ \displaystyle \mu_{0}(\bigcup_{i=1}^{\infty}E_{i})=\sum_{i=1}^{\infty}\mu_{0}(E_{i}) $*
 > 
-> *whenever $ {\{E\_{i}\}}$ is a collection of mutually disjoint elements in $ {\mathcal{A}}$.*
+> *whenever $ {\{E_{i}\}}$ is a collection of mutually disjoint elements in $ {\mathcal{A}}$.*
 
 The Boolean algebra $ {\mathcal{A}}$ can facilitate as a gauge system for $ {X}$, out of which one can construct an outer measure  
 
-$ \displaystyle \mu^{\*}(E)=\inf\{\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}):E\subset\bigcup\_{i=1}^{\infty}E\_{i},\quad E\_{i}\in\mathcal{A}\text{ for all }i\}.      (3)$
+$ \displaystyle \mu^{*}(E)=\inf\{\sum_{i=1}^{\infty}\mu_{0}(E_{i}):E\subset\bigcup_{i=1}^{\infty}E_{i},\quad E_{i}\in\mathcal{A}\text{ for all }i\}.      (3)$
 
 Then by Caratheodory's extension theorem, one can obtain from this outer measure a countable additive measure.  
 
-> **Definition 13** *A meaure $ {\nu}$, finitely or countably additive, on respectively a Boolean or $ {\sigma}$-algebra $ {\mathcal{E}}$ on $ {X}$, is said to be $ {\sigma}$-finite if $ {X}$ is a countable union of sets $ {\{E\_{i}\}\_{i=1}^{\infty}}$ in $ {\mathcal{E}}$ of finite measure, i.e. $ {\nu(E\_{i})<\infty}$ for all $ {i}$.*
+> **Definition 13** *A meaure $ {\nu}$, finitely or countably additive, on respectively a Boolean or $ {\sigma}$-algebra $ {\mathcal{E}}$ on $ {X}$, is said to be $ {\sigma}$-finite if $ {X}$ is a countable union of sets $ {\{E_{i}\}_{i=1}^{\infty}}$ in $ {\mathcal{E}}$ of finite measure, i.e. $ {\nu(E_{i})<\infty}$ for all $ {i}$.*
 
-> **Theorem 14** *(Hahn-Kolmogorov extension theorem) Let $ {\mu\_{0}:\mathcal{A}\rightarrow[0,\infty]}$ be a pre-measure on a Boolean algebra $ {\mathcal{A}}$ in $ {X}$. Then there exist a $ {\sigma}$-algebra $ {\mathcal{B}}$ and a countably additive measure $ {\mu:\mathcal{B}\rightarrow[0,\infty]}$, such that $ {\mu}$ is an extension of $ {\mu\_{0}}$. In addition, if $ {\mu\_{0}}$ is $ {\sigma}$-finite, then the extension is unique.*
+> **Theorem 14** *(Hahn-Kolmogorov extension theorem) Let $ {\mu_{0}:\mathcal{A}\rightarrow[0,\infty]}$ be a pre-measure on a Boolean algebra $ {\mathcal{A}}$ in $ {X}$. Then there exist a $ {\sigma}$-algebra $ {\mathcal{B}}$ and a countably additive measure $ {\mu:\mathcal{B}\rightarrow[0,\infty]}$, such that $ {\mu}$ is an extension of $ {\mu_{0}}$. In addition, if $ {\mu_{0}}$ is $ {\sigma}$-finite, then the extension is unique.*
 
 This theorem is very important, as one can now reduce the work into checking the requirements for a pre-measure. For example, the construction of *Lebesgue Stieltjes measure* follows this approach.  
 It is useful to introduce the following machinery to prove the uniqueness part of the theorem. They are also frequently used in probability theory.  
@@ -161,7 +161,7 @@ It is useful to introduce the following machinery to prove the uniqueness part o
 > -   A $ {\lambda}$-system is a collection $ {\mathcal{L}}$ of sets in $ {X}$ such that
 >     1.  $ {X\in\mathcal{L}}$;
 >     2.  (Closed under complement) If $ {E\subset F\in\mathcal{L}}$, then $ {F\backslash E\in\mathcal{L}}$;
->     3.  (Closed under ascending limits) If $ {E\_{i}\in\mathcal{L}}$, and $ {E\_{1}\subset E\_{2}\subset\cdots}$ is ascending, then $ {\bigcup\_{i=1}^{\infty}E\_{i}\in\mathcal{L}}$.*
+>     3.  (Closed under ascending limits) If $ {E_{i}\in\mathcal{L}}$, and $ {E_{1}\subset E_{2}\subset\cdots}$ is ascending, then $ {\bigcup_{i=1}^{\infty}E_{i}\in\mathcal{L}}$.*
 
 It is clear that a Boolean algebra is a $ {\pi}$-system, though it may not be a $ {\lambda}$-system. The basic relations of these set families is the following.  
 
@@ -173,55 +173,55 @@ It is clear that a Boolean algebra is a $ {\pi}$-system, though it may not be a 
 
 $ \displaystyle E\cup F=(E^{c}\cap F^{c})^{c}\in\mathcal{F}, $
 
-$ {\mathcal{F}}$ is closed under finite unions. Now let $ {\{\tilde{E}\_{i}\}\_{i=1}^{\infty}}$ be a countable collection of elements in $ {\mathcal{F}}$. Define $ {E\_{n}=\bigcup\_{i=1}^{n}\tilde{E}\_{i}}$. It is clear that $ {\{E\_{n}\}}$ is ascending and  
+$ {\mathcal{F}}$ is closed under finite unions. Now let $ {\{\tilde{E}_{i}\}_{i=1}^{\infty}}$ be a countable collection of elements in $ {\mathcal{F}}$. Define $ {E_{n}=\bigcup_{i=1}^{n}\tilde{E}_{i}}$. It is clear that $ {\{E_{n}\}}$ is ascending and  
 
-$ \displaystyle E=\bigcup\_{n=1}^{\infty}E\_{n}=\bigcup\_{i=1}^{\infty}\tilde{E}\_{i}. $
+$ \displaystyle E=\bigcup_{n=1}^{\infty}E_{n}=\bigcup_{i=1}^{\infty}\tilde{E}_{i}. $
 
 Hence $ {E\in\mathcal{F}}$ as desired. $ \Box$ Combining Proposition [16](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prop18) and [17](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prop19), we have:  
 
 > **Theorem 18** *(Dykin's $ {\pi}$-$ {\lambda}$ lemma) If $ {\mathcal{P}\subset\mathcal{L}}$ with $ {\mathcal{P}}$ a $ {\pi}$-system and $ {\mathcal{L}}$ a $ {\lambda}$-system, then the $ {\sigma}$-algebra $ {\sigma(\mathcal{P})}$ generated by $ {\mathcal{P}}$ is contained in $ {\mathcal{L}}$, i.e. $ {\sigma(\mathcal{P})\subset\mathcal{L}}$.*
 
-> **Proposition 19** *Following thw previous notations, if two measures $ {\mu\_{1}}$ and $ {\mu\_{2}}$ on $ {(X,\mathcal{P})}$ agree on the $ {\pi}$-system $ {\mathcal{P}}$, and $ {\mu\_{1}}$,$ {\mu\_{2}}$ are $ {\sigma}$-finite, then $ {\mu\_{1}=\mu\_{2}}$.*
+> **Proposition 19** *Following thw previous notations, if two measures $ {\mu_{1}}$ and $ {\mu_{2}}$ on $ {(X,\mathcal{P})}$ agree on the $ {\pi}$-system $ {\mathcal{P}}$, and $ {\mu_{1}}$,$ {\mu_{2}}$ are $ {\sigma}$-finite, then $ {\mu_{1}=\mu_{2}}$.*
 
 Now we can prove the Hahn-Kolmogorov extension theorem.  
 *Proof:* The uniqueness part follows from Proposition [19](https://www.blogger.com/blogger.g?blogID=4046755691971152965#propunique). Now we show the extension part. Recall the outer measure defined in ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#3)):  
 
-$ \displaystyle \mu^{\*}(E)=\inf\{\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}):E\subset\bigcup\_{i=1}^{\infty}E\_{i},\quad E\_{i}\in\mathcal{A}\text{ for all }i\}. $
+$ \displaystyle \mu^{*}(E)=\inf\{\sum_{i=1}^{\infty}\mu_{0}(E_{i}):E\subset\bigcup_{i=1}^{\infty}E_{i},\quad E_{i}\in\mathcal{A}\text{ for all }i\}. $
 
-Let $ {\mathcal{B}}$ be the collection of all sets $ {E\subset X}$ that are measurable in the sense of Carathéodory with respect to $ {\mu^{\*}}$, and let $ {\mu}$ be the restriction of $ {\mu^{\*}}$ to $ {\mathcal{B}}$. By Carathéodory extension theorem, $ {\mathcal{B}}$ is a $ {\sigma}$-algebra and $ {\mu}$ is a countably additive measure. It now remains to show that $ {\mathcal{B}\_{0}\subset\mathcal{B}}$ and $ {\mu}$ extends $ {\mu}$. Let $ {E\in\mathcal{B}\_{0}}$. We need to show that it satisfies ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) in Definition [8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Carath=0000E9odory%27s-measurability\)-L). Let $ {A\subset X}$ be any subset. It suffices to show  
+Let $ {\mathcal{B}}$ be the collection of all sets $ {E\subset X}$ that are measurable in the sense of Carathéodory with respect to $ {\mu^{*}}$, and let $ {\mu}$ be the restriction of $ {\mu^{*}}$ to $ {\mathcal{B}}$. By Carathéodory extension theorem, $ {\mathcal{B}}$ is a $ {\sigma}$-algebra and $ {\mu}$ is a countably additive measure. It now remains to show that $ {\mathcal{B}_{0}\subset\mathcal{B}}$ and $ {\mu}$ extends $ {\mu}$. Let $ {E\in\mathcal{B}_{0}}$. We need to show that it satisfies ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) in Definition [8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Carath=0000E9odory%27s-measurability\)-L). Let $ {A\subset X}$ be any subset. It suffices to show  
 
-$ \displaystyle \mu^{\*}(A)\geq\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E).      (4)$
+$ \displaystyle \mu^{*}(A)\geq\mu^{*}(A\cap E)+\mu^{*}(A\backslash E).      (4)$
 
-Fix $ {\epsilon>0}$. By definition of $ {\mu^{\*}}$, one can find $ {E\_{1},E\_{2},\dots\in\mathcal{B}\_{0}}$ whose union covers $ {A}$ and such that  
+Fix $ {\epsilon>0}$. By definition of $ {\mu^{*}}$, one can find $ {E_{1},E_{2},\dots\in\mathcal{B}_{0}}$ whose union covers $ {A}$ and such that  
 
-$ \displaystyle \sum\_{n=1}^{\infty}\mu\_{0}(E\_{n})\leq\mu^{\*}(A)+\epsilon. $
+$ \displaystyle \sum_{n=1}^{\infty}\mu_{0}(E_{n})\leq\mu^{*}(A)+\epsilon. $
 
-The sets $ {E\_{n}\cap E\in\mathcal{B}\_{0}}$ thus covers $ {A\cap E}$ and satisfy by sub-additivity  
+The sets $ {E_{n}\cap E\in\mathcal{B}_{0}}$ thus covers $ {A\cap E}$ and satisfy by sub-additivity  
 
-$ \displaystyle \mu^{\*}(A\cap E)\leq\sum\_{n=1}^{\infty}\mu\_{0}(E\_{n}\cap E), $
+$ \displaystyle \mu^{*}(A\cap E)\leq\sum_{n=1}^{\infty}\mu_{0}(E_{n}\cap E), $
 
 and similarly  
 
-$ \displaystyle \mu^{\*}(A\backslash E)\leq\sum\_{n=1}^{\infty}\mu\_{0}(E\_{n}\backslash E). $
+$ \displaystyle \mu^{*}(A\backslash E)\leq\sum_{n=1}^{\infty}\mu_{0}(E_{n}\backslash E). $
 
 But  
 
-$ \displaystyle \mu\_{0}(E\_{n}\cap E)+\mu\_{0}(E\_{n}\backslash E)=\mu\_{0}(E\_{n}) $
+$ \displaystyle \mu_{0}(E_{n}\cap E)+\mu_{0}(E_{n}\backslash E)=\mu_{0}(E_{n}) $
 
-by finite additivity of $ {\mu\_{0}}$. Therefore, \\begin{aligned} & & \\mu^{\*}(A\\cap E)+\\mu^{\*}(A\\backslash E)\\\\ & \\leq & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\cap E)+\\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\backslash E) \\\\ & = & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}) \\\\ & \\leq & \\mu^{\*}(A)+\\epsilon. \\end{aligned} Since $ {\epsilon}$ is arbitrary, ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) follows. To show that $ {\mu^{\*}(E)=\mu\_{0}(E)}$, it suffices to show  
+by finite additivity of $ {\mu_{0}}$. Therefore, \\begin{aligned} & & \\mu^{\*}(A\\cap E)+\\mu^{\*}(A\\backslash E)\\\\ & \\leq & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\cap E)+\\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\backslash E) \\\\ & = & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}) \\\\ & \\leq & \\mu^{\*}(A)+\\epsilon. \\end{aligned} Since $ {\epsilon}$ is arbitrary, ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) follows. To show that $ {\mu^{*}(E)=\mu_{0}(E)}$, it suffices to show  
 
-$ \displaystyle \mu^{\*}(E)\geq\mu\_{0}(E) $
+$ \displaystyle \mu^{*}(E)\geq\mu_{0}(E) $
 
-since $ {E}$ covers itself. By defintion of $ {\mu^{\*}}$, it suffices to show  
+since $ {E}$ covers itself. By defintion of $ {\mu^{*}}$, it suffices to show  
 
-$ \displaystyle \sum\_{n=1}^{\infty}\mu\_{0}(E\_{n})\geq\mu\_{0}(E) $
+$ \displaystyle \sum_{n=1}^{\infty}\mu_{0}(E_{n})\geq\mu_{0}(E) $
 
-whenever $ {\{E\_{n}\}}$ is a countable family in $ {\mathcal{B}\_{0}}$ and whose union covers $ {E}$. Notice that if $ {\{\tilde{E}\_{n}\}}$ is any countable family of elements in $ {\mathcal{B}\_{0}}$covering $ {E}$, then we can construct a mutually disjoint sequence by  
+whenever $ {\{E_{n}\}}$ is a countable family in $ {\mathcal{B}_{0}}$ and whose union covers $ {E}$. Notice that if $ {\{\tilde{E}_{n}\}}$ is any countable family of elements in $ {\mathcal{B}_{0}}$covering $ {E}$, then we can construct a mutually disjoint sequence by  
 
-$ \displaystyle E\_{n}'=\tilde{E}\_{n}\backslash\bigcup\_{i=1}^{n-1}E\_{i}\in\mathcal{B}\_{0}. $
+$ \displaystyle E_{n}'=\tilde{E}_{n}\backslash\bigcup_{i=1}^{n-1}E_{i}\in\mathcal{B}_{0}. $
 
-Since $ {E\in\mathcal{B}\_{0}}$, taking $ {E\_{n}=E\_{n}'\cap E\in\mathcal{B}\_{0}}$ we have a mutually disjoint family that covers exactly $ {E}$. Since $ {\mu\_{0}}$ is a pre-measure, we have  
+Since $ {E\in\mathcal{B}_{0}}$, taking $ {E_{n}=E_{n}'\cap E\in\mathcal{B}_{0}}$ we have a mutually disjoint family that covers exactly $ {E}$. Since $ {\mu_{0}}$ is a pre-measure, we have  
 
-$ \displaystyle \mu\_{0}(\bigcup\_{n=1}^{\infty}E\_{n})=\mu\_{0}(E). $
+$ \displaystyle \mu_{0}(\bigcup_{n=1}^{\infty}E_{n})=\mu_{0}(E). $
 
 The extension part thus follows. $ \Box$
