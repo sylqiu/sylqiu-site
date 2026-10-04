@@ -57,7 +57,6 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 
 const NAV = [
   { href: '#/', label: 'Home' },
-  { href: '#/exploreflow', label: exploreFlow.name },
 ];
 
 function renderNav() {
@@ -78,8 +77,7 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: identity plus two links (Google Scholar, Writing).
-  // Everything else (Research, Courses, ExploreFlow) is reachable from the nav.
+  // Deliberately tiny: name plus two links (Google Scholar, Writing).
   const links = [
     { label: 'Google Scholar', href: 'https://scholar.google.com.hk/citations?user=ZYVfX7UAAAAJ&hl' },
     { label: 'Writing', href: '#/blog' },
@@ -92,9 +90,7 @@ function viewHome() {
 
   app.innerHTML = `
     <section class="landing">
-      <img class="avatar" src="${esc(site.avatar)}" alt="${esc(site.name)}" />
       <h1>${esc(site.name)}</h1>
-      <p class="role">${esc(site.role)}</p>
       <p class="landing-links">${links}</p>
     </section>
   `;
