@@ -16,11 +16,11 @@ Taking a slight abstraction, the data of the "Riemann model'' can be thought of 
 
 $ \displaystyle \Lambda f\geq0\text{ whenever }f\geq0. $
 
-Given any open subset $ {G\subset X}$, consider the class of continuous functions $ {f}$ such that $ {0\leq f\leq1}$ on $ {G}$ and $ {f=0}$ outside of $ {G}$, denoted by $ {f\prec G}$. To get some idea, we can first define the "measure'' of the set $ {G}$ by[](https://www.blogger.com/null)  
+Given any open subset $ {G\subset X}$, consider the class of continuous functions $ {f}$ such that $ {0\leq f\leq1}$ on $ {G}$ and $ {f=0}$ outside of $ {G}$, denoted by $ {f\prec G}$. To get some idea, we can first define the "measure'' of the set $ {G}$ by  
 
-[$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f.\tag{$\\star$} \ \ \ \ \ $](https://www.blogger.com/null)
+$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f.      $
 
-[](https://www.blogger.com/null)In fact, one can use open sets as a gauge to construct an outer measure using the above definition. The Riesz representation theorem says that there corresponds a unique *unsigned Borel measure* that "does the same thing'' with the linear functional. Notice that an unsigned Borel measure can be obviously ensembled to be a linear functional.  
+In fact, one can use open sets as a gauge to construct an outer measure using the above definition. The Riesz representation theorem says that there corresponds a unique *unsigned Borel measure* that "does the same thing'' with the linear functional. Notice that an unsigned Borel measure can be obviously ensembled to be a linear functional.  
 
 However, it is rather intricate to find the right condition for the sets to be measurable (in the sense of Caratheodory). The main techinical issue in developing this machinary is, not surprisingly, topological.  
 
@@ -68,7 +68,7 @@ are open, and consequently $ {f}$ is continuous. Conversely, the second statemen
 
 A topological space is said to be *Hausdorff* if two distinct points can be separated by neighborhoods. Clearly, if $ {X}$ is normal and every point in it is closed, then $ {X}$ is also Hausdorff. Unfortunately, the converse it not true. However, for compact ones we do have:  
 
-> **Lemma 2** *[](https://www.blogger.com/null)A compact Hausdorff space is normal.*
+> **Lemma 2** *A compact Hausdorff space is normal.*
 
 The Hausdorff property can well be extended to subspaces of a Hausdorff space, while the normal property CANNOT.  
 
@@ -78,7 +78,7 @@ Now back to the "Riemann model''. Besides separation property, as in integration
 
 In light of Lemma [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemA-compact-Hausdorff), one can establish a Urysohn type of result for LCH spaces.  
 
-> **Lemma 4** *(Urysohn's lemma)[](https://www.blogger.com/null)Let $ {X}$ be a LCH space, $ {K\subset X}$ a compact subset, and $ {G}$ be a open neighborhood of $ {K}$. Then there exists a function $ {f\in C\_{c}(X)}$ such that $ {K\prec f\prec G}$.*
+> **Lemma 4** *(Urysohn's lemma)Let $ {X}$ be a LCH space, $ {K\subset X}$ a compact subset, and $ {G}$ be a open neighborhood of $ {K}$. Then there exists a function $ {f\in C\_{c}(X)}$ such that $ {K\prec f\prec G}$.*
 
 *Proof:* Let $ {U\_{x}}$ be a open neighborhood of $ {x}$ with compact closure. Then the collection $ {\{U\_{x}\}\_{x\in K}}$ forms an open cover of $ {K}$. Since $ {K}$ is compact, there exists a finite subfamily $ {\{U\_{1},\dots,U\_{N}\}}$ that forms a cover of $ {K}$, whose union has compact closure. Let $ {G'=\bigcup\_{n=1}^{N}U\_{n}\cap G}$. Then $ {\overline{G'}}$ is a compact Hausdorff space. Now apply Lemma [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemA-compact-Hausdorff) to get a continuous function $ {f}$ on $ {\overline{G'}}$, and define $ {f=0}$ outside of $ {\overline{G'}}$. $ \Box$  
 
@@ -108,31 +108,31 @@ As we will see later, $ {X}$ being merely LCH will give rise to some *regularity
 
 > **Remark 2** *Note that in the construction of outer measures, outer regularity is built-in for *any* set. There also exist constructions of Radon measures on spaces that are not $\sigma$-compact or not LCH, but we will not touch this point.*
 
-Now we start our construction. Given a positive linear functional $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$, for every open set $ {G\subset X}$, we define as in ([$\star$](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)):[](https://www.blogger.com/null)  
+Now we start our construction. Given a positive linear functional $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$, for every open set $ {G\subset X}$, we define as in ([$\star$](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)):  
 
-[$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f. \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \mu(G)=\sup\_{f\prec G}\Lambda f.      (2)$
 
-[](https://www.blogger.com/null)Positivity of $ {\Lambda}$ implies the monotonicity of $ {\mu}$ on open sets. Using open sets as a gauge, we can define for every subset $ {E\subset X}$ an outer measure,[](https://www.blogger.com/null)  
+Positivity of $ {\Lambda}$ implies the monotonicity of $ {\mu}$ on open sets. Using open sets as a gauge, we can define for every subset $ {E\subset X}$ an outer measure,  
 
-[$ \displaystyle \mu(E)=\inf\{\mu(G):G\supset E,\text{ and }G\text{ open}\}. \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \mu(E)=\inf\{\mu(G):G\supset E,\text{ and }G\text{ open}\}.      (3)$
 
-[](https://www.blogger.com/null)The countable sub-additivity of $ {\mu}$ thus follows from this definition. As Caratheodory's measurability suggests, we need sets that can be "approximated from below'', i.e. those inner regular ones to form a $ {\sigma}$-algebra and thus a measure space. Then by Caratheodory's extension theorem, the measure space will be complete. So define  
+The countable sub-additivity of $ {\mu}$ thus follows from this definition. As Caratheodory's measurability suggests, we need sets that can be "approximated from below'', i.e. those inner regular ones to form a $ {\sigma}$-algebra and thus a measure space. Then by Caratheodory's extension theorem, the measure space will be complete. So define  
 
 $ \displaystyle \mathfrak{M}\_{c}=\{E\subset X:\mu(E)<+\infty\text{ and }E\text{ is inner regular}\}, $
 
-that is, $ {E\in\mathfrak{M}\_{c}}$ is such that $ {\mu(E)<+\infty}$ and[](https://www.blogger.com/null)  
+that is, $ {E\in\mathfrak{M}\_{c}}$ is such that $ {\mu(E)<+\infty}$ and  
 
-[$ \displaystyle \mu(E)=\sup\{\mu(K):K\subset E,\text{ and }K\text{ compact}\}. \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \mu(E)=\sup\{\mu(K):K\subset E,\text{ and }K\text{ compact}\}.      (4)$
 
-[](https://www.blogger.com/null)and  
+and  
 
 $ \displaystyle \mathfrak{M}=\{E\subset X:E\cap K\in\mathfrak{M}\_{c}\text{ for all compact }K\subset X\} $
 
-> **Theorem 8** *[](https://www.blogger.com/null)(Riesz representation theorem for positive linear functionals; general case) Let $ {X}$ be a LCH space, and $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ a positive linear functional. Let $ {\mu}$ and $ {\mathfrak{M}}$ be construced as above. Then $ {\mathfrak{M}}$ is a complete $ {\sigma}$-algebra containing the Borel $ {\sigma}$-algebra $ {\mathcal{B}}$, and $ {\mu}$ is the unique measure on $ {\mathfrak{M}}$ such that $ {\Lambda=I\_{\mu}}$, i.e. for any $ {f\in C\_{c}(X)}$,[](https://www.blogger.com/null)*  
+> **Theorem 8** *(Riesz representation theorem for positive linear functionals; general case) Let $ {X}$ be a LCH space, and $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ a positive linear functional. Let $ {\mu}$ and $ {\mathfrak{M}}$ be construced as above. Then $ {\mathfrak{M}}$ is a complete $ {\sigma}$-algebra containing the Borel $ {\sigma}$-algebra $ {\mathcal{B}}$, and $ {\mu}$ is the unique measure on $ {\mathfrak{M}}$ such that $ {\Lambda=I\_{\mu}}$, i.e. for any $ {f\in C\_{c}(X)}$,*  
 > 
-> *[$ \displaystyle \Lambda f=\int\_{X}fd\mu. \ \ \ \ \ (5)$](https://www.blogger.com/null)*
+> *$ \displaystyle \Lambda f=\int\_{X}fd\mu.      (5)$*
 > 
-> *[](https://www.blogger.com/null)In addition, $ {\mu}$ is locally finite, outer regular for all $ {E\in\mathfrak{M}}$ and inner regular for every open set and every $ {E\in\mathfrak{M}}$ such that $ {\mu(E)<\infty}$.*
+> *In addition, $ {\mu}$ is locally finite, outer regular for all $ {E\in\mathfrak{M}}$ and inner regular for every open set and every $ {E\in\mathfrak{M}}$ such that $ {\mu(E)<\infty}$.*
 
 *Proof:* Let us first prove the uniqueness part. Since Property ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) holds for every open set and every set of finite measure, it suffices to prove that whenever $ {\mu\_{1}}$ and $ {\mu\_{2}}$ satisfy the theorem, then  
 
@@ -174,11 +174,11 @@ Suppose $ {E=\bigcup\_{i=1}^{\infty}E\_{i}}$, where $ {\{E\_{i}\}\_{i=1}^{\infty
 
 $ \displaystyle \mu(E)\geq\sum\_{i=1}^{\infty}\mu(E\_{i}). $
 
-If $ {\mu(E)=+\infty}$, there is nothing to prove. Assume $ {\mu(E)<+\infty}$. Since $ {E\_{i}}$ can be approximated from below by compact sets (inner regular), we first notice that[](https://www.blogger.com/null)  
+If $ {\mu(E)=+\infty}$, there is nothing to prove. Assume $ {\mu(E)<+\infty}$. Since $ {E\_{i}}$ can be approximated from below by compact sets (inner regular), we first notice that  
 
-[$ \displaystyle \mu(K\_{1}\cup K\_{2})=\mu(K\_{1})+\mu(K\_{2}) \ \ \ \ \ (6)$](https://www.blogger.com/null)
+$ \displaystyle \mu(K\_{1}\cup K\_{2})=\mu(K\_{1})+\mu(K\_{2})      (6)$
 
-[](https://www.blogger.com/null)for disjoint compact sets $ {K\_{1}}$ and $ {K\_{2}}$. Indeed, we can approximate them using continuous functions: for any $ {\epsilon>0}$, there is $ {K\_{1}\cup K\_{2}\prec g}$ such that ,  
+for disjoint compact sets $ {K\_{1}}$ and $ {K\_{2}}$. Indeed, we can approximate them using continuous functions: for any $ {\epsilon>0}$, there is $ {K\_{1}\cup K\_{2}\prec g}$ such that ,  
 
 $ \displaystyle \Lambda g<\mu(K\_{1}\cup K\_{2})+\epsilon. $
 
@@ -238,6 +238,6 @@ As noted before, there are examples when $ {X}$ is LCH and the $ {\mu}$ contruct
 
 The idea is to first use compactness, and then the "$\epsilon /2^i$-trick". Since closed sets in $ {X}$ are also $ {\sigma}$-compact, this immediately implies  
 
-> **Theorem 10** *[](https://www.blogger.com/null)(Riesz representation theorem for positive linear functionals; $ {\sigma}$-compact case) Let $ {X}$ be $ {LCH}$ and also $ {\sigma}$-compact. Let $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ be a positive linear functional. Then there exists a unique Radon measure $ {\mu}$ on $ {X}$ such that $ {\Lambda=I\_{\mu}}$ (and in fact, every measurable set is inner regular).*
+> **Theorem 10** *(Riesz representation theorem for positive linear functionals; $ {\sigma}$-compact case) Let $ {X}$ be $ {LCH}$ and also $ {\sigma}$-compact. Let $ {\Lambda:C\_{c}(X)\rightarrow\mathbb{R}}$ be a positive linear functional. Then there exists a unique Radon measure $ {\mu}$ on $ {X}$ such that $ {\Lambda=I\_{\mu}}$ (and in fact, every measurable set is inner regular).*
 
 > **Remark 3** *Using the uniqueness part of Theorem [10](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm\(Riesz-representation-theorem-1), one can prove that a locally finite Borel measure is always a Radon measure with the extra assumption that every open set in $ {X}$ is also $ {\sigma}$-compact (such as a LCH and $ {\sigma}$-compact metric space). However, it is NOT true when the assumption does not hold. See \[R\], Exercise 18, Chapter 2.*

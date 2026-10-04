@@ -70,13 +70,13 @@ which corresponds to the initial condition $ {u\_{0}=A\cdot\sin(\frac{nx}{2})}$.
 > 
 > *then $ {u=u\_{n}+u\_{m}}$ also satisfy $ {\frac{\partial u}{\partial t}-\frac{\partial^{2}u}{\partial x^{2}}=0}$, $ {u(0)=u(2\pi)=0}$.*
 
-We are now led to the ansatz that the general solution to the PDE $ {\frac{\partial u}{\partial t}-\frac{\partial^{2}u}{\partial x^{2}}=0}$ with the homogeneous Dirichlet boundary condition is of the form[](https://www.blogger.com/null)  
+We are now led to the ansatz that the general solution to the PDE $ {\frac{\partial u}{\partial t}-\frac{\partial^{2}u}{\partial x^{2}}=0}$ with the homogeneous Dirichlet boundary condition is of the form  
 
-[$ \displaystyle \sum\_{n=1}^{\infty}A\_{n}e^{-n^{2}t/4}\sin(\frac{nx}{2}) \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \sum\_{n=1}^{\infty}A\_{n}e^{-n^{2}t/4}\sin(\frac{nx}{2})      (1)$
 
-[](https://www.blogger.com/null)where the constants $ {\{A\_{n}\}\_{n=1}^{\infty}}$ will be determined from the initial condition $ {u(0,x)=u\_{0}(x)}$. More precisely, we have  
+where the constants $ {\{A\_{n}\}\_{n=1}^{\infty}}$ will be determined from the initial condition $ {u(0,x)=u\_{0}(x)}$. More precisely, we have  
 
-> **Exercise 4** *[](https://www.blogger.com/null)Following the above notation, show that*  
+> **Exercise 4** *Following the above notation, show that*  
 > 
 > *$ \displaystyle A\_{n}=\frac{1}{\pi}\int\_{[0,2\pi]}u\_{0}(x)\sin(\frac{nx}{2})dx. $*
 > 
@@ -123,7 +123,7 @@ Now let me make some explanation about the ansatz ([1](https://www.blogger.com/b
 
     so that in some appropriate sense,[
 
-    $ \displaystyle u\_{0}(x)=\sum\_{n=1}^{\infty}A\_{n}\sin(\frac{nx}{2}) \ \ \ \ \ (2)$
+    $ \displaystyle u\_{0}(x)=\sum\_{n=1}^{\infty}A\_{n}\sin(\frac{nx}{2})      (2)$
 
     ](https://www.blogger.com/null)with $ {A\_{n}}$ given in Exercise [4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#exerAn).
 -   Having the above expression for $ {u\_{0}(x)}$ under the eigen-basis $ {\{\sin(\frac{nx}{2})\}\_{n=1}^{\infty}}$, we can then study the evolution of each independent orthogonal component under the heat equation. This leads back to the technique of separation of variables.

@@ -105,11 +105,11 @@ $ \displaystyle f\*D\_{N}\rightarrow f\*\delta\_{0}=f\text{ in the norm }\|\cdot
 
 We only need to know the qualitative behavior here. In any case, the Dirichlet kernel can be thought of a "bad'' approximation of the "Dirac delta function''.  
 
-Now we turn to the Poisson kernel. It is closely related to the following boundary value problem[](https://www.blogger.com/null)  
+Now we turn to the Poisson kernel. It is closely related to the following boundary value problem  
 
-[$ \displaystyle \begin{cases} \Delta u=0 & \text{in }B(0,1)\subset\mathbb{R}^{2}\\ u=u\_{0} & \text{on }\partial B(0,1) \end{cases}. \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \begin{cases} \Delta u=0 & \text{in }B(0,1)\subset\mathbb{R}^{2}\\ u=u\_{0} & \text{on }\partial B(0,1) \end{cases}.      (1)$
 
-[](https://www.blogger.com/null)In class we made the ansatz that the solution is of the form  
+In class we made the ansatz that the solution is of the form  
 
 $ \displaystyle u(r,\theta)=a\_{0}+\sum\_{k=1}^{\infty}(a\_{k}\cos k\theta+b\_{k}\sin k\theta)r^{k} $
 

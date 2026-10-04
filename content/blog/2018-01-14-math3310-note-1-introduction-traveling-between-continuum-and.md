@@ -14,11 +14,11 @@ $ \displaystyle \text{Continuous: Calculus }\leftrightarrow\text{ Discrete: Line
 
 So my idea in this section is to build up some general picture and mindset, so that you should find yourself more motivated about the maths in and beyond this course. The material is largely based on Gilbert Strang's *Introduction to applied mathematics*, Chapter 3.1 - 3.3, which is a pleasant reading.  
 
-Let's begin by the simpliest differential equation in 1D. Suppose $ {u:[0,1]\rightarrow\mathbb{R}}$ and for $ {x\in(0,1)}$, $ {u}$ satisfies[](https://www.blogger.com/null)  
+Let's begin by the simpliest differential equation in 1D. Suppose $ {u:[0,1]\rightarrow\mathbb{R}}$ and for $ {x\in(0,1)}$, $ {u}$ satisfies  
 
-[$ \displaystyle \frac{d}{dx}u(x)=f(x). \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \frac{d}{dx}u(x)=f(x).      (1)$
 
-[](https://www.blogger.com/null)If $ {f}$ is continuous, then the fundamental theorem of calculus tells us there is a differentiable function $ {F:[0,1]\rightarrow\mathbb{R}}$ such that any function of the form $ {u=F+C}$, where $ {C}$ is a constant, is a solution. Why should there be a constant? Because the space of constant functions is inside the kernel of the *linear operator* $ {\frac{d}{dx}}$. You have to tell what you want the solution to be at the initial point $ {u(0)}$ to fix this ambiguity. In other words, you need to give a *boundary/initial condition*. Now that the differential equation with boudary condition can be thought of as a linear equation that goes infinite on one side. For example,  
+If $ {f}$ is continuous, then the fundamental theorem of calculus tells us there is a differentiable function $ {F:[0,1]\rightarrow\mathbb{R}}$ such that any function of the form $ {u=F+C}$, where $ {C}$ is a constant, is a solution. Why should there be a constant? Because the space of constant functions is inside the kernel of the *linear operator* $ {\frac{d}{dx}}$. You have to tell what you want the solution to be at the initial point $ {u(0)}$ to fix this ambiguity. In other words, you need to give a *boundary/initial condition*. Now that the differential equation with boudary condition can be thought of as a linear equation that goes infinite on one side. For example,  
 
 $ \displaystyle Au=\frac{1}{2\Delta x}\begin{bmatrix}0 & 1\\ -1 & 0 & 1\\ & -1 & 0 & 1\\ & & & & & \ddots\\ & & & & & & \ddots \end{bmatrix}\begin{bmatrix}u\_{1}\\ u\_{2}\\ u\_{3}\\ \vdots\\ \\ \end{bmatrix}=\begin{bmatrix}f\_{1}\\ f\_{2}\\ f\_{3}\\ \vdots\\ \\ \end{bmatrix}=f. $
 
@@ -45,11 +45,11 @@ $ \displaystyle \int\_{[0,1]}\frac{du(x)}{dx}\varphi(x)dx+u(0)\varphi(0)=\int\_{
 
 hence we see that $ {\varphi(1)}$ should be given to $ {\frac{-d\varphi}{dx}}$ (so that equations e.g. $ {-\frac{d\varphi}{dx}=g}$ can be solved), and nothing more. So the equality will always hold. Because the adjoint is different, we will say that the differential operator $ {\frac{d}{dx}}$ with its boundary condition is NOT *self-adjoint*.  
 
-Now let's look at a slightly more complicated differential equation derived in class, the equilibrium equation of an elastic bar[](https://www.blogger.com/null)  
+Now let's look at a slightly more complicated differential equation derived in class, the equilibrium equation of an elastic bar  
 
-[$ \displaystyle -\frac{d}{dx}(c\frac{du}{dx})=f. \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle -\frac{d}{dx}(c\frac{du}{dx})=f.      (2)$
 
-[](https://www.blogger.com/null)and so the differential equation can be regarded as the matrix equation  
+and so the differential equation can be regarded as the matrix equation  
 
 $ \displaystyle A^{T}CAu=f $
 

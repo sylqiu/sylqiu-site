@@ -41,7 +41,7 @@ $ \displaystyle \varphi'(0) = \langle \nabla f(x^0), v\rangle = \|\nabla f(x^0)\
 
 where $ {\theta}$ is the angle between $ {v}$ and $ {\nabla f(x^0)}$ under the Euclidean inner product. Then $ {\varphi'(0)}$ is minimised if and only if $ {v}$ is in the opposite direction of the gradient. One also can view this from another aspect of regularisation of the linear approximation of $ {f}$ at $ {x}$.  
 
-> **Exercise 1** *[](https://www.blogger.com/null)Show that, for any $ {x\in \mathbb{R}^d}$,*  
+> **Exercise 1** *Show that, for any $ {x\in \mathbb{R}^d}$,*  
 > 
 > *$ \displaystyle -\nabla f(x) = \arg\min\_{v\in \mathbb{R}^d} f(x) + \langle \nabla f(x), v\rangle + \frac{1}{2}\|v\|^2. $*
 > 
@@ -55,28 +55,28 @@ $ \displaystyle \frac{dx(t)}{dt} = -\nabla f(x(t)) $
 
 may be a candidate for solving the optimisation problem. The simplest example is Algorithm [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#algogd1).  
 
-> **Algorithm 1 (Gradient descent/forward Euler scheme)** *[](https://www.blogger.com/null)Given objective $ {f}$, initialisation $ {x^0}$ and step sizes choices $ {\tau\_k}$, for $ {k\geq 0}$, do*  
+> **Algorithm 1 (Gradient descent/forward Euler scheme)** *Given objective $ {f}$, initialisation $ {x^0}$ and step sizes choices $ {\tau\_k}$, for $ {k\geq 0}$, do*  
 > 
 > *$ \displaystyle x^{k+1} = x^k - \tau\_k \nabla f(x^k). $*
 
 A first question to ask is under what condition of $ {f}$ is the algorithm actually a *descent algorithm*? Because of discretisation, it is expected that certain smoothness of $ {f}$ is necessary.  
 
-> **Exercise 2 (Descent lemma)** *If $ {f}$ has $ {L}$-Lipschitz gradient, then[](https://www.blogger.com/null)*  
+> **Exercise 2 (Descent lemma)** *If $ {f}$ has $ {L}$-Lipschitz gradient, then*  
 > 
-> *[$ \displaystyle f(y) \leq f(x) + \langle \nabla f(x), y-x\rangle + \frac{L}{2}\|x-y\|^2. \ \ \ \ \ (1)$](https://www.blogger.com/null)*
+> *$ \displaystyle f(y) \leq f(x) + \langle \nabla f(x), y-x\rangle + \frac{L}{2}\|x-y\|^2.      (1)$*
 > 
-> *[](https://www.blogger.com/null)This implies that the function $ {\frac{L}{2} \langle x,x\rangle - f(x)}$ is convex. (Hint: use the fundamental theorem of calculus.)*
+> *This implies that the function $ {\frac{L}{2} \langle x,x\rangle - f(x)}$ is convex. (Hint: use the fundamental theorem of calculus.)*
 
-Putting $ {y=x^{k+1}}$ into [(1)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemdescent), we see that[](https://www.blogger.com/null)  
+Putting $ {y=x^{k+1}}$ into [(1)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemdescent), we see that  
 
-[$ \displaystyle \begin{aligned} f(x^{k+1}) &\leq f(x^k) + \langle \nabla f(x^k), -\tau \nabla f(x^k)\rangle + \frac{L}{2}\|x^k-x^{k+1}\|^2 \\ &= f(x^k) - \tau(1-\frac{\tau L}{2})\| \nabla f(x^k)\|^2. \end{aligned} \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} f(x^{k+1}) &\leq f(x^k) + \langle \nabla f(x^k), -\tau \nabla f(x^k)\rangle + \frac{L}{2}\|x^k-x^{k+1}\|^2 \\ &= f(x^k) - \tau(1-\frac{\tau L}{2})\| \nabla f(x^k)\|^2. \end{aligned}      (2)$
 
-[](https://www.blogger.com/null)Thus the sequence is decreasing as soon as $ {0<\tau<\frac{2}{L}}$. The optimal time step size is $ {\tau=\frac{1}{L}}$ so that the descent bound is optimised.  
+Thus the sequence is decreasing as soon as $ {0<\tau<\frac{2}{L}}$. The optimal time step size is $ {\tau=\frac{1}{L}}$ so that the descent bound is optimised.  
 Various extra conditions on $ {f}$ can ensure the *convergence* of the sequence $ {\{x^k\}}$ to a critical point. Here are several of them.  
 
 > **Theorem 2** *If $ {f}$ is continuously differentiable function bounded from below and has bounded level sets $ {\{x: f(x)\leq f(x^0)\}}$, then the sequence $ {\{x^k\}}$ has a subsequence converging to a critical point of $ {f}$.*
 
-> **Theorem 3** *[](https://www.blogger.com/null)If $ {f}$ is convex with $ {L}$-Lipschitz gradient, bounded from below, then with $ {0<\tau \leq \frac{1}{L}}$, the sequence $ {\{x^k\}}$ converge to a minimiser $ {x^\*}$ of $ {f}$ with estimate*  
+> **Theorem 3** *If $ {f}$ is convex with $ {L}$-Lipschitz gradient, bounded from below, then with $ {0<\tau \leq \frac{1}{L}}$, the sequence $ {\{x^k\}}$ converge to a minimiser $ {x^\*}$ of $ {f}$ with estimate*  
 > 
 > *$ \displaystyle f(x^k) - f(x^\*) \leq \frac{1}{2\tau k}\|x^0 - x^\*\|^2, $*
 > 
@@ -84,7 +84,7 @@ Various extra conditions on $ {f}$ can ensure the *convergence* of the sequence 
 
 Linear convergence can be shown when $ {f}$ has extra steepness.  
 
-> **Theorem 4** *[](https://www.blogger.com/null)If $ {f}$ has $ {L}$-Lipschitz gradient, and additionally is strongly convex, i.e. there exists $ {\mu}$ such that*  
+> **Theorem 4** *If $ {f}$ has $ {L}$-Lipschitz gradient, and additionally is strongly convex, i.e. there exists $ {\mu}$ such that*  
 > 
 > *$ \displaystyle f-\frac{\mu}{2}\|x\|^2 \text{ is convex,} $*
 > 
@@ -107,7 +107,7 @@ $ \displaystyle \begin{aligned} f(x^{k+1}) &\leq f(x) - \frac{\tau}{2}\|\nabla f
 where the second inequality follows from convexity. Summing the above inequality in $ {k}$ we obtain the estimate in Theorem [3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thmgd1).  
 The differentiability condition could be relaxed *sub-differentiability*, with gradient replaced by subgradient. For our purpose we only consider sub-gradient for convex functions.  
 
-> **Definition 6** *[](https://www.blogger.com/null)A vector $ {v\in\mathbb{R}^d}$ is said to be a subgradient of $ {f}$ at $ {x}$ if*  
+> **Definition 6** *A vector $ {v\in\mathbb{R}^d}$ is said to be a subgradient of $ {f}$ at $ {x}$ if*  
 > 
 > *$ \displaystyle f(y)\geq f(x)+\langle v, y-x\rangle, \quad \forall y\in\mathbb{R}^d. $*
 > 
@@ -128,11 +128,11 @@ $ \displaystyle x^{k+1} = x^k - \tau\_k g^k, \quad g^k\in \partial f(x^k). $
 Unlike gradient descent, negative of subgradient is not always a descent direction. And it turns out that any choice of constant step size will be sub-optimal. The analysis begins with the following estimate.  
 Let $ {x^\*}$ be an optimal point, then  
 
-> **Exercise 4***[](https://www.blogger.com/null)*  
+> **Exercise 4****  
 > 
-> *[$ \displaystyle \|x^{k+1} - x^\*\| \leq \|x^k-x^\*\|^2 - 2\tau\_k (f(x^k)-f(x^\*)) + \tau\_k^2\|g^k\|^2. \ \ \ \ \ (3)$](https://www.blogger.com/null)*
+> *$ \displaystyle \|x^{k+1} - x^\*\| \leq \|x^k-x^\*\|^2 - 2\tau\_k (f(x^k)-f(x^\*)) + \tau\_k^2\|g^k\|^2.      (3)$*
 > 
-> *[](https://www.blogger.com/null)(Hint: use the convexity of $ {f}$.)*
+> *(Hint: use the convexity of $ {f}$.)*
 
 Summing [(3)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2) in $ {k}$, we find that  
 
@@ -142,11 +142,11 @@ Let $ {f^{\*k} = min\_{0\leq i \leq k} f(x^i)}$. Then the above implies
 
 $ \displaystyle 2\sum\_{k=0}^{N-1}\tau\_k (f^{\*(N-1)} - f(x^\*)) \leq \|x^0-x^\*\|^2 + \sum\_{k=0}^{N-1}\tau\_k^2\|g^k\|^2. $
 
-So if we take constant step size $ {\tau\_k =\tau}$, and assume that and for every subgradient $ {g}$ one has a uniform bound $ {\|g\|\leq G}$, then[](https://www.blogger.com/null)  
+So if we take constant step size $ {\tau\_k =\tau}$, and assume that and for every subgradient $ {g}$ one has a uniform bound $ {\|g\|\leq G}$, then  
 
-[$ \displaystyle \begin{aligned} f^{\*(N-1)} - f(x^\*) &\leq \frac{\|x^0-x^\*\|^2}{2\sum\_{k=0}^{N-1}\tau\_k } + \frac{\sum\_{k=0}^{N-1}\tau\_k^2\|g^k\|^2}{2\sum\_{k=0}^{N-1}\tau\_k } \\ &\leq \frac{\|x^0-x^\*\|^2}{2N\tau} + \frac{G^2\tau^2}{2} \end{aligned} \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} f^{\*(N-1)} - f(x^\*) &\leq \frac{\|x^0-x^\*\|^2}{2\sum\_{k=0}^{N-1}\tau\_k } + \frac{\sum\_{k=0}^{N-1}\tau\_k^2\|g^k\|^2}{2\sum\_{k=0}^{N-1}\tau\_k } \\ &\leq \frac{\|x^0-x^\*\|^2}{2N\tau} + \frac{G^2\tau^2}{2} \end{aligned}      (4)$
 
-[](https://www.blogger.com/null)which does not guarantee convergence of $ {f^{\*(N-1)}}$ when $ {N}$ is large. To ensure convergence one has to take diminishing step sizes. In this case having $ {\tau\_k \rightarrow 0, \sum\_{k=1}^\infty \tau\_k = \infty}$ will be sufficient.  
+which does not guarantee convergence of $ {f^{\*(N-1)}}$ when $ {N}$ is large. To ensure convergence one has to take diminishing step sizes. In this case having $ {\tau\_k \rightarrow 0, \sum\_{k=1}^\infty \tau\_k = \infty}$ will be sufficient.  
 It is worthwhile to compare the convergence rate of the explicit subgradient method with that of the gradient descent. Although it seems not fair since they are for different functions, in the following subsection we shall see a boost in convergence even when functions are not necessarily differentiable, but instead *proximable*, so to see the incompetent nature of explicit subgradient methods.  
 
 Convergence rate is a measure of closeness to the optimal value per number of steps. Fixing the number of steps to be $ {N}$, we ask how close our last iterate value is to the optimal. If we choose constant step size $ {\tau\_k = \frac{C}{\sqrt{N}}}$, putting this into [(4)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3), we see that  
@@ -181,7 +181,7 @@ is known as the *Moreau-Yosida regularisation* of $ {f}$ with parameter $ {\tau}
 
 Observe that $ { \text{prox}\_{\tau f}(\bar{x}) = \arg\min\_{x} f(x) + \frac{\|x - \bar{x}\|^2}{2\tau}}$. We may now define the implicit "descent" as in Algorithm [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#algopgd1).  
 
-> **Algorithm 2 (Proximal minimisation/backward Euler scheme)** *[](https://www.blogger.com/null)Given objective $ {f}$, initialisation $ {x^0}$ and step sizes choices $ {\tau\_k}$, for $ {k\geq 0}$, do*  
+> **Algorithm 2 (Proximal minimisation/backward Euler scheme)** *Given objective $ {f}$, initialisation $ {x^0}$ and step sizes choices $ {\tau\_k}$, for $ {k\geq 0}$, do*  
 > 
 > *$ \displaystyle x^{k+1} = \text{prox}\_{\tau\_k f}(x^k).$*
 
@@ -204,11 +204,11 @@ Taking $ {z = x^{k}, x = x^k}$ in the above, we see that
 $ \displaystyle f(x^{k+1}) - f(x^k) \leq -\frac{1}{\tau\_k}\langle x^k- x^{k+1}, x^k- x^{k+1} \rangle = -\frac{1}{\tau\_k} \|x^k-x^{k+1}\|^2. $
 
 so that in each iteration there is improvement.  
-Now taking $ {z = x^{\*}, x = x^k}$, we see that[](https://www.blogger.com/null)  
+Now taking $ {z = x^{\*}, x = x^k}$, we see that  
 
-[$ \displaystyle \begin{array}{rcl} f(x^{k+1}) - f(x^\*) &\leq& -\frac{1}{\tau\_k}\langle x^k- x^{k+1}, x^\*- x^{k+1} \rangle \\ &=& -\frac{1}{\tau\_k}\langle x^k- x^{k+1}+x^\*-x^\*, x^\*- x^{k+1} \rangle \\ &\leq & \frac{1}{2\tau\_k}( \|x^\*- x^{k}\|^2 - \|x^\*- x^{k+1} \|^2), \end{array} $](https://www.blogger.com/null)
+$ \displaystyle \begin{array}{rcl} f(x^{k+1}) - f(x^\*) &\leq& -\frac{1}{\tau\_k}\langle x^k- x^{k+1}, x^\*- x^{k+1} \rangle \\ &=& -\frac{1}{\tau\_k}\langle x^k- x^{k+1}+x^\*-x^\*, x^\*- x^{k+1} \rangle \\ &\leq & \frac{1}{2\tau\_k}( \|x^\*- x^{k}\|^2 - \|x^\*- x^{k+1} \|^2), \end{array} $
 
-[](https://www.blogger.com/null)where the last row follows by ${\langle x^\*- x^{k}, x^\*-x^{k+1}\rangle \leq \frac{1}{2}(\|x^\*- x^{k}\|^2 + \|x^\*-x^{k+1}\|^2)}$. Assuming constant step size $ {\tau}$, and summing the above inequality [(4)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4) in $ {k}$, and using the fact that $ {f(x^k)}$ is decreasing, we have the convergence rate estimate  
+where the last row follows by ${\langle x^\*- x^{k}, x^\*-x^{k+1}\rangle \leq \frac{1}{2}(\|x^\*- x^{k}\|^2 + \|x^\*-x^{k+1}\|^2)}$. Assuming constant step size $ {\tau}$, and summing the above inequality [(4)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4) in $ {k}$, and using the fact that $ {f(x^k)}$ is decreasing, we have the convergence rate estimate  
 
 $ \displaystyle f(x^N) - f(x^\*) \leq \frac{1}{N}\sum\_{i=0}^{N-1}(f(x^i)-f(x^\*))\leq \frac{1}{N\tau}\|x^\* - x^0\|^2. $
 
@@ -238,7 +238,7 @@ and the function $ {f^\*}$ is known as the *conjugate*, or the *Legendre-Fenchel
 
 > **Exercise 8** *Show that $ {f^\*}$ is closed (i.e. f has closed epigraph) and convex regardless of $ {f}$. (Hint: intersection of closed half spaces is closed; pointwise supremum over affine functions is convex.)*
 
-> **Exercise 9** *[](https://www.blogger.com/null)Show that the biconjugate $ {f^{\*\*} : = (f^\*)^\*}$ of a function $ {f}$ satisfies*  
+> **Exercise 9** *Show that the biconjugate $ {f^{\*\*} : = (f^\*)^\*}$ of a function $ {f}$ satisfies*  
 > 
 > *$ \displaystyle f^{\*\*}(x) \leq f(x). $*
 > 
@@ -246,11 +246,11 @@ and the function $ {f^\*}$ is known as the *conjugate*, or the *Legendre-Fenchel
 
 **2.1. Lagrange duality**
 
-For our purpose suppose we are interested in the following class of optimisation problem with possibly nonlinear, but convex inequality constraints and linear equality constraint[](https://www.blogger.com/null)  
+For our purpose suppose we are interested in the following class of optimisation problem with possibly nonlinear, but convex inequality constraints and linear equality constraint  
 
-[$ \displaystyle \begin{aligned} & \underset{x\in C}{\text{min}} & & f(x) \\ & \text{subject to} & & g\_i(x) \leq 0, \; i = 1, \ldots, m.\\ & & & Ax-b = 0. \end{aligned} \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} & \underset{x\in C}{\text{min}} & & f(x) \\ & \text{subject to} & & g\_i(x) \leq 0, \; i = 1, \ldots, m.\\ & & & Ax-b = 0. \end{aligned}      (5)$
 
-[](https://www.blogger.com/null)Here $ {C}$ is a convex set in $ {\mathbb{R}^d}$, $ {f(x), g(x) = (g\_1(x),\dots,g\_m(x))}$ are convex functions, $ {A\in\mathbb{R}^{r \times d}}$ and $ {b\in \mathbb{R}^r}$. The *Lagragian* corresponding to [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1) is defined as  
+Here $ {C}$ is a convex set in $ {\mathbb{R}^d}$, $ {f(x), g(x) = (g\_1(x),\dots,g\_m(x))}$ are convex functions, $ {A\in\mathbb{R}^{r \times d}}$ and $ {b\in \mathbb{R}^r}$. The *Lagragian* corresponding to [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1) is defined as  
 
 $ \displaystyle L(x,\mu, \lambda) = f(x) + \langle \mu, g(x)\rangle + \langle \lambda, Ax-b\rangle. $
 
@@ -284,17 +284,17 @@ $ \displaystyle -\sup\_{p \geq 0}\; \langle \mu, -g(x)-p \rangle + \langle \lamb
 
 since $ {y\_1 \leq -g(x) \iff y\_1 = -g(x) - p}$ for some $ { p \geq 0}$. Noting that $ {-\langle \mu, p \rangle}$ has a bounded contribution to the supremum only when $ {\mu\geq 0 }$, the dual function is then equivalent to  
 
-$ \displaystyle q(\mu,\lambda) = \begin{cases} \inf\_{x\in C} f(x) + \langle \mu, g(x) \rangle + \langle \lambda, Ax-b \rangle &\text{ if } \mu \geq 0\\ -\infty &\text{ otherwise} \end{cases} \ \ \ \ \ (6)$
+$ \displaystyle q(\mu,\lambda) = \begin{cases} \inf\_{x\in C} f(x) + \langle \mu, g(x) \rangle + \langle \lambda, Ax-b \rangle &\text{ if } \mu \geq 0\\ -\infty &\text{ otherwise} \end{cases}      (6)$
 
 The term inside the above infimum is our familiar Lagrangian. Note how multiple Lagrangians can arise from different formulations of the same problem.  
 
 > **Exercise 10** *Show that the dual function $ {q(\mu,\lambda)}$ is concave.*
 
-The *dual problem* is now defined as[](https://www.blogger.com/null)  
+The *dual problem* is now defined as  
 
-[$ \displaystyle \begin{aligned} & \underset{\mu,\lambda}{\text{max}} & & q(\mu,\lambda) \\ & \text{subject to} & & \mu \geq 0,\lambda \in \mathbb{R}^r. \end{aligned} \ \ \ \ \ (7)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} & \underset{\mu,\lambda}{\text{max}} & & q(\mu,\lambda) \\ & \text{subject to} & & \mu \geq 0,\lambda \in \mathbb{R}^r. \end{aligned}      (7)$
 
-[](https://www.blogger.com/null)In light of above, Problem [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1) will be referred to as the *primal problem*.  
+In light of above, Problem [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1) will be referred to as the *primal problem*.  
 Why it is called *dual*?  
 
 > **Exercise 11** *(Primal-dual gap, weak duality) Show that for any feasible $ {x}$ (satisfying all the constraints) and $ {\mu,\lambda}$ in primal, dual problems resp.,*  
@@ -335,7 +335,7 @@ $ \displaystyle L(x,\mu^\*,\lambda^\*) \geq L(x^\*,\mu^\*,\lambda^\*) \geq L(x^\
 
 The saddle point formulation, together with Karush-Kuhn-Tucker (KKT) conditions, immediately yield the optimality condition for the constrained optimisation problem.  
 
-> **Theorem 10 (Primal-dual optimality condition)** *[](https://www.blogger.com/null)Suppose strong duality holds for Problem [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1). Then $ {(x^\*,\mu^\*,\lambda^\*)}$ is primal-dual optimal if and only if*  
+> **Theorem 10 (Primal-dual optimality condition)** *Suppose strong duality holds for Problem [(5)](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prob1). Then $ {(x^\*,\mu^\*,\lambda^\*)}$ is primal-dual optimal if and only if*  
 > 
 > *-   Primal feasibility: $ {x^\*}$ satisfies the constraints;
 > -   Dual feasibility: $ {\mu^\* \geq 0}$;
@@ -392,7 +392,7 @@ In fact, the *alternating direction method of multipliers (ADMM)* can be conside
 
 **How to find a subgradient of the conjugate function?** This is an interesting question arising from solving the above dual problem using e.g. explicit gradient/subgradient methods. The results are of course useful in many situations.  
 
-> **Theorem 11** *[](https://www.blogger.com/null)For a general function $ {f}$ (i.e. not necessarily convex), then $ {s \in \partial f(x)}$ implies that $ {x \in \partial f^\*(s)}$.*
+> **Theorem 11** *For a general function $ {f}$ (i.e. not necessarily convex), then $ {s \in \partial f(x)}$ implies that $ {x \in \partial f^\*(s)}$.*
 
 First we need a result regarding characterisation of $ {s \in \partial f(x)}$.  
 
@@ -418,11 +418,11 @@ The following is an easy consequence of Exercise [9](https://www.blogger.com/blo
 
 **2.3. Method of multipliers**
 
-Let's consider the convex problem[](https://www.blogger.com/null)  
+Let's consider the convex problem  
 
-[$ \displaystyle \begin{aligned} & \underset{x \in \mathbb{R}^d}{\text{min}} & & f(x) \\ & \text{subject to} & & Ax = b \end{aligned} \ \ \ \ \ (8)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} & \underset{x \in \mathbb{R}^d}{\text{min}} & & f(x) \\ & \text{subject to} & & Ax = b \end{aligned}      (8)$
 
-[](https://www.blogger.com/null)The associated Lagrangian function is  
+The associated Lagrangian function is  
 
 $ \displaystyle L(x,\lambda) = f(x) + \langle \lambda, Ax-b\rangle. $
 
@@ -473,20 +473,20 @@ where $ {x^\*}$ is as above. The convergence analysis in Section 1.2 thus applie
 
 **3\. Introduction to Operator splitting in optimisation**
 
-In this section, we typically consider problems of the form[](https://www.blogger.com/null)  
+In this section, we typically consider problems of the form  
 
-[$ \displaystyle \underset{x \in \mathbb{R}^d}{\text{min}} \; g(x) + h(x) \ \ \ \ \ (9)$](https://www.blogger.com/null)
+$ \displaystyle \underset{x \in \mathbb{R}^d}{\text{min}} \; g(x) + h(x)      (9)$
 
-[](https://www.blogger.com/null)without constraints. We shall describe more explicit conditions of the problem for each type of method as we go.  
+without constraints. We shall describe more explicit conditions of the problem for each type of method as we go.  
 The objective function is the sum of two (or more) functions, which can be thought of being used to handle constraints. There are different ways to penalise, using different penalty functions. As a consequence the two functions can have very different properties in terms of applying optimisation techniques. For instances:  
 
-> **Example 1 (Sparsity-promoting type penalty: lasso)***[](https://www.blogger.com/null)*  
+> **Example 1 (Sparsity-promoting type penalty: lasso)****  
 > 
 > *$ \displaystyle \underset{x \in \mathbb{R}^d}{\text{min}} \; \frac{\mu}{2}\|Ax-b\|^2 + \|x\|\_1 $*
 > 
 > *where $ {A\in \mathbb{R}^{m\times d}}$, $ {b\in \mathbb{R}^m}$ are given and $ {\mu>0}$ is a parameter. This model is useful for *sparse signal recovery*, that is recovering a clean signal from the noisy observed signal $ {b}$ as a sparse linear combination of atoms from the dictionary $ {A}$.*
 
-> **Example 2 (Rudin-Osher-Fatemi model for image denoising (ROF))** *[](https://www.blogger.com/null)Let $ {u^{\diamond}\in \mathbb{R}^{m\times n}}$ be the observed corrupted image. The (discrete) ROF model is defined to be*  
+> **Example 2 (Rudin-Osher-Fatemi model for image denoising (ROF))** *Let $ {u^{\diamond}\in \mathbb{R}^{m\times n}}$ be the observed corrupted image. The (discrete) ROF model is defined to be*  
 > 
 > *$ \displaystyle \underset{u \in \mathbb{R}^{m\times n}}{\text{min}} \; \mu\|Du\|\_{p,1} + \frac{1}{2}\|u-u^{\diamond}\|^2 $*
 > 
@@ -510,7 +510,7 @@ The objective function is the sum of two (or more) functions, which can be thoug
 > 
 > *$ \displaystyle \underset{u \in \mathbb{R}^{m\times n}}{\text{min}} \; \mu\|Du\|\_{p,1} + \frac{1}{2}\|a\*u-u^{\diamond}\|\_1. $*
 
-> **Example 5 (Robust principal component analysis (RPCA))** *[](https://www.blogger.com/null)Given $ {M\in\mathbb{R}^{m\times n}}$,*  
+> **Example 5 (Robust principal component analysis (RPCA))** *Given $ {M\in\mathbb{R}^{m\times n}}$,*  
 > 
 > *$ \displaystyle \begin{aligned} &\underset{L,S \in \mathbb{R}^{m\times n}}{\text{min}} \; & &\|L\|\_{\*} + \rho \|S\|\_1 \\ & \text{subject to} & & L+S=M \end{aligned} $*
 > 
@@ -544,7 +544,7 @@ There is a simple and natural idea of solving the unconstrained Problem [9](http
 
 > **Example 7 (Iterative soft-thresholding)** *Apply the forward-backward splitting to the Lasso problem (Example [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#problasso)).*
 
-> **Exercise 14** *[](https://www.blogger.com/null)Show that the proximal mapping of the $ {\ell^1}$-norm $ {\|x\|\_1}$ is the *soft-thresholding operator**  
+> **Exercise 14** *Show that the proximal mapping of the $ {\ell^1}$-norm $ {\|x\|\_1}$ is the *soft-thresholding operator**  
 > 
 > *$ \displaystyle (\text{prox}\_{\tau \|\cdot\|\_1}(x))\_i = \max \{0, |x\_i|-\tau\}= \begin{cases} x\_i - \tau \text{ if } x\_i \geq \tau \\ 0 \text{ if } |x\_i| \leq \tau \\ x\_i + \tau \text{ if } x\_i \leq -\tau \\ \end{cases} $*
 > 
@@ -587,15 +587,15 @@ The analysis then is a combination that of the gradient/proximal descent we have
 
 > **Exercise 20** *Show that, for all $ {z}$*  
 > 
-> *$ \displaystyle \begin{aligned} &g(z) + h(z) + \frac{1}{2\tau}\|z - x^k\|^2 \\ \geq& \; g(x^k) + \langle \nabla g(x^k), z-x^k\rangle + \frac{1}{2\tau}\|z - x^k\|^2 + h(z) \\ \geq& \; g(x^k) + \langle \nabla g(x^k), x^{k+1}-x^k\rangle + \frac{1}{2\tau}\|x^{k+1} - x^k\|^2 + h(x^{k+1}) + \frac{1}{2\tau}\|z - x^{k+1}\|^2 \end{aligned} \ \ \ \ \ (10)$*
+> *$ \displaystyle \begin{aligned} &g(z) + h(z) + \frac{1}{2\tau}\|z - x^k\|^2 \\ \geq& \; g(x^k) + \langle \nabla g(x^k), z-x^k\rangle + \frac{1}{2\tau}\|z - x^k\|^2 + h(z) \\ \geq& \; g(x^k) + \langle \nabla g(x^k), x^{k+1}-x^k\rangle + \frac{1}{2\tau}\|x^{k+1} - x^k\|^2 + h(x^{k+1}) + \frac{1}{2\tau}\|z - x^{k+1}\|^2 \end{aligned}      (10)$*
 > 
 > *(Hint: for the second inequality, observe that $ {x^{k+1}}$ is the minimiser of the function $ {h(z) + g(x^k) + \langle \nabla g(x^k), z - x^k\rangle + \frac{1}{2\tau}\|z - x^k\|^2 }$.)*
 
-Now since $ {g}$ has $ {L}$-Lipschitz gradient, it follows from the descent lemma, together with $ {\tau \leq 1/L}$ that[](https://www.blogger.com/null)  
+Now since $ {g}$ has $ {L}$-Lipschitz gradient, it follows from the descent lemma, together with $ {\tau \leq 1/L}$ that  
 
-[$ \displaystyle g(x^{k+1}) + h(x^{k+1}) + \frac{1}{2\tau}\|z - x^{k+1}\|^2 \leq g(z) + h(z) + \frac{1}{2\tau}\|z - x^{k}\|^2 . \ \ \ \ \ (11)$](https://www.blogger.com/null)
+$ \displaystyle g(x^{k+1}) + h(x^{k+1}) + \frac{1}{2\tau}\|z - x^{k+1}\|^2 \leq g(z) + h(z) + \frac{1}{2\tau}\|z - x^{k}\|^2 .      (11)$
 
-[](https://www.blogger.com/null)Taking $ {z = x^k}$ we see that the algorithm is a descent method. Taking $ {z = x^\*}$ and summing in $ {k}$ with constant step sizes we obtain the $ {O(1/N)}$ rate of convergence.  
+Taking $ {z = x^k}$ we see that the algorithm is a descent method. Taking $ {z = x^\*}$ and summing in $ {k}$ with constant step sizes we obtain the $ {O(1/N)}$ rate of convergence.  
 
 **3.2. Douglas-Rachford splitting; ADMM**
 
@@ -603,7 +603,7 @@ The idea of this splitting method can be traced back to the work of Douglas and 
 
 Assume that both $ {g,h}$ are closed and convex, the Douglas-Rachford splitting method reads  
 
-> **Algorithm 4 (Douglas-Rachford)** *[](https://www.blogger.com/null)Given objectives $ {g,h}$, initialisation $ {y^0}$ and step sizes $ {\tau\_k}$. For $ {k\geq 0}$, do*  
+> **Algorithm 4 (Douglas-Rachford)** *Given objectives $ {g,h}$, initialisation $ {y^0}$ and step sizes $ {\tau\_k}$. For $ {k\geq 0}$, do*  
 > 
 > *$ \displaystyle \begin{aligned} x^{k+1} &= \text{prox}\_{\tau\_k g}(y^{k}); \\ y^{k+1} &= y^k -x^{k+1} + \text{prox}\_{\tau\_k h}(2x^{k+1} - y^k). \end{aligned} $*
 > 
@@ -628,11 +628,11 @@ Summing the above two relations, we arrive at the optimality condition
 $ \displaystyle 0 \in \partial g(x^\*) + \partial h(x^\*). $
 
 The analysis of this algorithm shall be taken up later in the framework of monotone operators. Here we want to relate it to ADMM.  
-Consider the constrained optimisation problem[](https://www.blogger.com/null)  
+Consider the constrained optimisation problem  
 
-[$ \displaystyle \begin{aligned} &\min\_{\substack{x\in \mathbb{R}^{d\_1}, y\in \mathbb{R}^{d\_2}}} \; & & f\_1(x) + f\_2(y)\\ & \text{subject to} & & Ax + By = b \end{aligned} \ \ \ \ \ (12)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} &\min\_{\substack{x\in \mathbb{R}^{d\_1}, y\in \mathbb{R}^{d\_2}}} \; & & f\_1(x) + f\_2(y)\\ & \text{subject to} & & Ax + By = b \end{aligned}      (12)$
 
-[](https://www.blogger.com/null)where $ {A\in\mathbb{R}^{m \times d\_1},B\in\mathbb{R}^{m \times d\_2}, b\in \mathbb{R}^m}$. The dual problem is unconstrained  
+where $ {A\in\mathbb{R}^{m \times d\_1},B\in\mathbb{R}^{m \times d\_2}, b\in \mathbb{R}^m}$. The dual problem is unconstrained  
 
 $ \displaystyle \min\_{s\in \mathbb{R}^m} \; \langle s, b\rangle + f^\*\_1(-A^Ts) + f^\*\_2(-B^Ts), $
 

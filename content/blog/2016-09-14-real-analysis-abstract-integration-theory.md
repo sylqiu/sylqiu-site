@@ -28,7 +28,7 @@ We can already define a desirable kind of mappings in this axiomatic setting.
 
    **1.1. Definition of a Measurable Mapping**     
 
-  Let us begin with a set-theoretic property that we will often encounter. Let $ {f:A\rightarrow B}$ be any mapping, $ {C,D\subset B}$. It follows from the *definition* of a mapping that \\begin{eqnarray} f^{-1}(C\\cap D) & =f^{-1}(C)\\cap f^{-1}(D); \\\\ f^{-1}(C\\cup D) & =f^{-1}(C)\\cup f^{-1}(D). \\end{eqnarray} In fact, for *any* collection of subsets in $ {B}$ the above will hold. Thus a mapping is well-behaved in terms of preimages with respect to set-theoretic operations, which will be exploited throughout.
+  Let us begin with a set-theoretic property that we will often encounter. Let $ {f:A\rightarrow B}$ be any mapping, $ {C,D\subset B}$. It follows from the *definition* of a mapping that \\begin{aligned} f^{-1}(C\\cap D) & =f^{-1}(C)\\cap f^{-1}(D); \\\\ f^{-1}(C\\cup D) & =f^{-1}(C)\\cup f^{-1}(D). \\end{aligned} In fact, for *any* collection of subsets in $ {B}$ the above will hold. Thus a mapping is well-behaved in terms of preimages with respect to set-theoretic operations, which will be exploited throughout.
 
 > **Definition 2** *Let $ {X}$ be a measurable space, $ {Y}$ be a topological space, and $ {f:X\rightarrow Y}$. $ {f}$ is said to be *measurable* if for every open set $ {G\subset Y}$, $ {f^{-1}(G)}$ is measurable.*
 
@@ -66,7 +66,7 @@ Since a simple function only takes finitely number of values, it immediately fol
 
 In contrast to Riemann's approach to approximating a function, where domain of the function to be approximated is divided into boxes, we subdivide the range of the function into boxes (intervals). This has the advantage that, the preimage of each sub-interval is measurable, and thus can be approximated by simple functions. It can be easily arranged to be an approximation from below. We summarise it as  
 
-> **Theorem 5** *[](https://www.blogger.com/null)Let $ {f:\rightarrow[0,\infty]}$ be measurable. There exists a sequence of incresing simple functions such that $ {s\_{n}\nearrow f}$ pointwisely.*
+> **Theorem 5** *Let $ {f:\rightarrow[0,\infty]}$ be measurable. There exists a sequence of incresing simple functions such that $ {s\_{n}\nearrow f}$ pointwisely.*
 
 For any measurable function $ {f:X\rightarrow[-\infty,\infty]}$, define  
 
@@ -94,7 +94,7 @@ We continue with an axiomatic approach to integration.
 
 The following theorem is more general than it may seem.  
 
-> **Theorem 9** *[](https://www.blogger.com/null)(Monotone convergence and Dominated convergence:positive measure case)*  
+> **Theorem 9** *(Monotone convergence and Dominated convergence:positive measure case)*  
 > 
 > *-   If $ {A=\bigcup\_{n=1}^{\infty}A\_{n}}$ and $ {\{A\_{n}\}}$ is an ascending seqeunce:
 >     
@@ -131,7 +131,7 @@ $ \displaystyle \int\_{E}sd\mu:=\sum\_{i=1}^{n}\alpha\_{i}\mu(A\_{i}\cap E). $
 
 Here is a first result that explains what Theorem [9](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm\(Monotone-convergence-and) can be applied quite generally:  
 
-> **Proposition 10** *[](https://www.blogger.com/null)If $ {s\geq0}$, then $ {\varphi(E)=\int\_{E}sd\mu}$ for $ {E\in\mathfrak{M}}$ defines a measure on $ {\mathfrak{M}}$.*
+> **Proposition 10** *If $ {s\geq0}$, then $ {\varphi(E)=\int\_{E}sd\mu}$ for $ {E\in\mathfrak{M}}$ defines a measure on $ {\mathfrak{M}}$.*
 
 > **Definition 11** *(Lebesgue integral of positive functions) If $ {f:X\rightarrow[0,\infty]}$ is measurable, and $ {E\in\mathfrak{M}}$, the Lebesgue integral of $ {f}$ over $ {E}$ with respect to the measure $ {\mu}$ is defined by*  
 > 
@@ -183,7 +183,7 @@ In general, a sequence of non-negative functions that is a.e. convergent need no
 > *In particular, if $ {0\leq f\_{n}\rightarrow f}$ a.e., then $ {\int\_{X}fd\mu\leq\liminf\_{n\rightarrow\infty}\int\_{X}f\_{n}d\mu}$.*
 
 *Proof:* Let $ {g\_{k}=\inf\_{n\geq k}f\_{n}}$. It is measurable and $ {g\_{k}\leq f\_{k}}$ . Thus $ {\int\_{X}g\_{k}d\mu\leq\int\_{X}f\_{k}d\mu}$. Since $ {0\leq g\_{k}\nearrow\liminf f}$, we conclude from the monotone convergence theorem that  
-\\begin{eqnarray} \\int\_{X}\\lim\_{k\\rightarrow\\infty}g\_{k}d\\mu &=&\\int\_{X}(\\liminf\_{n\\rightarrow\\infty}f\_{n})d\\mu \\\\ & \\leq & \\liminf\_{n\\rightarrow\\infty}\\int\_{X}f\_{n}d\\mu. \\end{eqnarray} $ \Box$  
+\\begin{aligned} \\int\_{X}\\lim\_{k\\rightarrow\\infty}g\_{k}d\\mu &=&\\int\_{X}(\\liminf\_{n\\rightarrow\\infty}f\_{n})d\\mu \\\\ & \\leq & \\liminf\_{n\\rightarrow\\infty}\\int\_{X}f\_{n}d\\mu. \\end{aligned} $ \Box$  
 
 > **Definition 14** *An extended real-valued measurable functions $ {f}$ on $ {X}$ is said to be *integrable* if*  
 > 
@@ -205,7 +205,7 @@ $ \displaystyle \int\_{X}fd\mu=\int\_{X}f^{+}d\mu-\int\_{X}f^{-}d\mu. $
 > *$ \displaystyle \int\_{X}f\_{n}d\mu\rightarrow\int\_{X}fd\mu. $*
 
 *Proof:* It is obvious that $ {|f|\le g}$. Hence $ {f\in L^{1}(\mu)}$.  
-By triangle inequality, $ {|f-f\_{n}|\leq2g}$. Since $ {|f-f\_{n}|\rightarrow0}$, by Fatou's lemma, \\begin{eqnarray} \\int\_{X}2gd\\mu & \\leq &\\liminf\\int\_{X}(2g-|f-f\_{n}|)d\\mu \\\\ & =& \\int\_{X}2gd\\mu+\\liminf\\int\_{X}\\left(-|f-f\_{n}|\\right)d\\mu. \\end{eqnarray} Since $ {g\in L^{1}(\mu)}$, we can cancel the term $ {\int\_{X}2gd\mu}$ and obtain  
+By triangle inequality, $ {|f-f\_{n}|\leq2g}$. Since $ {|f-f\_{n}|\rightarrow0}$, by Fatou's lemma, \\begin{aligned} \\int\_{X}2gd\\mu & \\leq &\\liminf\\int\_{X}(2g-|f-f\_{n}|)d\\mu \\\\ & =& \\int\_{X}2gd\\mu+\\liminf\\int\_{X}\\left(-|f-f\_{n}|\\right)d\\mu. \\end{aligned} Since $ {g\in L^{1}(\mu)}$, we can cancel the term $ {\int\_{X}2gd\mu}$ and obtain  
 
 $ \displaystyle \liminf\int\_{X}\left(-|f-f\_{n}|\right)d\mu\geq0. $
 

@@ -27,14 +27,14 @@ as a *bounded linear functional* (thus equivalently continuous) on $ {L^{p}}$. S
 Of course, the corollary extends to the cases where $ {\lambda}$ is a finite signed measure or complex measure.  
 *Proof:* (1) implies (3) (this is absolute continuity of integrals). (3) implies (2). By Lebesgue-Radon-Nikodym theorem, (2) implies (1). $ \Box$  
 
-> **Theorem 2** *[](https://www.blogger.com/null)Let $ {1\leq p<\infty}$, and assume $ {\mu}$ is $ {\sigma}$-finite. Let $ {\lambda:L^{p}\rightarrow\mathbb{C}}$ be a bounded linear functional. Then there exists a unique $ {g\in L^{q}}$ such that $ {\lambda=\lambda\_{g}}$.*
+> **Theorem 2** *Let $ {1\leq p<\infty}$, and assume $ {\mu}$ is $ {\sigma}$-finite. Let $ {\lambda:L^{p}\rightarrow\mathbb{C}}$ be a bounded linear functional. Then there exists a unique $ {g\in L^{q}}$ such that $ {\lambda=\lambda\_{g}}$.*
 
 *Proof:* The uniqueness follows from that if $ {\lambda\_{g'}=\lambda\_{g}}$, then $ {\int\_{E}g'-gd\mu=0}$ for any measurable $ {E}$, thus $ {g=g'}$ a.e..  
-Suppose first that $ {\mu}$ is finite. Now to show that every bounded linear functional $ {\lambda}$ on $ {L^{p}}$ arises as $ {\lambda\_{g}}$ for some $ {g}$, following the suggestion of Radon-Nikodym we define a set function $ {\nu:\mathfrak{M}\rightarrow\mathbb{C}}$ by[](https://www.blogger.com/null)  
+Suppose first that $ {\mu}$ is finite. Now to show that every bounded linear functional $ {\lambda}$ on $ {L^{p}}$ arises as $ {\lambda\_{g}}$ for some $ {g}$, following the suggestion of Radon-Nikodym we define a set function $ {\nu:\mathfrak{M}\rightarrow\mathbb{C}}$ by  
 
-[$ \displaystyle \nu(E):=\lambda(\chi\_{E}). \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \nu(E):=\lambda(\chi\_{E}).      (1)$
 
-[](https://www.blogger.com/null)Since $ {\lambda}$ is linear, and $ {\chi\_{E\_{1}\sqcup E\_{2}}=\chi\_{E\_{1}}+\chi\_{E\_{2}}}$, finite additivity follows. Since $ {\mu}$ is finite, dominated convergence theorem shows whenever $ {E\_{1},E\_{2},\dots}$ is a sequence of disjoint set,  
+Since $ {\lambda}$ is linear, and $ {\chi\_{E\_{1}\sqcup E\_{2}}=\chi\_{E\_{1}}+\chi\_{E\_{2}}}$, finite additivity follows. Since $ {\mu}$ is finite, dominated convergence theorem shows whenever $ {E\_{1},E\_{2},\dots}$ is a sequence of disjoint set,  
 
 $ \displaystyle \mu(\bigsqcup\_{n}E\_{n})=\sum\_{n}\mu(E\_{n}), $
 
@@ -89,7 +89,7 @@ We see $ {\|A\_{n}-A\|\rightarrow0}$ as $ {n\rightarrow\infty}$.
 From the above discussion we see that $ {X^{\*}}$ is a Banach space. And if $ {X\_{1},X\_{2}}$ are identified with some dense subspaces of the Banach space $ {X}$, their dual spaces will be isometric to $ {X^{\*}}$. This says that any densely defined linear functional on a Banach space has a unique isometric extension.  
 The dual space of a Hilbert space is particularly simple:  
 
-> **Theorem 4** *[](https://www.blogger.com/null)(Riesz representation for Hilbert spaces) Let $ {(H.(\cdot,\cdot))}$ be a (complex) Hilbert space, $ {\lambda:H\rightarrow\mathbb{C}}$ is a continuous linear functional. Then there exists a unique $ {v}$ in $ {H}$ such that $ {\lambda=(\cdot,v)}$. In particular, we see that the dual space of a Hilbert space is isomorphic to itself.*
+> **Theorem 4** *(Riesz representation for Hilbert spaces) Let $ {(H.(\cdot,\cdot))}$ be a (complex) Hilbert space, $ {\lambda:H\rightarrow\mathbb{C}}$ is a continuous linear functional. Then there exists a unique $ {v}$ in $ {H}$ such that $ {\lambda=(\cdot,v)}$. In particular, we see that the dual space of a Hilbert space is isomorphic to itself.*
 
 *Proof:* Uniqueness is easy. Suppose $ {\lambda\neq0}$. Then the kernel of $ {\lambda}$ is not the whole space, so pick a $ {w}$ not in the kernel and normalise to unit length. Then for any $ {x\in H}$, it projects to $ {w}$ with coefficient $ {\lambda(x)/\lambda(w)}$, what is remaining writes  
 
@@ -99,7 +99,7 @@ and is orthogonal to $ {w}$, so $ {(x,w)=\lambda(x)/\lambda(w)}$ and $ {\lambda(
 
  However, it is absolutely not trivial that thedual space of some other topological vector space isn't just $ {\{0\}}$ !  
 
-> **Example 1** *[](https://www.blogger.com/null)Equipp $ {[0,1]}$ with the usual Lebesgue measure. Consider the metric space $ {L^{1/2}[0,1]}$ of $ {1/2}$-integrable extended-real-valued functions, with metric $ {d(f,g)=\|f-g\|\_{\frac{1}{2}}^{\frac{1}{2}}}$ , which we have seen in a previous post. Suppose $ {\varphi\in\left(L^{1/2}\right)^{\*}}$ is non-trivial. Then the image of $ {\varphi}$ is the whole real line, in particular there exists $ {f\_{0}\in L^{1/2}}$ such that*  
+> **Example 1** *Equipp $ {[0,1]}$ with the usual Lebesgue measure. Consider the metric space $ {L^{1/2}[0,1]}$ of $ {1/2}$-integrable extended-real-valued functions, with metric $ {d(f,g)=\|f-g\|\_{\frac{1}{2}}^{\frac{1}{2}}}$ , which we have seen in a previous post. Suppose $ {\varphi\in\left(L^{1/2}\right)^{\*}}$ is non-trivial. Then the image of $ {\varphi}$ is the whole real line, in particular there exists $ {f\_{0}\in L^{1/2}}$ such that*  
 > 
 > *$ \displaystyle \varphi(f\_{0})\geq1. $*
 > 
@@ -191,11 +191,11 @@ It is an important fact that $ {L^{1}}$ is not reflexive in general, because the
 
 **1.3. Radon-Nikodym revisit**
 
-First let us quickly show how the $ {L^{p}}$-$ {L^{q}}$ duality can be used to deduce Radon-Nikodym theorem. For simplicity, restrict to the case where we have two finite unsigned measure $ {\nu}$ and $ {\mu}$ on $ {X}$. Then $ {\nu+\mu}$ is again a finite unsigned measure. Taking $ {\nu+\mu}$ as our reference measure, we see that the functional $ {I\_{\mu}:f\mapsto\int\_{X}fd\mu}$ is continuous on the space $ {L^{1}(\nu+\mu)}$, then there exists $ {g\in L^{\infty}(\nu+\mu)}$ such that $ {I\_{\mu}}$ can be represented to be[](https://www.blogger.com/null)  
+First let us quickly show how the $ {L^{p}}$-$ {L^{q}}$ duality can be used to deduce Radon-Nikodym theorem. For simplicity, restrict to the case where we have two finite unsigned measure $ {\nu}$ and $ {\mu}$ on $ {X}$. Then $ {\nu+\mu}$ is again a finite unsigned measure. Taking $ {\nu+\mu}$ as our reference measure, we see that the functional $ {I\_{\mu}:f\mapsto\int\_{X}fd\mu}$ is continuous on the space $ {L^{1}(\nu+\mu)}$, then there exists $ {g\in L^{\infty}(\nu+\mu)}$ such that $ {I\_{\mu}}$ can be represented to be  
 
-[$ \displaystyle I\_{\mu}(f)=\int\_{X}fd\mu=\int\_{X}f\bar{g}d(\nu+\mu). \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle I\_{\mu}(f)=\int\_{X}fd\mu=\int\_{X}f\bar{g}d(\nu+\mu).      (2)$
 
-[](https://www.blogger.com/null)Taking $ {f=\chi\_{E}}$, we see that $ {g}$ must be real and non-negative, and $ {g\leq1}$ $ {[\nu+\mu]}$-a.e.. Rearranging, we see that  
+Taking $ {f=\chi\_{E}}$, we see that $ {g}$ must be real and non-negative, and $ {g\leq1}$ $ {[\nu+\mu]}$-a.e.. Rearranging, we see that  
 
 $ \displaystyle \int\_{X}fd\mu-\int\_{X}fgd\mu=\int\_{X}f(1-g)d\mu=\int\_{X}fgd\nu. $
 

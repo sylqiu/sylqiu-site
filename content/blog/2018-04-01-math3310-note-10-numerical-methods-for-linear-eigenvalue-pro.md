@@ -8,11 +8,11 @@ publish: true
 ---
 **1\. The power method: finding the eigenvalues and eigenvectors**
 
-The power method for eigenvalue problem takes the advantage of the discrepancy between the eigenvalues. Strictly speaking, it is the difference in modulus that matters. Suppose an vector $ {{\bf u}}$ can be written as linear combination of the eigenvectors $ {\{{\bf v}\_{i}\}}$ of a matrix $ {A}$[](https://www.blogger.com/null)  
+The power method for eigenvalue problem takes the advantage of the discrepancy between the eigenvalues. Strictly speaking, it is the difference in modulus that matters. Suppose an vector $ {{\bf u}}$ can be written as linear combination of the eigenvectors $ {\{{\bf v}\_{i}\}}$ of a matrix $ {A}$  
 
-[$ \displaystyle {\bf u}=u\_{1}{\bf v}\_{1}+u\_{2}{\bf v}\_{2}+\cdots+u\_{n}{\bf v}\_{n},\quad u\_{i}\neq0\ \forall i. \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle {\bf u}=u\_{1}{\bf v}\_{1}+u\_{2}{\bf v}\_{2}+\cdots+u\_{n}{\bf v}\_{n},\quad u\_{i}\neq0 \forall i.      (1)$
 
-[](https://www.blogger.com/null)Then, by linearity  
+Then, by linearity  
 
 $ \displaystyle A^{k}{\bf u}=\lambda\_{1}^{k}u\_{1}{\bf v}\_{1}+\lambda\_{2}^{k}u\_{2}{\bf v}\_{2}+\cdots\lambda\_{n}^{k}u\_{n}{\bf v}\_{n}. $
 

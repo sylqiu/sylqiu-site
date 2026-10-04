@@ -54,7 +54,7 @@ It is important to note that the limit in $ {\sum\_{n\in\mathbb{Z}}\hat{f}(n)e^{
 
 What we have in mind here is that we have a set of "basis vectors'' $ {\{\frac{1}{2\pi}e^{inx}\}\_{n\in\mathbb{Z}}}$. These "basis vectors'' are in fact orthogonal, and the $ {n}$-th Fourier coefficient is basically the coefficient corresponding to the vector $ {\frac{1}{2\pi}e^{inx}}$.  
 
-> **Exercise 2** *Check that for every $ {n\in\mathbb{Z}}$[](https://www.blogger.com/null)*  
+> **Exercise 2** *Check that for every $ {n\in\mathbb{Z}}$*  
 > 
 > *$ \displaystyle \frac{1}{2\pi}\int\_{[0,2\pi]}e^{inx}dx=\begin{cases} 1 & \text{if }n=0\\ 0 & \text{otherwise} \end{cases} $*
 
@@ -116,9 +116,9 @@ I plotted the symmetric partial sum for $ {N=1,4,30}$ below.
 
 Now you might wonder why a function nice as $ {f(x)=x}$ will have its fourier series not agreeing with it at $ {x=\pm\pi}$. The catch is that the function $ {f(x)=x}$, although is continuous on $ {(-\pi,\pi)}$, is actually not a continuous function once $ {2\pi}$-periodically extended. So from this point of view it is more similar to a "saw-tooth'' function than a nice continuous function.  
 
-> **Remark 2** *[](https://www.blogger.com/null)Note that the symmetric parital sum near the discontinuity also overshoots the original function by roughly 18%. It turns out that this over-shoot cannot be entirely avoided by taking $ {N}$ larger. This is known as the ***Gibbs phenomenon***. In general, the pointwise convergence of Fourier series is localized and it exhibits bad pointwise convergence behavior near discontinuities. In fact, quantitative assumptions must be made since one can even construct a continuous function whose Fourier series diverges at one point. The reasons for these issues are well-understood in harmonic analysis.*
+> **Remark 2** *Note that the symmetric parital sum near the discontinuity also overshoots the original function by roughly 18%. It turns out that this over-shoot cannot be entirely avoided by taking $ {N}$ larger. This is known as the ***Gibbs phenomenon***. In general, the pointwise convergence of Fourier series is localized and it exhibits bad pointwise convergence behavior near discontinuities. In fact, quantitative assumptions must be made since one can even construct a continuous function whose Fourier series diverges at one point. The reasons for these issues are well-understood in harmonic analysis.*
 
-> **Remark 3** *[](https://www.blogger.com/null)What special advantage the inner product formulation of the Fourier coefficient gives us, is that we are then able to prove certain best approximation properties of the (partial) Fourier series, where orthogonality is a very handy tool. This formulation is more often called the "mean-squared'', or $ {L^{2}}$-formualtion of Fourier series. Convergene in the "mean-squared'' sense are then quite easy to establish for quite general functions, which are not necessarily continuous. For more details, you can refer to Chapter 3 of *Fourier Analysis: an introduction* by Stein and Shakarchi.*
+> **Remark 3** *What special advantage the inner product formulation of the Fourier coefficient gives us, is that we are then able to prove certain best approximation properties of the (partial) Fourier series, where orthogonality is a very handy tool. This formulation is more often called the "mean-squared'', or $ {L^{2}}$-formualtion of Fourier series. Convergene in the "mean-squared'' sense are then quite easy to establish for quite general functions, which are not necessarily continuous. For more details, you can refer to Chapter 3 of *Fourier Analysis: an introduction* by Stein and Shakarchi.*
 
 The ringing effect (I called incorrectly it aliasing effect, which is another thing) is closely related to Gibbs phenomenon. Photo from Wikipedia  
 

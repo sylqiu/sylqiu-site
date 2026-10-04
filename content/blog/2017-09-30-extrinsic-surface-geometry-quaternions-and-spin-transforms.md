@@ -129,7 +129,7 @@ $ \displaystyle d\tilde{f}=\bar{\lambda}df\lambda, $
 
 called the spin transform.  
 
-> **Theorem 3** *[](https://www.blogger.com/null)Two immersions into $ {\mathbb{R}^{3}}$ of an oriented surface are spin equivalent if and only if they induce the same conformal structure on $ {M}$ and are regular homotopic.*
+> **Theorem 3** *Two immersions into $ {\mathbb{R}^{3}}$ of an oriented surface are spin equivalent if and only if they induce the same conformal structure on $ {M}$ and are regular homotopic.*
 
 **5\. A Dirac operator**
 

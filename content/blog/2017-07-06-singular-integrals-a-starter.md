@@ -12,7 +12,7 @@ $ \displaystyle H(f)(x)=\int\_{\mathbb{R}}f^{\wedge}(\xi)\frac{\text{sign}(\xi)}
 
 for $ {f\in L^{2}(\mathbb{R})}$, where  
 
-$ \displaystyle \text{sign}(\xi)=\begin{cases} 1 & \xi>0\\ 0 & \xi=0\\ -1 & \xi<0 \end{cases};\ f^{\wedge}(\xi):=\int\_{\mathbb{R}}f(x)e^{-2\pi i\xi x}\,dx $
+$ \displaystyle \text{sign}(\xi)=\begin{cases} 1 & \xi>0\\ 0 & \xi=0\\ -1 & \xi<0 \end{cases}; f^{\wedge}(\xi):=\int\_{\mathbb{R}}f(x)e^{-2\pi i\xi x}\,dx $
 
 or in the case the underlying space is a circle $ {\mathbb{T}}$,  
 
@@ -20,13 +20,13 @@ $ \displaystyle H(f)(\theta)=\sum\_{n\in\mathbb{Z}}f^{\wedge}(n)\frac{\text{sign
 
 where $ {f\in L^{2}([0,2\pi])}$, and  
 
-$ \displaystyle \text{sign}(n)=\begin{cases} 1 & n>0\\ 0 & n=0\\ -1 & n<0 \end{cases};\ f^{\wedge}(n):=\frac{1}{2\pi}\int\_{[0,2\pi]}f(x)e^{-inx}\,dx. $
+$ \displaystyle \text{sign}(n)=\begin{cases} 1 & n>0\\ 0 & n=0\\ -1 & n<0 \end{cases}; f^{\wedge}(n):=\frac{1}{2\pi}\int\_{[0,2\pi]}f(x)e^{-inx}\,dx. $
 
 (Note that the sign function vanishes on a measure zero set on $ {\mathbb{R}}$, but on a measure 1 set on $ {\mathbb{Z}}$. This ultimately causes the constant mode of the periodic function jumping out in various identities, compared to their analogs for functions on $ {\mathbb{R}}$. This is however not essential.) The other formulation is as a "singular integral operator'', as will be ellaborated below. It is in the 19th and earlier 20th centuries that the properties of this operator came into interest, for its fundamental connection with the following two questions that arised in Analysis.  
 
 The first one is that of convergence, in some appropriate sense, of the *symmetric partial sum* of the Fourier series of an integrable function $ {f:[0,2\pi]\rightarrow\mathbb{C}}$  
 
-$ \displaystyle S\_{N}(f)(\theta):=\sum\_{|n|\leq N}f^{\wedge}(n)e^{in\theta}\rightarrow f(\theta)\ ? $
+$ \displaystyle S\_{N}(f)(\theta):=\sum\_{|n|\leq N}f^{\wedge}(n)e^{in\theta}\rightarrow f(\theta) ? $
 
 At that time Lebesgue's integration theory had not been developed. However, that under the condition of $ {C^{1}}$ regularity of the function, the pointwise convergence was already clear to Dirichlet, in 1829, who told in private that he would soon resolve the case when $ {f}$ is continuous. This was disproved in 1873, by du Bois Reymond. Then after the work of Lebesgue, under the condition of square integrability of $ {f}$, the $ {L^{2}}$ convergence can be established using elemental Hilbert space technique, invented during the end of the 19th century. Later, achieved by Marcel Riesz in 1923, the $ {L^{p}}$ convergence was shown to be true for all $ {1<p<\infty}$. Nevertheless, the "local'' convergence behavior turns out much more intricate, and the a.e. convergence for $ {L^{2}}$ functions was eventually resolved by Carleson, in 1966.  
 
@@ -72,27 +72,27 @@ It is of interest that when the a.e. convergence holds. In sharp contrast to the
 
 Now we ask the converse, that is, given a holomorphic function $ {F}$ in the unit disk, then under what conditions $ {F}$ will have radial limit on the circle, i.e.  
 
-$ \displaystyle \lim\_{r\rightarrow1^{-}}F(re^{i\theta})\ \text{ exists for a.e. $\\theta\\in \[0,2\\pi\]$?} $
+$ \displaystyle \lim\_{r\rightarrow1^{-}}F(re^{i\theta}) \text{ exists for a.e. } \theta\in [0,2\pi]? $
 
 Suppose $ {F}$ has the power series expansion $ {\sum\_{n=0}^{\infty}a\_{n}z^{n}}$. Now by Parseval's identity  
 
-$ \displaystyle \sum\_{n=0}^{\infty}|a\_{n}|^{2}r^{2n}=\frac{1}{2\pi}\int\_{[0,2\pi]}|F(re^{i\theta})|^{2}d\theta,\ 0\leq r<1. $
+$ \displaystyle \sum\_{n=0}^{\infty}|a\_{n}|^{2}r^{2n}=\frac{1}{2\pi}\int\_{[0,2\pi]}|F(re^{i\theta})|^{2}d\theta, 0\leq r<1. $
 
-Thus, assume that[](https://www.blogger.com/null)  
+Thus, assume that  
 
-[$ \displaystyle \sup\_{0\leq r<1}\int\_{[0,2\pi]}|F(re^{i\theta})|^{2}d\theta<\infty, \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \sup\_{0\leq r<1}\int\_{[0,2\pi]}|F(re^{i\theta})|^{2}d\theta<\infty,      (1)$
 
-[](https://www.blogger.com/null)so that the series $ {\sum\_{n=0}^{\infty}|a\_{n}|^{2}}$ converges to the above quantity, and thus has a corresponding $ {L^{2}}$ function $ {F\_{0}(e^{i\theta}).}$ Since $ {L^{2}([0,2\pi])\subset L^{1}([0,2\pi])}$, by the above paragraph we have the limit $ {\lim\_{r\rightarrow1^{-}}F(re^{i\theta})}$ exists for a.e. $ {\theta}$. This result was obtained by Fatou.  
+so that the series $ {\sum\_{n=0}^{\infty}|a\_{n}|^{2}}$ converges to the above quantity, and thus has a corresponding $ {L^{2}}$ function $ {F\_{0}(e^{i\theta}).}$ Since $ {L^{2}([0,2\pi])\subset L^{1}([0,2\pi])}$, by the above paragraph we have the limit $ {\lim\_{r\rightarrow1^{-}}F(re^{i\theta})}$ exists for a.e. $ {\theta}$. This result was obtained by Fatou.  
 
 The space of holomorphic functions on the unit disk satisfying the bound ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) is called the *Hardy space $ {H^2(\mathbb{D})}$*, with norm $ {\|F\|\_{H^{2}(\mathbb{D})}}$ defined to be the quantity on the LHS of ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)). It can be identified with the closed subspace $ {\ell^{2}(\mathbb{Z}\_{+})}$ of the Hilbert space $ {\ell^{2}(\mathbb{Z})}$, or equivalently the space $ {\mathcal{S}}$ of square integrable functions on the cirlce whose Fourier coefficients vanish for $ {n<0}$. In view of this, define the orthogonal projection from $ {L^{2}([0,2\pi])}$ to $ {\mathcal{S}}$, and write in the corresponding element in $ {H^{2}(\mathbb{D})}$  
 
 $ \displaystyle \begin{array}{rcl} P(f)(z): & = & \sum\_{n=0}^{\infty}a\_{n}z^{n}.\\ & = & \sum\_{n=0}^{\infty}\left(\frac{1}{2\pi}\int\_{[0,2\pi]}f(e^{i\theta})e^{-in\theta}\thinspace d\theta\right)z^{n}\\ & = & \frac{1}{2\pi}\int\_{[0,2\pi]}f(e^{i\theta})\sum\_{n=0}^{\infty}\left(e^{-i\theta}z\right)^{n}\thinspace d\theta\\ & = & \frac{1}{2\pi i}\int\_{S^{1}}\frac{f(\zeta)}{\zeta-z}\thinspace d\zeta, \end{array} $
 
-which turns out to be the *Cauchy integral* on the circle. On the other hand, notice that[](https://www.blogger.com/null)  
+which turns out to be the *Cauchy integral* on the circle. On the other hand, notice that  
 
-[$ \displaystyle P(f)(e^{i\theta})=\frac{f(e^{i\theta})+iH(f)(e^{i\theta})}{2}. \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle P(f)(e^{i\theta})=\frac{f(e^{i\theta})+iH(f)(e^{i\theta})}{2}.      (2)$
 
-[](https://www.blogger.com/null)For this reason, $ {H(f)}$ is often called *conjugate* to $ {f}$, and hence can be also identified the imaginary part of the *Cauchy kernel* of the unit circle  
+For this reason, $ {H(f)}$ is often called *conjugate* to $ {f}$, and hence can be also identified the imaginary part of the *Cauchy kernel* of the unit circle  
 
 $ \displaystyle \frac{1}{i(\zeta-z)}d\zeta=\frac{ie^{i\psi}d\psi}{i(e^{i\psi}-re^{i\theta})}=\mathcal{P}\_{r}(\theta-\psi)d\psi+\frac{d\psi}{2}+i\mathcal{Q}\_{r}(\theta-\psi)d\psi. $
 
@@ -102,11 +102,11 @@ $ \displaystyle \mathcal{Q}\_{r}(\theta-\psi)=\frac{r\sin(\theta-\psi)}{1-2r\cos
 
 as $ {r\rightarrow1^{-}}$. Unlike Poisson's kernel, it is not absolutely integrable, thus called "singular'', near the diagonal $ {\theta=\psi}$, but note that $ {\cot(x)}$ is an odd function on $ {[-\pi,\pi]}$, which is one manifestation of the {cancellation property} for such singular integral operators.  
 
-Now we turn to the analogous results of the above for functions on the real line, where the unit disk is replaced by the upper half space $ {\mathbb{R}\_{+}^{2}:=\{(x,y)\in\mathbb{R}^{2}:y>0\}}$. Starting with a function $ {F\_{0}^{\wedge}\in L^{2}(0,\infty)}$, define its *Laplace transform* to be[](https://www.blogger.com/null)  
+Now we turn to the analogous results of the above for functions on the real line, where the unit disk is replaced by the upper half space $ {\mathbb{R}\_{+}^{2}:=\{(x,y)\in\mathbb{R}^{2}:y>0\}}$. Starting with a function $ {F\_{0}^{\wedge}\in L^{2}(0,\infty)}$, define its *Laplace transform* to be  
 
-[$ \displaystyle F(x+iy)=\int\_{[0,\infty)}F\_{0}^{\wedge}(\xi)e^{2\pi i\xi z}\thinspace d\xi, \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle F(x+iy)=\int\_{[0,\infty)}F\_{0}^{\wedge}(\xi)e^{2\pi i\xi z}\thinspace d\xi,      (3)$
 
-[](https://www.blogger.com/null)which can be viewed as an "integral version'' of Abel summation of the Fourier series $ {\sum\_{n\geq0}f^{\wedge}(n)}$. (The analogue for $ {\sum\_{n\in\mathbb{Z}}f^{\wedge}(n)}$ will be given by $ {\int\_{\mathbb{R}}f^{\wedge}(\xi)e^{-2\pi|\xi|y}e^{2\pi ix\xi}\thinspace d\xi}$.) Since for any $ {\delta>0}$, if $ {y\geq\delta}$, the integral has the uniform bound  
+which can be viewed as an "integral version'' of Abel summation of the Fourier series $ {\sum\_{n\geq0}f^{\wedge}(n)}$. (The analogue for $ {\sum\_{n\in\mathbb{Z}}f^{\wedge}(n)}$ will be given by $ {\int\_{\mathbb{R}}f^{\wedge}(\xi)e^{-2\pi|\xi|y}e^{2\pi ix\xi}\thinspace d\xi}$.) Since for any $ {\delta>0}$, if $ {y\geq\delta}$, the integral has the uniform bound  
 
 $ \displaystyle \int\_{[0,\infty)}|F\_{0}^{\wedge}(\xi)e^{2\pi i\xi z}|\thinspace d\xi\leq\left(\int\_{[0,\infty)}|F\_{0}^{\wedge}(\xi)|^{2}\thinspace d\xi\right)^{1/2}\left(\int\_{[0,\infty)}e^{-4\pi\xi\delta}\thinspace d\xi\right)^{1/2}, $
 
@@ -205,6 +205,6 @@ $ \displaystyle \frac{1}{x+i0}=\text{p.v.}(\frac{1}{x})-i\pi\delta $
 corresponding to identity for multipliers above.  
 Again, one can define the orthogonal projection $ {P}$ from $ {L^{2}(\mathbb{R})}$ to the closed subspace that contains functions whose Fourier transforms are supported on $ {[0,\infty)}$. It is realized by the *Cauchy integral*  
 
-$ \displaystyle F(z)=\int\_{\mathbb{R}}\frac{f(t)}{t-z}\thinspace dt=\int\_{[0,\infty)}f^{\wedge}(\xi)e^{2\pi i\xi z}\thinspace d\xi,\ z\in\mathbb{R}\_{+}^{2} $
+$ \displaystyle F(z)=\int\_{\mathbb{R}}\frac{f(t)}{t-z}\thinspace dt=\int\_{[0,\infty)}f^{\wedge}(\xi)e^{2\pi i\xi z}\thinspace d\xi, z\in\mathbb{R}\_{+}^{2} $
 
 which maps $ {L^{2}(\mathbb{R})}$ onto $ {H^{2}(\mathbb{R}\_{+}^{2})}$.

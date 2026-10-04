@@ -12,7 +12,7 @@ This post is a continuation of the [previous post](http://sylqiu.blogspot.hk/201
 
 We recall first the Heine-Borel theorem for metric spaces.  
 
-> **Theorem 1** *[](https://www.blogger.com/null)(Heine-Borel) Let $ {(X,d)}$ be a metric space. Let $ {K\subset X}$. The following are equivalent:*  
+> **Theorem 1** *(Heine-Borel) Let $ {(X,d)}$ be a metric space. Let $ {K\subset X}$. The following are equivalent:*  
 > 
 > *-   $ {K}$ is sequential compact;
 > -   $ {K}$ is compact, i.e. every open cover has a finite subcover;
@@ -33,7 +33,7 @@ $ \displaystyle Q\_{1}\supset Q\_{2}\supset\cdots $
 which by completeness satisfies $ {\bigcap\_{n=1}^{\infty}Q\_{n}=\{x\}}$ for some $ {x\in Q}$. But then the sequence will eventually lies in one covering ball. This is enough to deduce a contradiction. Finally, since complete subsets are also closed, we conclude the usual Heine-Borel theorem that $ {K\subset X}$ if and only if $ {K}$ is closed and bounded.  
 In the case of infinite dimensional Banach space (since compact sets are neccesarily complete, a Banach space in fact gives us more compact sets), the norm topology is so strong that it forces the compact sets to be "almost finite dimensional''.  
 
-> **Proposition 4** *[](https://www.blogger.com/null)Let $ {V}$ be a Banach space and $ {K\subset V}$. Then $ {K}$ is compact if and only if $ {K}$ is closed and bounded, and for each $ {\epsilon>0}$, $ {K}$ lies in the $ {\epsilon}$-neighborhood of some finite dimensional subspace $ {W\subset V}$.*
+> **Proposition 4** *Let $ {V}$ be a Banach space and $ {K\subset V}$. Then $ {K}$ is compact if and only if $ {K}$ is closed and bounded, and for each $ {\epsilon>0}$, $ {K}$ lies in the $ {\epsilon}$-neighborhood of some finite dimensional subspace $ {W\subset V}$.*
 
 This follows by a direct application of Theorem [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm\(Heine-Borel\)).  
 
@@ -118,7 +118,7 @@ The first question regards to the notion of weak and weak-star convergence is th
 
 *Proof:* By Hahn Banach, if $ {\lambda(v)=0}$ for all $ {\lambda\in V^{\*}}$, then $ {v=0}$. $ \Box$  
 
-> **Example 2** *[](https://www.blogger.com/null)Let $ {V=c\_{0}(\mathbb{N})}$ (equipped with sup-norm), $ {V^{\*}=\ell^{1}(\mathbb{N})}$, $ {\left(V^{\*}\right)^{\*}=\ell^{\infty}(\mathbb{N})}$, and let $ {e\_{1},e\_{2},\dots}$ be the standard basis of either of the three spaces that will be specified in the context.*  
+> **Example 2** *Let $ {V=c\_{0}(\mathbb{N})}$ (equipped with sup-norm), $ {V^{\*}=\ell^{1}(\mathbb{N})}$, $ {\left(V^{\*}\right)^{\*}=\ell^{\infty}(\mathbb{N})}$, and let $ {e\_{1},e\_{2},\dots}$ be the standard basis of either of the three spaces that will be specified in the context.*  
 > 
 > *-   $ {(e\_{n})\_{n=1}^{\infty}}$ converges weakly to $ {0}$ in $ {V}$, but not in the sup-norm;
 > -   $ {(e\_{n})\_{n=1}^{\infty}}$ converges weak-starly to $ {0}$ in $ {V^{\*}}$, but not weakly in $ {V^{\*}}$;
@@ -133,13 +133,13 @@ The first question regards to the notion of weak and weak-star convergence is th
 
 Although the weak topology is not normable, and so *a priori* there is no notion of boundedness of sets, it turns out sets that are *weakly bounded* (i.e. $ {E\subset V}$ such that $ {\lambda(E)}$ is bounded for each $ {\lambda\in V^{\*}}$\\}) are also *strongly bounded* (i.e. bounded in norm), due to the *uniform boundedness principle*.  
 
-> **Proposition 8** *[](https://www.blogger.com/null)Let $ {V}$ be a normed vector space, and $ {E\subset V}$. Then $ {E}$ is strongly bounded if and only if weakly bounded.*
+> **Proposition 8** *Let $ {V}$ be a normed vector space, and $ {E\subset V}$. Then $ {E}$ is strongly bounded if and only if weakly bounded.*
 
 *Proof:* We show the "if'' part. By the isometric embedding $ {V\hookrightarrow(V^{\*})^{\*}}$, each $ {x\in E}$ can be thought of as an element in $ {(V^{\*})^{\*}}$. Then $ {\sup\_{x\in E}|\lambda(v)|<+\infty}$ for each $ {\lambda}$. By the uniform boundedness principle, $ {\sup\_{x\in E}\|x\|\_{V}<+\infty}$. $ \Box$  
 
 Making use of the basic inequality $ {|\lambda(v)|\leq\|\lambda\|\_{V^{\*}}\|v\|\_{V}}$, we obtain  
 
-> **Corollary 9** *[](https://www.blogger.com/null)Weakly and weak-starly convergent sequences are bounded. In fact, if $ {x\_{n}\rightharpoonup x}$ in $ {V}$, then*  
+> **Corollary 9** *Weakly and weak-starly convergent sequences are bounded. In fact, if $ {x\_{n}\rightharpoonup x}$ in $ {V}$, then*  
 > 
 > *$ \displaystyle \|x\|\_{V}\leq\liminf\_{n\rightarrow\infty}\|x\_{n}\|\_{V}. $*
 > 
@@ -151,7 +151,7 @@ Making use of the basic inequality $ {|\lambda(v)|\leq\|\lambda\|\_{V^{\*}}\|v\|
 
 We shall develop the converse to the above corollary except relaxed to subsequences in reflexive spaces, known as the *Banach-Eberlein-Smulian theorem*. Thus weak and weak\* topologies enjoy much better compactness properties, in contrast to the strong (i.e. norm) topologies. For later purpose we need the following observation, which follows directly from the above corollary.  
 
-> **Lemma 10** *[](https://www.blogger.com/null)Let $ {V}$ be a Banach space. Then the closed unit ball in $ {V}$ is closed in the weak topology; also, the closed unit ball in $ {V^{\*}}$ is closed in the weak\* topology.*
+> **Lemma 10** *Let $ {V}$ be a Banach space. Then the closed unit ball in $ {V}$ is closed in the weak topology; also, the closed unit ball in $ {V^{\*}}$ is closed in the weak\* topology.*
 
 Note that the statement for unit sphere is certainly false (more or less a paraphrase of that strict inequality can hold in Corollary [9](https://www.blogger.com/blogger.g?blogID=4046755691971152965#corWeakly-and-weak-starly)).  
 
@@ -186,19 +186,19 @@ Note that the statement for unit sphere is certainly false (more or less a parap
 As is perhaps anticipated, the space $ {\ell^{1}(\mathbb{N})}$ (or $ {\ell^{\infty}(\mathbb{N})}$) at the level of sets can be embedded into the product space $ {\mathbb{R}^{\mathbb{N}}=\prod\_{i=1}^{\infty}\mathbb{R}^{(i)}}$. Furhtermore, if we consider the closed unit ball $ {B^{\*}}$ (or more generally any closed bounded subset) in$ {\ell^{1}(\mathbb{N})}$ (or $ {\ell^{\infty}(\mathbb{N})}$) to be embedded into the product space $ {[-1,1]^{\mathbb{N}}}$ (note that $ {\|a\|\_{1}\leq1}$ implies $ {|a^{(i)}|\leq1}$ for all $ {i\in\mathbb{N}}$; similar statement holds for $ {\|\cdot\|\_{\infty}}$), the argument given in the above example in effect identified the weak{\*} topology with the product topology on $ {[-1,1]^{\mathbb{N}}}$ restricted to $ {B^{\*}}$. Moreover, $ {B^{\*}}$ is closed in $ {[-1,1]^{\mathbb{N}}}$ by Lemma [10](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lem13). Now the *Tychonoff theorem* implies that $ {[-1,1]^{\mathbb{N}}}$ is compact with product topology, so $ {B^{\*}}$ is compact in the weak\* topolgy. The sequential compactness $ {B}$ follows similarly.  
 The above argument can be generalized, leading to the *Banach-Alaoglu theorem*.  
 
-> **Theorem 11** *[](https://www.blogger.com/null)(Banach-Alaoglu) Let $ {V}$ be a normed vector space. Then the closed unit ball of $ {V^{\*}}$ is compact in the weak\* topology.*
+> **Theorem 11** *(Banach-Alaoglu) Let $ {V}$ be a normed vector space. Then the closed unit ball of $ {V^{\*}}$ is compact in the weak\* topology.*
 
 Some additional care is needed for its sequential counterpart.  
 
 > **Theorem 12** *(Sequential Banach-Alaoglu) Let $ {V}$ be a separable normed vector space. Then the closed unit ball of $ {V^{\*}}$ is sequentially compact in the weak\* topology.*
 
-*Proof:* Let $ {B}$, $ {B^{\*}}$ be the closed unit ball in $ {V}$ and $ {V^{\*}}$. Any element $ {\lambda\in B^{\*}}$ maps $ {B}$ to $ {[-1,1]}$, as shown by the inequality[](https://www.blogger.com/null)  
+*Proof:* Let $ {B}$, $ {B^{\*}}$ be the closed unit ball in $ {V}$ and $ {V^{\*}}$. Any element $ {\lambda\in B^{\*}}$ maps $ {B}$ to $ {[-1,1]}$, as shown by the inequality  
 
-[$ \displaystyle |\lambda(x)|\leq\|\lambda\|\|x\|\leq\|x\|\leq1 \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle |\lambda(x)|\leq\|\lambda\|\|x\|\leq\|x\|\leq1      (1)$
 
-[](https://www.blogger.com/null)for $ {x\in B}$. Since $ {V}$ is separable, there is a countable dense (in the sense of norm) subset $ {Q\subset B}$. Restrict $ {B^{\*}}$ to $ {Q}$, we can identify $ {B^{\*}\downharpoonright\_{Q}}$ with a closed subset of $ {[-1,1]^{Q}}$, which by the *sequential Tychonoff theorem* is sequentially compact in the product topology. Therefore, any sequence in $ {B^{\*}}$ contains a subsequence converging pointwisely on $ {Q}$. But by the estimate ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) (which in effect says $ {B^{\*}}$ is uniformly equicontinuous on $ {B}$), we conclude that the subsequence converges pointwisely on $ {B}$. The sequential compactness of $ {B^{\*}}$ thus follows. $ \Box$  
+for $ {x\in B}$. Since $ {V}$ is separable, there is a countable dense (in the sense of norm) subset $ {Q\subset B}$. Restrict $ {B^{\*}}$ to $ {Q}$, we can identify $ {B^{\*}\downharpoonright\_{Q}}$ with a closed subset of $ {[-1,1]^{Q}}$, which by the *sequential Tychonoff theorem* is sequentially compact in the product topology. Therefore, any sequence in $ {B^{\*}}$ contains a subsequence converging pointwisely on $ {Q}$. But by the estimate ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) (which in effect says $ {B^{\*}}$ is uniformly equicontinuous on $ {B}$), we conclude that the subsequence converges pointwisely on $ {B}$. The sequential compactness of $ {B^{\*}}$ thus follows. $ \Box$  
 
-> **Remark 2** *[](https://www.blogger.com/null)One can also prove the theorem by observing that the weak\* topology on the closed unit ball $ {B^{\*}}$is *metrisable*: let $ {\{x\_{i}\}\_{i=1}^{\infty}}$ be an enumeration of the countable dense subset in $ {B}$, define*  
+> **Remark 2** *One can also prove the theorem by observing that the weak\* topology on the closed unit ball $ {B^{\*}}$is *metrisable*: let $ {\{x\_{i}\}\_{i=1}^{\infty}}$ be an enumeration of the countable dense subset in $ {B}$, define*  
 > 
 > *$ \displaystyle d(\lambda\_{1},\lambda\_{2})=\sum\_{n=1}^{\infty}\frac{1}{2^{n}}\left|\lambda\_{1}(x\_{n})-\lambda\_{2}(x\_{n})\right| $*
 > 

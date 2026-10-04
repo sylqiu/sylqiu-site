@@ -30,17 +30,17 @@ Throughout this post we will assume our underlying measure spaces are $\sigma$-f
 
 $ \displaystyle \int|fg|\leq\left(\int|f|^{p}\right)^{\frac{1}{p}}\left(\int|g|^{p'}\right)^{\frac{1}{p'}} $
 
-where $ {p'\geq p\geq1}$, $ {\frac{1}{p}+\frac{1}{p'}=1}$, and of course $ {f\in L^{p},g\in L^{p'}}$, is the most fundamental *log-convexity result* in the theory of $ {L^{p}}$ spaces. A simple proof of the inequality relies on the convexity of the exponential function[](https://www.blogger.com/null)  
+where $ {p'\geq p\geq1}$, $ {\frac{1}{p}+\frac{1}{p'}=1}$, and of course $ {f\in L^{p},g\in L^{p'}}$, is the most fundamental *log-convexity result* in the theory of $ {L^{p}}$ spaces. A simple proof of the inequality relies on the convexity of the exponential function  
 
-[$ \displaystyle e^{s/p+t/p'}\leq\frac{1}{p}e^{s}+\frac{1}{p'}e^{t}, \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle e^{s/p+t/p'}\leq\frac{1}{p}e^{s}+\frac{1}{p'}e^{t},      (1)$
 
-[](https://www.blogger.com/null)where we have taken  
+where we have taken  
 
 $ \displaystyle e^{s}=|f|^{p},e^{t}=|g|^{p'}. $
 
 There are many things can be inferred from Hölder's inequality. For example, it implies the linear functional $ {\int\cdot g}$ is bounded on $ {L^{p}}$. This bound is crucial in developing the duality between $ {L^{p}}$ and $ {L^{p'}}$. In this regard, we have the following useful result.  
 
-> **Lemma 1** *[](https://www.blogger.com/null)Suppose $ {1\leq p,p'\leq\infty}$ are conjugate components. If $ {g\in L^{p'}}$,*  
+> **Lemma 1** *Suppose $ {1\leq p,p'\leq\infty}$ are conjugate components. If $ {g\in L^{p'}}$,*  
 > 
 > *$ \displaystyle \|g\|\_{L^{p'}}=\sup\_{\|f\|\_{L^{p}}\leq1}\left|\int fg\right|. $*
 > 
@@ -58,11 +58,11 @@ implying that in fact $ {f\in L^{2}}$ also, where we note that we must have
 
 $ \displaystyle \frac{1}{p'}\leq\frac{1}{2}\leq\frac{1}{p}. $
 
-The above result can be amplified, that is, if we have $ {f\in L^{p\_{0}}\cap L^{p\_{1}}}$ with $ {0<p\_{0}<p\_{1}\leq\infty}$, then also $ {f\in L^{p\_{\theta}}}$ for all $ {p\_{0}<p\_{\theta}<p\_{1}}$. This is a prototypical example of *interpolation of functions*, which can be proved by establishing the (sharp) bound[](https://www.blogger.com/null)  
+The above result can be amplified, that is, if we have $ {f\in L^{p\_{0}}\cap L^{p\_{1}}}$ with $ {0<p\_{0}<p\_{1}\leq\infty}$, then also $ {f\in L^{p\_{\theta}}}$ for all $ {p\_{0}<p\_{\theta}<p\_{1}}$. This is a prototypical example of *interpolation of functions*, which can be proved by establishing the (sharp) bound  
 
-[$ \displaystyle \|f\|\_{L^{p\_{\theta}}}\leq\|f\|\_{L^{p\_{0}}}^{1-\theta}\|f\|\_{L^{p\_{1}}}^{\theta}, \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \|f\|\_{L^{p\_{\theta}}}\leq\|f\|\_{L^{p\_{0}}}^{1-\theta}\|f\|\_{L^{p\_{1}}}^{\theta},      (2)$
 
-[](https://www.blogger.com/null)where  
+where  
 
 $ \displaystyle \frac{1}{p\_{\theta}}=\frac{1-\theta}{p\_{0}}+\frac{\theta}{p\_{1}},0\leq\theta\leq1. $
 
@@ -73,11 +73,11 @@ $ \displaystyle \begin{array}{rcl} \int|f^{p\_{\theta}}| & = & \int|f{}^{(1-\the
 
 This approach is in close spirit to the convexity method as in ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
 
-A second approach is "divide-and-conquer''. We first reduce to the normalised case $ {\|f\|\_{L^{p\_{0}}}=\|f\|\_{L^{p\_{1}}}=1}$ (by multiplying the measure by suitable cconstants) and split[](https://www.blogger.com/null)  
+A second approach is "divide-and-conquer''. We first reduce to the normalised case $ {\|f\|\_{L^{p\_{0}}}=\|f\|\_{L^{p\_{1}}}=1}$ (by multiplying the measure by suitable cconstants) and split  
 
-[$ \displaystyle f=f\cdot1\_{|f|\leq1}+f\cdot1\_{|f|>1} \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle f=f\cdot1\_{|f|\leq1}+f\cdot1\_{|f|>1}      (3)$
 
-[](https://www.blogger.com/null)into a sum of bounded function and an integrable function (which consequently has finite support, since it is lower bounded by a indicator function). Since $ {p\_{\theta}>p\_{0}}$, we have  
+into a sum of bounded function and an integrable function (which consequently has finite support, since it is lower bounded by a indicator function). Since $ {p\_{\theta}>p\_{0}}$, we have  
 
 $ \displaystyle \|f\cdot1\_{|f|\leq1}\|\_{L^{p\_{\theta}}}^{p\_{\theta}}=\int\_{|f|\leq1}|f|^{p\_{\theta}}\leq\int|f|^{p\_{0}}=1, $
 
@@ -85,11 +85,11 @@ and since $ {p\_{1}>p\_{\theta}}$
 
 $ \displaystyle \|f\cdot1\_{|f|>1}\|\_{L^{p\_{\theta}}}^{p\_{\theta}}=\int\_{|f|>1}|f|^{p\_{\theta}}\leq\int|f|^{p\_{1}}=1. $
 
-Apply the quasi-traingle inequality ($ {p\_{\theta}<1}$) or triangle inequality ($ {p\_{\theta}\geq1}$) to the splitting ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), we obtain[](https://www.blogger.com/null)  
+Apply the quasi-traingle inequality ($ {p\_{\theta}<1}$) or triangle inequality ($ {p\_{\theta}\geq1}$) to the splitting ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)), we obtain  
 
-[$ \displaystyle \|f\|\_{L^{p\_{\theta}}}\leq C\_{p\_{\theta}}, \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \|f\|\_{L^{p\_{\theta}}}\leq C\_{p\_{\theta}},      (4)$
 
-[](https://www.blogger.com/null)Note that the bound ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) provided by this divide-and-conquer argument already implies the inclusion relation  
+Note that the bound ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) provided by this divide-and-conquer argument already implies the inclusion relation  
 
 $ \displaystyle L^{p\_{0}}\cap L^{p\_{1}}\hookrightarrow L^{p\_{\theta}}\hookrightarrow L^{p\_{0}}+L^{p\_{1}}. $
 
@@ -113,11 +113,11 @@ Sending $ {M\rightarrow+\infty}$, we obtain the desired result. This divide-and-
 
 Finally, a third approach is to embed the index $ {p}$ into a strip in the complex plane $ {\mathbb{C}}$, known as the *complex interpolation method*. As indices appear in the exponents, at least for simple functions, the new function now depends *holomorphically* on the complex index $ {s}$, so that one can exploit powerful tools in complex analysis such as the *Phragmén-Lindelöf principle*. We will use its following variant.  
 
-> **Theorem 2** *[](https://www.blogger.com/null)(Lindelöf's Three-lines Lemma) Let $ {s\mapsto f(s)}$ be a holomorphic function on the strip $ {S:=\{\sigma+it:0\leq\sigma\leq1;t\in\mathbb{R}\}}$, with qualitative growth condition[](https://www.blogger.com/null)*  
+> **Theorem 2** *(Lindelöf's Three-lines Lemma) Let $ {s\mapsto f(s)}$ be a holomorphic function on the strip $ {S:=\{\sigma+it:0\leq\sigma\leq1;t\in\mathbb{R}\}}$, with qualitative growth condition*  
 > 
-> *[$ \displaystyle |f(\sigma+it)|\leq C\exp(\exp((\pi-\delta)|t|)) \ \ \ \ \ (5)$](https://www.blogger.com/null)*
+> *$ \displaystyle |f(\sigma+it)|\leq C\exp(\exp((\pi-\delta)|t|))      (5)$*
 > 
-> *[](https://www.blogger.com/null)for all $ {\sigma+it\in S}$ and some constants $ {C,\delta>0}$. Suppose*  
+> *for all $ {\sigma+it\in S}$ and some constants $ {C,\delta>0}$. Suppose*  
 > 
 > *$ \displaystyle |f(0+it)|\leq B\_{0} $*
 > 
@@ -171,11 +171,11 @@ We can now easily formulate an interpolation statement for linear operators.
 > 
 > *$ \displaystyle \|Tf\|\_{L^{q\_{1}}(Y)}\leq B\_{1}\|f\|\_{L^{p\_{1}}(X)} $*
 > 
-> *for all $ {f\in L^{p\_{1}}(X)}$. Then we have[](https://www.blogger.com/null)*  
+> *for all $ {f\in L^{p\_{1}}(X)}$. Then we have*  
 > 
-> *[$ \displaystyle \|Tf\|\_{L^{q\_{\theta}}(Y)}\leq B\_{\theta}\|f\|\_{L^{p\_{\theta}}(X)}, \ \ \ \ \ (6)$](https://www.blogger.com/null)*
+> *$ \displaystyle \|Tf\|\_{L^{q\_{\theta}}(Y)}\leq B\_{\theta}\|f\|\_{L^{p\_{\theta}}(X)},      (6)$*
 > 
-> *[](https://www.blogger.com/null)for all $ {0<\theta<1}$ and $ {f\in L^{p\_{\theta}}(X)}$, where*  
+> *for all $ {0<\theta<1}$ and $ {f\in L^{p\_{\theta}}(X)}$, where*  
 > 
 > *$ \displaystyle \frac{1}{p\_{\theta}}=\frac{1-\theta}{p\_{0}}+\frac{\theta}{p\_{1}},\quad\frac{1}{q\_{\theta}}=\frac{1-\theta}{q\_{0}}+\frac{\theta}{q\_{1}}. $*
 
@@ -228,21 +228,21 @@ defined by
 $ \displaystyle \lambda\_{f}(t):=\mu(\{x\in X:|f(x)|\geq t\})=\int\_{X}1\_{|f|\geq t}d\mu. $
 
 We see that $ {\lambda\_{f}(t)}$ encodes the *"height"* $ {t}$, and *"width"* $ {\mu(\{x\in X:|f(x)|\geq t\})}$ of the function $ {f}$.  
-If $ {f\in L^{p}}$, we have the equality[](https://www.blogger.com/null)  
+If $ {f\in L^{p}}$, we have the equality  
 
-[$ \displaystyle \|f\|\_{L^{p}}^{p}=p\int\_{0}^{+\infty}\lambda\_{f}(t)t^{p}\frac{dt}{t} \ \ \ \ \ (7)$](https://www.blogger.com/null)
+$ \displaystyle \|f\|\_{L^{p}}^{p}=p\int\_{0}^{+\infty}\lambda\_{f}(t)t^{p}\frac{dt}{t}      (7)$
 
-[](https://www.blogger.com/null)for all $ {0<p<+\infty}$, and for $ {p=+\infty}$  
+for all $ {0<p<+\infty}$, and for $ {p=+\infty}$  
 
 $ \displaystyle \|f\|\_{L^{\infty}}=\inf\{t\geq0;\lambda\_{f}(t)=0\}. $
 
-We also have an easy and useful bound, known as *Chebyshev's inequality*[](https://www.blogger.com/null)  
+We also have an easy and useful bound, known as *Chebyshev's inequality*  
 
-[$ \displaystyle \lambda\_{f}(t)\leq\frac{1}{t^{p}}\|f\|\_{L^{p}}^{p}. \ \ \ \ \ (8)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{f}(t)\leq\frac{1}{t^{p}}\|f\|\_{L^{p}}^{p}.      (8)$
 
-[](https://www.blogger.com/null)Now make the following observation on ([7](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7-1)) and ([8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8)).  
+Now make the following observation on ([7](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7-1)) and ([8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8)).  
 
-> **Proposition 6** *[](https://www.blogger.com/null)Let $ {0<p<+\infty}$, and $ {f\in L^{p}}$. We have*  
+> **Proposition 6** *Let $ {0<p<+\infty}$, and $ {f\in L^{p}}$. We have*  
 > 
 > *$ \displaystyle c\_{p}\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{np}\leq\|f\|\_{L^{p}}^{p}\leq C\_{p}\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{np} $*
 > 
@@ -295,11 +295,11 @@ This implies the corresponding inclusions for Lorentz spaces. From the inclusion
 
 $ \displaystyle \{|f+g|>t\}\subset\{|f|>t/2\}\cup\{|g|>t/2\}, $
 
-we have[](https://www.blogger.com/null)  
+we have  
 
-[$ \displaystyle \lambda\_{f+g}(t)\leq\lambda\_{f}(t/2)+\lambda\_{g}(t/2). \ \ \ \ \ (9)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{f+g}(t)\leq\lambda\_{f}(t/2)+\lambda\_{g}(t/2).      (9)$
 
-[](https://www.blogger.com/null)By shifting indices, and making use of the comparison result, it now easily follows the quasi-triangle inquality  
+By shifting indices, and making use of the comparison result, it now easily follows the quasi-triangle inquality  
 
 $ \displaystyle \|f+g\|\_{L^{p,q}}\leq C\_{p,q}(\|f\|\_{L^{p,q}}+\|g\|\_{L^{p,q}}). $
 
@@ -320,11 +320,11 @@ for all $ {t>0}$. Hence by scalar interpolation, for all $ {0<\theta<1}$, with $
 
 $ \displaystyle \lambda\_{f}(t)\leq\frac{B\_{\theta}^{p\_{\theta}}}{t^{p\_{\theta}}}. $
 
-This result can be strengthened if two bounds $ {B\_{0},B\_{1}}$ are different. Namely, let $ {t\_{0}}$ be the unique value of $ {t}$ such that $ {\frac{B\_{0}^{p\_{0}}}{t^{p\_{0}}}=\frac{B\_{1}^{p\_{1}}}{t^{p\_{1}}}}$, then for any $ {\epsilon}$ small enough,[](https://www.blogger.com/null)  
+This result can be strengthened if two bounds $ {B\_{0},B\_{1}}$ are different. Namely, let $ {t\_{0}}$ be the unique value of $ {t}$ such that $ {\frac{B\_{0}^{p\_{0}}}{t^{p\_{0}}}=\frac{B\_{1}^{p\_{1}}}{t^{p\_{1}}}}$, then for any $ {\epsilon}$ small enough,  
 
-[$ \displaystyle \lambda\_{f}(t)\leq\frac{B\_{\theta}^{p\_{\theta}}}{t^{p\_{\theta}}}\min\{\frac{t}{t\_{0}},\frac{t\_{0}}{t}\}^{\epsilon}. \ \ \ \ \ (10)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{f}(t)\leq\frac{B\_{\theta}^{p\_{\theta}}}{t^{p\_{\theta}}}\min\{\frac{t}{t\_{0}},\frac{t\_{0}}{t}\}^{\epsilon}.      (10)$
 
-[](https://www.blogger.com/null)Indeed, note that if $ {t\leq t\_{0}}$, we obviously have  
+Indeed, note that if $ {t\leq t\_{0}}$, we obviously have  
 
 $ \displaystyle \lambda\_{f}(t)\leq\frac{B\_{\theta}^{p\_{\theta}}}{t^{p\_{\theta}}}\left(\frac{t}{t\_{0}}\right)^{\epsilon} $
 
@@ -343,15 +343,15 @@ There is also an operator version of the above result, known as the *Marcinkiewi
 
 > **Theorem 9** *(Marcinkiewicz) Let $ {0<p\_{0},p\_{1},q\_{0},q\_{1}\leq\infty}$ and $ {0<\theta<1}$ be such that $ {q\_{0}\neq q\_{1}}$,$ {p\_{0}<p\_{1}}$, and $ {p\_{1}\leq q\_{1}}$,$ {p\_{2}\leq q\_{2}}$. Let $ {T}$ be a linear operator of weak type $ {(p\_{0},q\_{0})}$ and weak type $ {(p\_{1},q\_{1})}$. Then $ {T}$ is of strong type $ {(p\_{\theta},q\_{\theta})}$.*
 
-*Proof:* Let's first assume $ {q\_{0},q\_{1}<+\infty}$ . By assumption, there exist $ {B\_{0}}$, $ {B\_{1}>0}$ such that[](https://www.blogger.com/null)  
+*Proof:* Let's first assume $ {q\_{0},q\_{1}<+\infty}$ . By assumption, there exist $ {B\_{0}}$, $ {B\_{1}>0}$ such that  
 
-[$ \displaystyle \lambda\_{Tf}(t)\leq B\_{0}^{q\_{0}}\frac{\|f\|\_{L^{p\_{0}}(X)}^{q\_{0}}}{t^{q\_{0}}} \ \ \ \ \ (11)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{Tf}(t)\leq B\_{0}^{q\_{0}}\frac{\|f\|\_{L^{p\_{0}}(X)}^{q\_{0}}}{t^{q\_{0}}}      (11)$
 
-[](https://www.blogger.com/null)for all $ {f\in L^{p\_{0}}(X)}$, and[](https://www.blogger.com/null)  
+for all $ {f\in L^{p\_{0}}(X)}$, and  
 
-[$ \displaystyle \lambda\_{Tf}(t)\leq B\_{1}^{q\_{1}}\frac{\|f\|\_{L^{p\_{1}}(X)}^{q\_{1}}}{t^{q\_{1}}} \ \ \ \ \ (12)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{Tf}(t)\leq B\_{1}^{q\_{1}}\frac{\|f\|\_{L^{p\_{1}}(X)}^{q\_{1}}}{t^{q\_{1}}}      (12)$
 
-[](https://www.blogger.com/null)for all $ {f\in L^{p\_{1}}(X)}$.  
+for all $ {f\in L^{p\_{1}}(X)}$.  
 Below the fold we shall use the notation  
 
 $ \displaystyle A\lesssim B $
@@ -360,15 +360,15 @@ to mean $ {A\leq C(p\_{0},p\_{1},q\_{0},q\_{1},\theta,B\_{0},B\_{1})B}$. Thus it
 
 $ \displaystyle \|Tf\|\_{L^{q\_{\theta}}(Y)}\lesssim\|f\|\_{L^{p\_{\theta}}(X)}. $
 
-We may normalize $ {\|f\|\_{L^{p\_{\theta}}(X)}=1}$. By Proposition [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#propLet-,-and),[](https://www.blogger.com/null)  
+We may normalize $ {\|f\|\_{L^{p\_{\theta}}(X)}=1}$. By Proposition [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#propLet-,-and),  
 
-[$ \displaystyle 1=\|f\|\_{L^{p\_{\theta}}(X)}\sim\_{p\_{\theta}}\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{p\_{\theta}n} \ \ \ \ \ (13)$](https://www.blogger.com/null)
+$ \displaystyle 1=\|f\|\_{L^{p\_{\theta}}(X)}\sim\_{p\_{\theta}}\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{p\_{\theta}n}      (13)$
 
-[](https://www.blogger.com/null)then the goal is to show[](https://www.blogger.com/null)  
+then the goal is to show  
 
-[$ \displaystyle \sum\_{n\in\mathbb{Z}}\lambda\_{Tf}(2^{n})2^{q\_{\theta}n}\lesssim\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{p\_{\theta}n}. \ \ \ \ \ (14)$](https://www.blogger.com/null)
+$ \displaystyle \sum\_{n\in\mathbb{Z}}\lambda\_{Tf}(2^{n})2^{q\_{\theta}n}\lesssim\sum\_{n\in\mathbb{Z}}\lambda\_{f}(2^{n})2^{p\_{\theta}n}.      (14)$
 
-[](https://www.blogger.com/null)For this we need to compare  
+For this we need to compare  
 
 $ \displaystyle \lambda\_{Tf}(2^{n})'s\text{ and }\lambda\_{f}(2^{n})'s $
 
@@ -380,11 +380,11 @@ where $ {f\_{m}:=f\cdot1\_{2^{m}<|f|\leq2^{m+1}}}$, which is of course $ {L^{p}}
 
 $ \displaystyle Tf=\sum\_{m\in\mathbb{Z}}Tf\_{m} $
 
-and using a similar argument as in ([9](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq10)), we have[](https://www.blogger.com/null)  
+and using a similar argument as in ([9](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq10)), we have  
 
-[$ \displaystyle \lambda\_{Tf}(2^{n})\leq\sum\lambda\_{Tf\_{m}}(c\_{n,m}2^{n}) \ \ \ \ \ (15)$](https://www.blogger.com/null)
+$ \displaystyle \lambda\_{Tf}(2^{n})\leq\sum\lambda\_{Tf\_{m}}(c\_{n,m}2^{n})      (15)$
 
-[](https://www.blogger.com/null)whenever $ {c\_{n,m}}$ are positive constants with $ {\sum\_{n,m}c\_{m}\leq1}$. We shall optimise the choice of these coefficients later.  
+whenever $ {c\_{n,m}}$ are positive constants with $ {\sum\_{n,m}c\_{m}\leq1}$. We shall optimise the choice of these coefficients later.  
 Now applying the bound ([11](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq11)),([12](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq12)) to $ {Tf\_{m}}$, for $ {i=0,1}$, we have  
 
 $ \displaystyle \lambda\_{Tf\_{m}}(c\_{n,m}2^{n})\lesssim c\_{n,m}^{-q\_{i}}2^{-nq\_{i}}\|f\_{m}\|\_{L^{p\_{i}}(X)}^{q\_{i}}. $

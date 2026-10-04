@@ -24,11 +24,11 @@ A solution can be provided by the distance function
 
 $ \displaystyle u(x)=\text{dist}(x,\partial\Omega) $
 
-which is general not differentiable at every point. For simplicity, let us assume we are in $ {1}$-D, $ {\Omega=(-1,1)}$. The equation is simplified to[](https://www.blogger.com/null)  
+which is general not differentiable at every point. For simplicity, let us assume we are in $ {1}$-D, $ {\Omega=(-1,1)}$. The equation is simplified to  
 
-[$ \displaystyle |u\_{x}|-1=0 \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle |u\_{x}|-1=0      (1)$
 
-[](https://www.blogger.com/null)with $ {u(-1)=u(1)=0}$. A solution is given by $ {1-|x|}$, which is not differentiable at zero. At first, one can ask for a "weak'' solution, by relaxing $ {u}$ to be only Lipschitz continuous and that ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) holds almost everywhere. However, we then lose the uniqueness of the solution: there are infinitely many weak solutions to the Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
+with $ {u(-1)=u(1)=0}$. A solution is given by $ {1-|x|}$, which is not differentiable at zero. At first, one can ask for a "weak'' solution, by relaxing $ {u}$ to be only Lipschitz continuous and that ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) holds almost everywhere. However, we then lose the uniqueness of the solution: there are infinitely many weak solutions to the Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
 On the other hand, one can obtain a solution (also in the "weak'' sense) via the method of *vanishing viscosity*. The viscosity approximation to Equation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1))  
 
 $ \displaystyle |u\_{x}^{\epsilon}|-1=\epsilon u\_{xx}^{\epsilon} $
@@ -65,11 +65,11 @@ This says the laplacian $ {\Delta f(0)}$ measures the second order rate of chang
 
 $ \displaystyle \Delta u=0 $
 
-namely the *harmonic functions*, enjoy a kind of *mean value property*. Indeed, we have the following characterisation of harmonic functions:[](https://www.blogger.com/null)  
+namely the *harmonic functions*, enjoy a kind of *mean value property*. Indeed, we have the following characterisation of harmonic functions:  
 
-[$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S\_{r}(x)}u(y)dS(y)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{B\_{r}(x)}u(y)dy \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle u(x)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint{S\_{r}(x)}u(y)dS(y)=\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{B\_{r}(x)}u(y)dy      (2)$
 
-[](https://www.blogger.com/null)where we assume $ {u\in\mathcal{C}^{2}(\Omega)}$, and $ {\textstyle \def\avint{\mathop{\rlap{\raise.15em{\scriptstyle -}}\kern-.2em\int}\nolimits} \avint\_{A}}$ means averaged integral $ {{\displaystyle \frac{1}{|A|}\int\_{A}}}$. Changing the equality in ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) to  
+where we assume $ {u\in\mathcal{C}^{2}(\Omega)}$, and $ {\textstyle \def\avint{\mathop{\rlap{\raise.15em{\scriptstyle -}}\kern-.2em\int}\nolimits} \avint\_{A}}$ means averaged integral $ {{\displaystyle \frac{1}{|A|}\int\_{A}}}$. Changing the equality in ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) to  
 
 $ \displaystyle u(x)\leq\def\avint{\mathop{\,\rlap{-}\!\!\int}\nolimits} \avint\_{S\_{r}(x)}u(y)dS(y) $
 
@@ -113,9 +113,9 @@ Hence the set $ {\{x\in\Omega:u(x)=M\}}$ is both open and relatively closed. It 
 
 Some immediate consequences are:  
 
-> **Corollary 3** *[](https://www.blogger.com/null)(Comparison principle) Suppose $ {\Omega\subset\mathbb{R}^{n}}$ is open and bounded. If $ {\Delta u\geq\Delta v}$ in $ {\Omega}$, and $ {u\leq v}$ in $ {\partial\Omega}$, then $ {u\leq v}$ in $ {\Omega}$.*
+> **Corollary 3** *(Comparison principle) Suppose $ {\Omega\subset\mathbb{R}^{n}}$ is open and bounded. If $ {\Delta u\geq\Delta v}$ in $ {\Omega}$, and $ {u\leq v}$ in $ {\partial\Omega}$, then $ {u\leq v}$ in $ {\Omega}$.*
 
-> **Corollary 4** *[](https://www.blogger.com/null)(Uniqueness) The solution to the Dirichlet problem*  
+> **Corollary 4** *(Uniqueness) The solution to the Dirichlet problem*  
 > 
 > *$ \displaystyle \Delta u(x)=0\quad x\in\Omega $*
 > 
@@ -129,11 +129,11 @@ Some immediate consequences are:
 
 Below the fold we will explore what notion of a solution that will enjoy properties such as Corollary [3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#cor\(Comparison-principle\)-Suppose) and [4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#cor\(Uniqueness\)-The-solution). This will be in large parallel to the development above, although we will be more focusing on the comparison side, rather than the maximal principle. For historical reasons, such solutions are called *viscosity solutions*, originally appeared in the work of Evans, Crandall and Lions. Indeed, it would more appropriate to describe this kind of solutions to be e.g. *comparison solutions* or something else.  
 
-For most of the time, we will try to formulate the definition of the viscosity solutions to the first order PDE[](https://www.blogger.com/null)  
+For most of the time, we will try to formulate the definition of the viscosity solutions to the first order PDE  
 
-[$ \displaystyle F(x,u,\nabla u)=0 \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle F(x,u,\nabla u)=0      (3)$
 
-[](https://www.blogger.com/null)where $ {F:\Omega\times\mathbb{R}\times\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is continuous, and $ {\Omega\subset\mathbb{R}^{n}}$ ia open and bounded. Then for the *comparison principle* we will turn to a very special class, namely the *Hamilton-Jacobi PDE*  
+where $ {F:\Omega\times\mathbb{R}\times\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is continuous, and $ {\Omega\subset\mathbb{R}^{n}}$ ia open and bounded. Then for the *comparison principle* we will turn to a very special class, namely the *Hamilton-Jacobi PDE*  
 
 $ \displaystyle u+H(x,\nabla u)=0. $
 
@@ -145,19 +145,19 @@ holds for all points in a neighborhood $ {U}$ of $ {x\_{0}}$. Let $ {\varphi\in\
 
 $ \displaystyle \nabla u(x\_{0})=\nabla\varphi(x\_{0}) $
 
-and hence[](https://www.blogger.com/null)  
+and hence  
 
-[$ \displaystyle F(x\_{0},u,\nabla u)=F(x\_{0},\varphi,\nabla\varphi)\leq0 \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle F(x\_{0},u,\nabla u)=F(x\_{0},\varphi,\nabla\varphi)\leq0      (4)$
 
-[](https://www.blogger.com/null)in $ {U}$. Similarly, if $ {u}$ is a classical *supersolution* at $ {x\_{0}}$, and let $ {\psi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u-\psi}$ attains local minimum at $ {x\_{0}}$ in $ {U}$, we have  
+in $ {U}$. Similarly, if $ {u}$ is a classical *supersolution* at $ {x\_{0}}$, and let $ {\psi\in\mathcal{C}^{1}(\Omega)}$ be such that $ {u-\psi}$ attains local minimum at $ {x\_{0}}$ in $ {U}$, we have  
 
 $ \displaystyle \nabla u(x\_{0})=\nabla\psi(x\_{0}) $
 
-and[](https://www.blogger.com/null)  
+and  
 
-[$ \displaystyle 0\leq F(x,\psi,\nabla\psi)=F(x,u,\nabla u) \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle 0\leq F(x,\psi,\nabla\psi)=F(x,u,\nabla u)      (5)$
 
-[](https://www.blogger.com/null)Combining the two, we conclude that $ {u}$ is a classical solution locally at $ {x\_{0}}$. However, since a solution in the classical sense (namely, a differentiable one) to the Drichilet problem ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) does not exist in general, one seeks to formulate a "weak'' problem. In light of inequalities ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) and ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we will try to formulate their equivalents in a non-differentiable setting.  
+Combining the two, we conclude that $ {u}$ is a classical solution locally at $ {x\_{0}}$. However, since a solution in the classical sense (namely, a differentiable one) to the Drichilet problem ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) does not exist in general, one seeks to formulate a "weak'' problem. In light of inequalities ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) and ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we will try to formulate their equivalents in a non-differentiable setting.  
 
 **1.4. One sided differentials**
 
@@ -171,7 +171,7 @@ and[](https://www.blogger.com/null)
 
 Roughly speaking, locally the function sits below the plane situated at $ {x}$ defined by $ {p\in D^{+}u(x)}$, and sits above the plane defined by $ {p\in D^{-}u(x)}$, whenever the sets are nonempty. They are linear approximations to the behavior of the function at certain point, although they are not neccessarily unique unless the function is differentiable. But we are able to extract a lot of information, by comparing the function to the more regular ones, with the same *linear behavior* (in fact, we can even get quadratic information).  
 
-> **Lemma 6** *[](https://www.blogger.com/null)Let $ {u\in\mathcal{C}(\Omega)}$. Then*  
+> **Lemma 6** *Let $ {u\in\mathcal{C}(\Omega)}$. Then*  
 > 
 > *-   $ {p\in D^{+}u(x)}$ if and only if there is a function $ {\varphi\in\mathcal{C}^{1}(\Omega)}$ such that $ {\nabla\varphi(x)=p}$ and $ {u-\varphi}$ has a local maximum at $ {x}$;
 > -   $ {p\in D^{-}u(x)}$ if and only if there is a function $ {\psi\in\mathcal{C}^{1}(\Omega)}$ such that $ {\nabla\psi(x)=p}$ and $ {u-\psi}$ has a local minimum at $ {x}$;*
@@ -205,7 +205,7 @@ Hence $ {u-\varphi}$ attains a local maximum at $ {x}$. By posibly adding $ {|x-
 
 The formulation in Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lemequiv%20def) allows us to do some quick check about our intuitions.  
 
-> **Lemma 7** *[](https://www.blogger.com/null)Let Let $ {u\in\mathcal{C}(\Omega)}$. Then*  
+> **Lemma 7** *Let Let $ {u\in\mathcal{C}(\Omega)}$. Then*  
 > 
 > *-   If $ {u}$ is differentiable at $ {x}$, then
 >     
@@ -284,11 +284,11 @@ It is plasuible to believe, and in fact it is true, that the solution obtained b
 
 **1.6. A Comparison theorem for stationary Hamilton-Jacobi PDE**
 
-Consider the Dirichlet problem[](https://www.blogger.com/null)  
+Consider the Dirichlet problem  
 
-[$ \displaystyle u+H(x,\nabla u)=0\quad x\in\Omega, \ \ \ \ \ (6)$](https://www.blogger.com/null)
+$ \displaystyle u+H(x,\nabla u)=0\quad x\in\Omega,      (6)$
 
-[](https://www.blogger.com/null)where $ {H}$ is uniformly continuous in the $ {x}$-variable:  
+where $ {H}$ is uniformly continuous in the $ {x}$-variable:  
 
 $ \displaystyle \left|H(x,p)-H(y,p)\right|\leq\omega(|x-y|(1+|p|), $
 

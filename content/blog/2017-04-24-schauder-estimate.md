@@ -26,11 +26,11 @@ In the exposition we have largely followed the book by Gilbarg and Trudinger. Ma
 
 **1\. Genesis of $ {C^{\alpha}}$-estimates: the regularity problem of the Poisson equation**
 
-A harmonic function $ {u}$, i.e.[](https://www.blogger.com/null)  
+A harmonic function $ {u}$, i.e.  
 
-[$ \displaystyle \Delta u=0 \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \Delta u=0      (1)$
 
-[](https://www.blogger.com/null)is so special in that it is "controlled by itself". This is manifested in a number of inter-connected aspects. The most special one is the *mean value property (MVP)*, which says that the value of the harmonic function at a point can be given by its integral over radially symmetric domains around that point (i.e. balls, spheres). This can be explained by the radial symmetry of the Laplacian, and the fact that it measures the second order change of the average  
+is so special in that it is "controlled by itself". This is manifested in a number of inter-connected aspects. The most special one is the *mean value property (MVP)*, which says that the value of the harmonic function at a point can be given by its integral over radially symmetric domains around that point (i.e. balls, spheres). This can be explained by the radial symmetry of the Laplacian, and the fact that it measures the second order change of the average  
 
 $ \displaystyle \Delta u(x)=\lim\_{r\rightarrow0^{+}}C(n)\frac{1}{r^{n+2}}\int\_{B\_{r}(x)}\left(u(y)-u(x)\right)dy, $
 
@@ -38,7 +38,7 @@ here $ {C(n)}$ is some constant depending only on $ {n}$. Thus if $ {\Delta u=0}
 We can easily deduce many other properties from the MVP. For instances, suppose $ {u}$ is harmonic, then  
 
 -   via a contradiction argument, one sees that $ {u}$ on a bounded domain takes its extrema on the boundary, and otherwise constant. These are known as the *weak and strong maximum principles*.
--   given a ball $ {B\_{R}(x)\subset\Omega'\subset\subset\Omega}$, for any $ {y\_{1},y\_{2}\in B\_{r}(y)}$ for $ {r}$ small enough (say $ {r=R/4)}$, via a covering argument, one can control the discrepancy between the values $ {u(y\_{1})}$ and $ {u(y\_{2})}$ by using the MVP. This implies that harmonic functions satisfy a (rather crude) *Harnack-type inequality*,
+-   given a ball $ {B\_{R}(x)\subset\Omega'\subset\subset\Omega}$, for any $ {y\_{1},y\_{2}\in B\_{r}(y)}$ for $ {r}$ small enough (say $ {r=R/4)}$, via a covering argument, one can control the discrepancy between the values $ {u(y\_{1})}$ and $ \displaystyle [u]_{j,\beta;\Omega}^{*} \leq \epsilon[u]_{2,\alpha;\Omega}^{*}+C_{\epsilon}|u|_{0;\Omega},\ \ \ \ \ (17)$ by using the MVP. This implies that harmonic functions satisfy a (rather crude) *Harnack-type inequality*,
 
     $ \displaystyle \sup\_{\Omega'}u\lesssim\_{n}\inf\_{\Omega'}u. $
 
@@ -53,23 +53,23 @@ We can easily deduce many other properties from the MVP. For instances, suppose 
 
     and its higher order analogs[
 
-    $ \displaystyle |D^{\boldsymbol{\alpha}}u(x\_{0})|\leq\frac{n^{m}e^{m-1}m!}{R^{m}}\sup\_{B\_{R}(x\_{0})}|u| \ \ \ \ \ (2)$
+    $ \displaystyle |D^{\boldsymbol{\alpha}}u(x\_{0})|\leq\frac{n^{m}e^{m-1}m!}{R^{m}}\sup\_{B\_{R}(x\_{0})}|u|      (2)$
 
     ](https://www.blogger.com/null)for any multi-index $ {\alpha}$ with $ {|\alpha|=m}$. From this one can show the *analyticity* of $ {u}$.
 
-The bound ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) can be extended to an *(a priori) interior estimate* of the form[](https://www.blogger.com/null)  
+The bound ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)) can be extended to an *(a priori) interior estimate* of the form  
 
-[$ \displaystyle \sup\_{\Omega'}|D^{\boldsymbol{\alpha}}u|\lesssim\_{n,m}\frac{1}{\text{diam}(\Omega')^{m}}\sup\_{\Omega}|u| \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \sup\_{\Omega'}|D^{\boldsymbol{\alpha}}u|\lesssim\_{n,m}\frac{1}{\text{diam}(\Omega')^{m}}\sup\_{\Omega}|u|      (3)$
 
-[](https://www.blogger.com/null)where $ {\Omega'\subset\subset\Omega}$ . These estimates are called *a priori* because the existence of $ {u}$ is part of the assumption. An immediate consequence is the *equicontinuity* of the derivatives of $ {u}$ at all orders, and via the *Arzelá-Ascoli* theorem, we can obtain the following *compactness result*, which is important in developing the existence of solutions to the Dirichlet problem:  
+where $ {\Omega'\subset\subset\Omega}$ . These estimates are called *a priori* because the existence of $ {u}$ is part of the assumption. An immediate consequence is the *equicontinuity* of the derivatives of $ {u}$ at all orders, and via the *Arzelá-Ascoli* theorem, we can obtain the following *compactness result*, which is important in developing the existence of solutions to the Dirichlet problem:  
 
 -   Any bounded sequence of harmonic functions on a domain $ {\Omega\subset\mathbb{R}^{n}}$ contains a locally uniformly convergent subsequence.  
 
-Next we consider the inhomogeneous counterpart to ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)), the *Poisson equation*[](https://www.blogger.com/null)  
+Next we consider the inhomogeneous counterpart to ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)), the *Poisson equation*  
 
-[$ \displaystyle \Delta u=f, \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \Delta u=f,      (4)$
 
-[](https://www.blogger.com/null)where we call the function $ {f:\Omega\rightarrow\mathbb{R}}$ the *source term* of the equation. To see the structure of the equation, we use the fundamental solution: for any function $ {u}$ in $ {C^{2}(\overline{B}\_{R}(x))}$, we have for $ {y\in\Omega}$, the *Green's representation formula*  
+where we call the function $ {f:\Omega\rightarrow\mathbb{R}}$ the *source term* of the equation. To see the structure of the equation, we use the fundamental solution: for any function $ {u}$ in $ {C^{2}(\overline{B}\_{R}(x))}$, we have for $ {y\in\Omega}$, the *Green's representation formula*  
 
 $ \displaystyle u(y)=\int\_{\partial B\_{R}}\left(u(x)\frac{\partial\Phi}{\partial\nu}(x-y)-\Phi(x-y)\frac{\partial u}{\partial\nu}(x)\right)dS(x)+\int\_{B\_{R}}\Phi(x-y)\Delta u(x)dx, $
 
@@ -97,15 +97,15 @@ So we have to justify the replacement. This means we have to analyse the linear 
 
 $ \displaystyle \Delta^{-1}:f\mapsto w\_{f} $
 
-where the notation $ {\Delta^{-1}}$ is due to the fact that $ {\Delta w\_{\Delta u}=\Delta u}$. If it were the case that $ {\Delta^{-1}}$ is bounded, say, from $ {C^{0}(\Omega)}$ to $ {C^{2}(\Omega')}$, that is[](https://www.blogger.com/null)  
+where the notation $ {\Delta^{-1}}$ is due to the fact that $ {\Delta w\_{\Delta u}=\Delta u}$. If it were the case that $ {\Delta^{-1}}$ is bounded, say, from $ {C^{0}(\Omega)}$ to $ {C^{2}(\Omega')}$, that is  
 
-[$ \displaystyle \sup\_{\Omega'}|D^{2}w\_{f}|\lesssim\_{n,\Omega'}\sup\_{\Omega}|f|, \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \sup\_{\Omega'}|D^{2}w\_{f}|\lesssim\_{n,\Omega'}\sup\_{\Omega}|f|,      (5)$
 
-[](https://www.blogger.com/null)where $ {D^{2}}$ means the second order derivative operator, and then coupled with the previous estimate of the harmonic functions ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)), one would have an interior a priori bound for the solutions of the Poisson equation[](https://www.blogger.com/null)  
+where $ {D^{2}}$ means the second order derivative operator, and then coupled with the previous estimate of the harmonic functions ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)), one would have an interior a priori bound for the solutions of the Poisson equation  
 
-[$ \displaystyle \sup\_{\Omega'}|D^{2}u|\lesssim\_{n,\Omega'}\sup\_{\Omega}|h|+\sup\_{\Omega}|f|. \ \ \ \ \ (6)$](https://www.blogger.com/null)
+$ \displaystyle \sup\_{\Omega'}|D^{2}u|\lesssim\_{n,\Omega'}\sup\_{\Omega}|h|+\sup\_{\Omega}|f|.      (6)$
 
-[](https://www.blogger.com/null)And by a similar compactness result one would get the existence of solutions to the Dirichlet problem of Poisson equation with continuous source term.  
+And by a similar compactness result one would get the existence of solutions to the Dirichlet problem of Poisson equation with continuous source term.  
 The bound ([6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq6)) as stated is, however, not the case.  
 
 > **Example 1** *Let $ {P(x)=x\_{1}x\_{2}}$ (or any other harmonic polynomial with mixed-partials bounded away from zero will do), and let $ {\eta\in C\_{0}^{\infty}(B\_{2}(0))}$ be a cutoff function such that $ {\eta=1}$ when $ {|x|<1}$. Consider the function*  
@@ -210,13 +210,13 @@ $ \displaystyle \frac{|g(x)(f(x)-f(y))|}{|x-y|^{\alpha}}\leq\|g\|\_{C^{0}(\Omega
 
 $ \displaystyle \begin{array}{rcl} \frac{|f(y)(g(x)-g(y))|}{|x-y|^{\alpha}} & = & |x-y|^{\beta-\alpha}\frac{|f(y)(g(x)-g(y))|}{|x-y|^{\beta}}\\ & \leq & |\text{diam}\Omega|^{\beta-\alpha}\|f\|\_{C^{0}(\Omega)}[g]\_{\alpha;\Omega}, \end{array} $
 
-we conclude that on bounded domains the product of Hölder continuous functions is still Hölder continuous, and moreover, write $ {\gamma=\min(\alpha,\beta)}$[](https://www.blogger.com/null)  
+we conclude that on bounded domains the product of Hölder continuous functions is still Hölder continuous, and moreover, write $ {\gamma=\min(\alpha,\beta)}$  
 
-[$ \displaystyle \|fg\|\_{C^{\gamma}(\Omega)}\leq\max(1,|\text{diam}\Omega|^{\alpha+\beta-2\gamma})\|f\|\_{C^{\alpha}(\Omega)}\|g\|\_{C^{\beta}(\Omega)}. \ \ \ \ \ (7)$](https://www.blogger.com/null)
+$ \displaystyle \|fg\|\_{C^{\gamma}(\Omega)}\leq\max(1,|\text{diam}\Omega|^{\alpha+\beta-2\gamma})\|f\|\_{C^{\alpha}(\Omega)}\|g\|\_{C^{\beta}(\Omega)}.      (7)$
 
-[](https://www.blogger.com/null)We also see that in general the product inherits the *lowest* Hölder regularity from the given functions.  
+We also see that in general the product inherits the *lowest* Hölder regularity from the given functions.  
 
-> **Example 3** *[](https://www.blogger.com/null)Here we illustrate the behaviour of the $ {C^{k,\alpha}}$-norm on $ {\mathbb{R}^{n}}$ using various functions, thus ignoring the boundary effects of the domain. Let $ {\phi\in C\_{c}^{\infty}(\mathbb{R}^{n})}$. First note that for $ {x\_{0}\in\mathbb{R}^{n}}$,*  
+> **Example 3** *Here we illustrate the behaviour of the $ {C^{k,\alpha}}$-norm on $ {\mathbb{R}^{n}}$ using various functions, thus ignoring the boundary effects of the domain. Let $ {\phi\in C\_{c}^{\infty}(\mathbb{R}^{n})}$. First note that for $ {x\_{0}\in\mathbb{R}^{n}}$,*  
 > 
 > *$ \displaystyle \lim\_{x\rightarrow x\_{0}}\frac{|\phi(x)-\phi(x\_{0})|}{|x-x\_{0}|^{\alpha}}=\lim\_{x\rightarrow x\_{0}}\frac{|\phi(x)-\phi(x\_{0})|}{|x-x\_{0}|}|x-x\_{0}|^{1-\alpha}=\begin{cases} |\phi'(x\_{0})| & \alpha=0\\ 0 & \text{otherwise} \end{cases}. $*
 > 
@@ -245,11 +245,11 @@ $ \displaystyle |x|\phi(x) $
 
 lies in $ {C^{1,0}(\Omega)}$. But it does not come from a restriction of any function in $ {C^{1,0}(\mathbb{R}^{n})}$, since $ {|x|}$ is not conitnuously differentiable at the origin. Moreover, from the experience with various Hölder quantities (when $ {\alpha>0}$), for instances the estimate with products ([7](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq17)), and calculations for smooth functions in Example [3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#exaHere-we-illustrate) above, we can see that they are in a sense "global" in character, in constrast to differentiability, which is an entirely local concept. In this respect, there is a typical example of a Liouville type result regarding the boundedness of Hölder norm for harmonic functions defined on the whole space $ {\mathbb{R}^{n}}$.  
 
-> **Lemma 3** *(Liouville type lemma) Let $ {0<\alpha<1}$. If $ {u:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is a harmonic function with finite $ {\alpha}$-Hölder norm, i.e. there exists $ {C>0}$ such that[](https://www.blogger.com/null)*  
+> **Lemma 3** *(Liouville type lemma) Let $ {0<\alpha<1}$. If $ {u:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ is a harmonic function with finite $ {\alpha}$-Hölder norm, i.e. there exists $ {C>0}$ such that*  
 > 
-> *[$ \displaystyle |u(x)-u(y)|\leq C|x-y|^{\alpha} \ \ \ \ \ (8)$](https://www.blogger.com/null)*
+> *$ \displaystyle |u(x)-u(y)|\leq C|x-y|^{\alpha}      (8)$*
 > 
-> *[](https://www.blogger.com/null)for all $ {x,y\in\mathbb{R}^{n}}$. Then $ {u}$ is constant.*
+> *for all $ {x,y\in\mathbb{R}^{n}}$. Then $ {u}$ is constant.*
 
 *Proof:* Without loss of generality assume $ {u(0)=0}$. Taking $ {y=0}$ in ([8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7-1)) we find a growth condition for $ {u}$:  
 
@@ -292,24 +292,24 @@ for any $ {\epsilon>0}$. For example, such an inequality is useful when we have,
 
 **3\. The heart of the matter: interior a priori estimate**
 
-This section is to devoted to the proof of the Hölder estimate for the Newtonian potential,[](https://www.blogger.com/null)  
+This section is to devoted to the proof of the Hölder estimate for the Newtonian potential,  
 
-[$ \displaystyle \|D^{2}w\_{f}\|\_{C^{\alpha}(\Omega')}\lesssim\_{n,\Omega'}\|f\|\_{C^{\alpha}(\Omega)}, \ \ \ \ \ (9)$](https://www.blogger.com/null)
+$ \displaystyle \|D^{2}w\_{f}\|\_{C^{\alpha}(\Omega')}\lesssim\_{n,\Omega'}\|f\|\_{C^{\alpha}(\Omega)},      (9)$
 
-[](https://www.blogger.com/null)for any $ {u\in C^{2,\alpha}(\Omega)}$, $ {0<\alpha<1}$; as well as Schauder's perturbation argument for the generalised a priori estimate[](https://www.blogger.com/null)  
+for any $ {u\in C^{2,\alpha}(\Omega)}$, $ {0<\alpha<1}$; as well as Schauder's perturbation argument for the generalised a priori estimate  
 
-[$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega')}\lesssim\_{n,\Omega',L}\|Lu\|\_{C^{\alpha}(\Omega)}+\|u\|\_{C^{0}(\Omega)}, \ \ \ \ \ (10)$](https://www.blogger.com/null)
+$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega')}\lesssim\_{n,\Omega',L}\|Lu\|\_{C^{\alpha}(\Omega)}+\|u\|\_{C^{0}(\Omega)},      (10)$
 
-[](https://www.blogger.com/null)for a linear second order uniform elliptic operator with, i.e.  
+for a linear second order uniform elliptic operator with, i.e.  
 
 $ \displaystyle Lu(x)=a^{ij}(x)D\_{ij}^{2}u(x)+b^{i}(x)D\_{i}u(x)+c(x)u(x) $
 
 with some appropriate assumptions on the coefficients. The vital ideas presented in what follows will stand as the principal part of this article.  
-Note that it suffices to establish[](https://www.blogger.com/null)  
+Note that it suffices to establish  
 
-[$ \displaystyle \|D^{2}w\_{f}\|\_{C^{\alpha}(B\_{r})}\lesssim\_{n,r}\|f\|\_{C^{\alpha}(B\_{2r})}. \ \ \ \ \ (11)$](https://www.blogger.com/null)
+$ \displaystyle \|D^{2}w\_{f}\|\_{C^{\alpha}(B\_{r})}\lesssim\_{n,r}\|f\|\_{C^{\alpha}(B\_{2r})}.      (11)$
 
-[](https://www.blogger.com/null)Indeed, let $ {x\_{0}\in\Omega'}$ $ {r=\frac{1}{3}\text{dist}(x\_{0},\partial\Omega)}$, $ {B\_{r}=B(x\_{0},r)}$, and $ {y\in\Omega}$. We have  
+Indeed, let $ {x\_{0}\in\Omega'}$ $ {r=\frac{1}{3}\text{dist}(x\_{0},\partial\Omega)}$, $ {B\_{r}=B(x\_{0},r)}$, and $ {y\in\Omega}$. We have  
 
 $ \displaystyle \begin{array}{rcl} & & |D^{2}u(x)|+\frac{|D^{2}u(x)-D^{2}u(y)|}{|x-y|^{\alpha}}\\ & \leq & \|D^{2}u\|\_{C^{2}(B\_{r})}+[D^{2}u]\_{\alpha;B\_{r}}+\frac{|D^{2}u(x)|+|D^{2}u(y)|}{r^{\alpha}}. \end{array} $
 
@@ -330,11 +330,11 @@ Thus it is natural to introduce the non-dimensional quantities
 
 $ \displaystyle |u|'\_{k,\alpha;B\_{r}}=\sum\_{j=0}^{k}r^{j}\|D^{j}u\|\_{C^{0}(B\_{r})}+r^{k+\alpha}[D^{k}u]\_{\alpha;B\_{r}} $
 
-to absorb the effect done by scaling. Thus the estimate ([11](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8)) writes[](https://www.blogger.com/null)  
+to absorb the effect done by scaling. Thus the estimate ([11](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8)) writes  
 
-[$ \displaystyle |D^{2}w\_{f}|'\_{0,\alpha;B\_{r}}\lesssim\_{n}|f|'\_{0,\alpha;B\_{2r}}. \ \ \ \ \ (12)$](https://www.blogger.com/null)
+$ \displaystyle |D^{2}w\_{f}|'\_{0,\alpha;B\_{r}}\lesssim\_{n}|f|'\_{0,\alpha;B\_{2r}}.      (12)$
 
-[](https://www.blogger.com/null)  
+  
 We first justify that $ {w\_{f}}$ is twice differentiable provided $ {f\in C^{0,\alpha}(B\_{2r})}$, which satisfies  
 
 $ \displaystyle |f(x)-f(y)|\lesssim[f]\_{\alpha;x}|x-y|^{\alpha}. $
@@ -343,15 +343,15 @@ This will be based on an approximation argument. For this we need the following 
 
 $ \displaystyle \begin{array}{rcl} |D\_{i}\Phi(x-y)| & \lesssim & |x-y|^{1-n};\\ |D\_{ij}\Phi(x-y)| & \lesssim & |x-y|^{-n}. \end{array} $
 
-As results, the functions[](https://www.blogger.com/null)  
+As results, the functions  
 
-[$ \displaystyle v\_{1}(x)=\int\_{B\_{2r}}D\_{i}\Phi(x-y)\cdot f(y)dy, \ \ \ \ \ (13)$](https://www.blogger.com/null)
+$ \displaystyle v\_{1}(x)=\int\_{B\_{2r}}D\_{i}\Phi(x-y)\cdot f(y)dy,      (13)$
 
-[](https://www.blogger.com/null)[](https://www.blogger.com/null)  
+  
 
-[$ \displaystyle v\_{2}(x)=\int\_{B\_{2r}}D\_{ij}\Phi(x-y)\cdot(f(y)-f(x))dy+f(x)\int\_{\partial B\_{2r}}D\_{i}\Phi(x-y)\cdot\nu\_{j}dS(y). \ \ \ \ \ (14)$](https://www.blogger.com/null)
+$ \displaystyle v\_{2}(x)=\int\_{B\_{2r}}D\_{ij}\Phi(x-y)\cdot(f(y)-f(x))dy+f(x)\int\_{\partial B\_{2r}}D\_{i}\Phi(x-y)\cdot\nu\_{j}dS(y).      (14)$
 
-[](https://www.blogger.com/null)are well defined. The "bad" part of kernel and its derivatives occur when $ {x=y}$. So we multiply a cutoff function $ {\eta\_{\epsilon}(x-y)=\eta(\frac{|x-y|}{\epsilon})}$ with  
+are well defined. The "bad" part of kernel and its derivatives occur when $ {x=y}$. So we multiply a cutoff function $ {\eta\_{\epsilon}(x-y)=\eta(\frac{|x-y|}{\epsilon})}$ with  
 
 $ \displaystyle \eta(t)=\begin{cases} 1 & t\geq2\\ 0 & t\leq1\\ C^{\infty} & \text{otherwise} \end{cases},\quad|\eta'|\leq2, $
 
@@ -382,7 +382,7 @@ $ \displaystyle \begin{array}{rcl} & & D\_{ij}w(\bar{x})-D\_{ij}w(x)\\ & = & \in
 
 By adding and subtracting various terms and rearranging, it amounts to estimate the following integrals. There are two boundary terms:  
 
-$ \displaystyle \begin{array}{rcl} & & f(x)\int\_{\partial B\_{2r}}\left(D\_{i}\Phi(\bar{x}-y)-D\_{i}\Phi(x-y)\right)\cdot\nu\_{j}dS(y)\\ & \leq & \sup\_{B\_{2r}}|f|\cdot|x-\bar{x}|\int\_{\partial B\_{2r}}\left|DD\_{i}\Phi(\bar{x}-y)\right|dS(y)\text{ \quad(mean value theorem)}\\ & \lesssim\_{n} & r^{-\alpha}\sup\_{B\_{2r}}|f|\cdot|x-\bar{x}|^{\alpha}\quad\text{(since \ensuremath{x,\bar{x}\in B\_{r}})}, \end{array} $
+$ \displaystyle \begin{array}{rcl} & & f(x)\int\_{\partial B\_{2r}}\left(D\_{i}\Phi(\bar{x}-y)-D\_{i}\Phi(x-y)\right)\cdot\nu\_{j}dS(y)\\ & \leq & \sup\_{B\_{2r}}|f|\cdot|x-\bar{x}|\int\_{\partial B\_{2r}}\left|DD\_{i}\Phi(\bar{x}-y)\right|dS(y)\text{ (mean value theorem)}\\ & \lesssim\_{n} & r^{-\alpha}\sup\_{B\_{2r}}|f|\cdot|x-\bar{x}|^{\alpha}\quad\text{(since } x,\bar{x}\in B\_{r}\text{)}, \end{array} $
 
 $ \displaystyle \begin{array}{rcl} & & \left(f(x)-f(\bar{x})\right)\int\_{\partial B\_{2}}D\_{i}\Phi(\bar{x}-y)\nu\_{j}dS(y)\\ & \lesssim\_{n} & [f]\_{\alpha;x}|x-y|^{\alpha}, \end{array} $
 
@@ -425,16 +425,16 @@ with constant coefficients and no lower order term. Here we require
 
 $ \displaystyle a^{ij}\xi\_{i}\xi\_{j}\geq\lambda|\xi|^{2}\quad\forall x\in\Omega,\xi\in\mathbb{R}^{n}, $
 
-for some $ {\lambda>0}$, i.e. $ {L}$ is *strictly elliptic*. Of course now the constant in the estimate depends on the extrema $ {\lambda,\Lambda}$ of the eigenvalues of $ {[a\_{ij}]}$,[](https://www.blogger.com/null)  
+for some $ {\lambda>0}$, i.e. $ {L}$ is *strictly elliptic*. Of course now the constant in the estimate depends on the extrema $ {\lambda,\Lambda}$ of the eigenvalues of $ {[a\_{ij}]}$,  
 
-[$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega')}\lesssim\_{n,\Omega',\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{\alpha}(\Omega)}. \ \ \ \ \ (15)$](https://www.blogger.com/null)
+$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega')}\lesssim\_{n,\Omega',\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{\alpha}(\Omega)}.      (15)$
 
-[](https://www.blogger.com/null)  
-Now, we prove the interior Hölder estimate of the second derivative of the equation[](https://www.blogger.com/null)  
+  
+Now, we prove the interior Hölder estimate of the second derivative of the equation  
 
-[$ \displaystyle Lu(x)=a^{ij}(x)D\_{ij}^{2}u(x)+b\_{i}(x)D\_{i}u(x)+c(x)u(x)=f(x) \ \ \ \ \ (16)$](https://www.blogger.com/null)
+$ \displaystyle Lu(x)=a^{ij}(x)D\_{ij}^{2}u(x)+b\_{i}(x)D\_{i}u(x)+c(x)u(x)=f(x)      (16)$
 
-[](https://www.blogger.com/null)And to get sharper result than ([10](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8-1)), we will make the appropriate assumption on the coefficients while doing estimate. The strategy is to "freeze" the coefficient  
+And to get sharper result than ([10](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq8-1)), we will make the appropriate assumption on the coefficients while doing estimate. The strategy is to "freeze" the coefficient  
 
 $ \displaystyle a\_{ij}(x\_{0})D\_{ij}u=(a\_{ij}(x\_{0})-a\_{ij}(x))D\_{ij}u-b^{i}(x)D\_{i}u(x)-c(x)u(x)+f(x) $
 
@@ -459,11 +459,11 @@ we also use some weighted interior quantities such as
 
 $ \displaystyle |f|\_{0,\alpha;\Omega}^{(k)}:=\sup\_{x\in\Omega}d\_{x}^{k}|f(x)|+\sup\_{x,y\in\Omega}d\_{x,y}^{k+\alpha}\frac{|f(x)-f(y)|}{|x-y|^{\alpha}}. $
 
-Given the above formulation, ([15](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq13)) is equivalent to[](https://www.blogger.com/null)  
+Given the above formulation, ([15](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq13)) is equivalent to  
 
-[$ \displaystyle |u|\_{k,\alpha;\Omega}^{\*}\lesssim\_{n,\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+|f|\_{0,\alpha;\Omega}^{(2)}. \ \ \ \ \ (17)$](https://www.blogger.com/null)
+$ \displaystyle |u|\_{k,\alpha;\Omega}^{\*}\lesssim\_{n,\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+|f|\_{0,\alpha;\Omega}^{(2)}.      (17)$
 
-[](https://www.blogger.com/null)  
+  
 Now let's assume $ {\Omega}$ is compact and $ {u}$ is a $ {C^{2,\alpha}}$-solution of the equation ([16](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq14)). The compactness assumption will be subsequently removed. Write  
 
 $ \displaystyle F(x):=(a\_{ij}(x\_{0})-a\_{ij}(x))D\_{ij}u-b\_{i}(x)D\_{i}u(x)-c(x)u(x)+f(x). $
@@ -481,11 +481,11 @@ Combining, we see that
 $ \displaystyle d\_{x\_{0}}^{2+\alpha}\frac{|D^{2}u(x\_{0})-D^{2}u(y\_{0})|}{|x\_{0}-y\_{0}|^{\alpha}}\leq\frac{C\_{n,\lambda,\Lambda}}{\mu^{2+\alpha}}\left(\|u\|\_{C^{0}(B\_{d})}+|F|\_{0,\alpha;B\_{d}}^{(2)}\right)+\frac{4}{\mu^{\alpha}}[u]\_{2;\Omega}^{\*}. $
 
 We wish $ {|F|\_{0,\alpha;B\_{d}}^{(2)}}$ and $ {[u]\_{2;\Omega}^{\*}}$ to be estimated in terms of $ {\|u\|\_{C^{0}(\Omega)}}$ and $ {[u]\_{2,\alpha;\Omega}^{\*}}$, where the latter should has a small coefficient so that can be absorbed by the LHS.  
-At this point we put forward the interior interpolation inequalities in its general form that we shall be using. Suppose $ {u\in C^{2,\alpha}(\Omega).}$ Then for any $ {\epsilon >0}$, there is a constant $ {C\_{\epsilon}}$ such that for any $ {\beta+j<2 align="center" alpha="" div="" have="" we=""> [$ \\displaystyle \[u\]\_{j,\\beta;\\Omega}^{\*} \\leq \\epsilon\[u\]\_{2,\\alpha;\\Omega}^{\*}+C\_{\\epsilon}|u|\_{0;\\Omega},\\ \\ \\ \\ \\ (17) $](https://www.blogger.com/null) [](https://www.blogger.com/null)which also implies (with different constants)  
+At this point we put forward the interior interpolation inequalities in its general form that we shall be using. Suppose $ {u\in C^{2,\alpha}(\Omega).}$ Then for any $ {\epsilon >0}$, there is a constant $ {C\_{\epsilon}}$ such that for any $ {\beta+j<2}$ and $ \\displaystyle [u]\_{j,\\beta;\\Omega}^{\*} \\leq \\epsilon[u]\_{2,\\alpha;\\Omega}^{\*}+C\_{\\epsilon}|u|\_{0;\\Omega},\\ \\ \\ \\ \\ (17) $ which also implies (with different constants)  
 
-[$ \displaystyle |u|\_{j,\beta;\Omega}^{\*}\leq\epsilon[u]\_{2,\alpha;\Omega}^{\*}+C\_{\epsilon}|u|\_{0;\Omega}. \ \ \ \ \ (18)$](https://www.blogger.com/null)
+$ \displaystyle |u|\_{j,\beta;\Omega}^{\*}\leq\epsilon[u]\_{2,\alpha;\Omega}^{\*}+C\_{\epsilon}|u|\_{0;\Omega}.      (18)$
 
-[](https://www.blogger.com/null)  
+  
 We continue our estimate, and it amounts to estimate each term in $ {F}$ separately. To estimate  
 
 $ \displaystyle |(a\_{ij}(x\_{0})-a\_{ij}(x))D\_{ij}u|\_{0,\alpha;B\_{d}}^{(2)} $
@@ -575,11 +575,11 @@ that straightens the boundary portion $ {B\_{0}\cap\partial\Omega}$, for instanc
 $ \displaystyle \Psi(B\_{0}\cap\Omega)\cong B(\Psi(x\_{0}),r)\cap\{x'\_{n}\geq0\} $
 
 where $ {x\_{n}'}$ is the last coordinate function in the codomain. Thus locally we can view the boundary as the graph of a $ {C^{2,\alpha}}$ function. Of course, these diffeomorphisms should satisfy compatibility conditions, as in the usual definition of a manifold.  
-Such a diffeomorphism encodes the "local distortion" when one straightens the corresponding boundary portion. More precisely, we have for some constant $ {K>0}$ that[](https://www.blogger.com/null)  
+Such a diffeomorphism encodes the "local distortion" when one straightens the corresponding boundary portion. More precisely, we have for some constant $ {K>0}$ that  
 
-[$ \displaystyle K^{-1}|x-y|\leq|\Psi\_{0}(x)-\Psi\_{0}(y)|\leq K|x-y| \ \ \ \ \ (19)$](https://www.blogger.com/null)
+$ \displaystyle K^{-1}|x-y|\leq|\Psi\_{0}(x)-\Psi\_{0}(y)|\leq K|x-y|      (19)$
 
-[](https://www.blogger.com/null)for all $ {x,y\in B\_{0}}$ , where $ {K}$ depends on $ {\Psi\_{0}}$. In the case that $ {\overline{\Omega}}$ is compact (which is then called a *$ {C^{2,\alpha}}$ domain* in the book by Gilbarg and Trudinger), then from the finite covering of the boundary we can assert that the such local distortions are uniformly bounded (i.e. a uniform $ {K}$ for each neighborhood). Otherwise in the unbounded case, this should always be part of our assumption, and therefore we can localize our analysis.  
+for all $ {x,y\in B\_{0}}$ , where $ {K}$ depends on $ {\Psi\_{0}}$. In the case that $ {\overline{\Omega}}$ is compact (which is then called a *$ {C^{2,\alpha}}$ domain* in the book by Gilbarg and Trudinger), then from the finite covering of the boundary we can assert that the such local distortions are uniformly bounded (i.e. a uniform $ {K}$ for each neighborhood). Otherwise in the unbounded case, this should always be part of our assumption, and therefore we can localize our analysis.  
 An immediate consequence of ([19](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq20)) is that the various quantities such as $ {\|\cdot\|\_{C^{2,\alpha}(B)}}$ ,$ {|\cdot|\_{2,\alpha;B}^{\*}}$ etc. are $ {K}$-comparable to the corresponding quantities in the codomain $ {\|\cdot\|\_{C^{k,\alpha}(\Psi(B))}}$ ,$ {|\cdot|\_{k,\alpha;(\Psi(B))}^{(\sigma)}}$, and of course their weaker analogues. This essentially reduces our task to dealing with the boundary portion of the type  
 
 $ \displaystyle B\cap\{x{}\_{n}\geq0\}, $
@@ -605,11 +605,11 @@ and
 
 $ \displaystyle |f|\_{0,\alpha;\Omega\cup T}^{(2)}<+\infty; $
 
-moreover, the interpolation inequalities replaced by the corresponding versions. In summary, we have the a priori estimate on the boundary portion[](https://www.blogger.com/null)  
+moreover, the interpolation inequalities replaced by the corresponding versions. In summary, we have the a priori estimate on the boundary portion  
 
-[$ \displaystyle |u|\_{2,\alpha;\Omega\cup T}^{\*}\lesssim\_{n,\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+|f|\_{0,\alpha;\Omega\cup T}^{(2)}. \ \ \ \ \ (20)$](https://www.blogger.com/null)
+$ \displaystyle |u|\_{2,\alpha;\Omega\cup T}^{\*}\lesssim\_{n,\lambda,\Lambda}\|u\|\_{C^{0}(\Omega)}+|f|\_{0,\alpha;\Omega\cup T}^{(2)}.      (20)$
 
-[](https://www.blogger.com/null)  
+  
 We can patch these estimates together. Now the assumptions on the coefficients and the source term are global:  
 
 $ \displaystyle |a\_{ij}|\_{0,\alpha;\Omega},|b\_{i}|\_{0,\alpha;\Omega},|c|\_{0,\alpha;\Omega}\leq\Lambda, $
@@ -622,11 +622,11 @@ Again assume $ {u=0}$ on $ {\partial\Omega}$ for simplicity, which will be remov
 
 $ \displaystyle \frac{|D^{2}u(x)-D^{2}u(y)|}{|x-y|^{\alpha}} $
 
-into the estimate in that ball, which is given by [20](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq21); the estimate in the interior, which is handled in the last section; finally the estimate in the case two points lie in different regions, but which satisfies a bound $ {|x-y|>\delta}$. Combining these together, we get[](https://www.blogger.com/null)  
+into the estimate in that ball, which is given by [20](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq21); the estimate in the interior, which is handled in the last section; finally the estimate in the case two points lie in different regions, but which satisfies a bound $ {|x-y|>\delta}$. Combining these together, we get  
 
-[$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega)}\lesssim\_{n,\lambda,\Lambda,\Omega}\|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{0,\alpha}(\Omega)}. \ \ \ \ \ (21)$](https://www.blogger.com/null)
+$ \displaystyle \|u\|\_{C^{2,\alpha}(\Omega)}\lesssim\_{n,\lambda,\Lambda,\Omega}\|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{0,\alpha}(\Omega)}.      (21)$
 
-[](https://www.blogger.com/null)In the general situation, assume the boundary value $ {\varphi\in C^{2,\alpha}(\partial\Omega)}$. By the preceding discussion we can abuse the notation $ {\varphi}$ to represnet any function in $ {C^{2,\alpha}(\Omega)}$ whose restriction gives that boudary value. Then let  
+In the general situation, assume the boundary value $ {\varphi\in C^{2,\alpha}(\partial\Omega)}$. By the preceding discussion we can abuse the notation $ {\varphi}$ to represnet any function in $ {C^{2,\alpha}(\Omega)}$ whose restriction gives that boudary value. Then let  
 
 $ \displaystyle v=u-\varphi, $
 
@@ -640,9 +640,9 @@ $ \displaystyle \|v\|\_{C^{2,\alpha}(\Omega)}\lesssim\_{n,\lambda,\Lambda,\Omega
 
 and hence  
 
-[$ \displaystyle \begin{array}{rcl} \|u\|\_{C^{2,\alpha}(\Omega)} & \leq & \|v\|\_{C^{2,\alpha}(\Omega)}+\|\varphi\|\_{C^{2,\alpha}(\Omega)} \\ & \lesssim\_{n,\lambda,\Lambda,\Omega} & \|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{0,\alpha}(\Omega)}+\|\varphi\|\_{C^{2,\alpha}(\Omega)},\ \ \ \ \ (22) \end{array} $](https://www.blogger.com/null)
+$ \displaystyle \begin{array}{rcl} \|u\|\_{C^{2,\alpha}(\Omega)} & \leq & \|v\|\_{C^{2,\alpha}(\Omega)}+\|\varphi\|\_{C^{2,\alpha}(\Omega)} \\ & \lesssim\_{n,\lambda,\Lambda,\Omega} & \|u\|\_{C^{0}(\Omega)}+\|f\|\_{C^{0,\alpha}(\Omega)}+\|\varphi\|\_{C^{2,\alpha}(\Omega)},     (22) \end{array} $
 
-[](https://www.blogger.com/null)which is our desired global a priori estimate.  
+which is our desired global a priori estimate.  
 
 **5\. Existence technique: the method of continuity and Perron's subsolutions**
 
@@ -720,7 +720,7 @@ There are two essential ingredients in Perron's argument: we shall first establi
 
 For the first part we need a uniqueness result that will be a consequence of the following.  
 
-> **Theorem 7** *[](https://www.blogger.com/null)(E. Hopf's Strong Maximum Principle) Let $ {L}$ be uniformly elliptic and $ {Lu\geq0}$ ($ {\leq0}$) in $ {\Omega}$ (may not be bounded). If $ {c\leq0}$ and $ {c/\lambda}$ is locally bounded, then $ {u}$ cannot achieve a non-negative maximum (non-positive minimum) in the interior of $ {\Omega}$ unless $ {u}$ is constant.*
+> **Theorem 7** *(E. Hopf's Strong Maximum Principle) Let $ {L}$ be uniformly elliptic and $ {Lu\geq0}$ ($ {\leq0}$) in $ {\Omega}$ (may not be bounded). If $ {c\leq0}$ and $ {c/\lambda}$ is locally bounded, then $ {u}$ cannot achieve a non-negative maximum (non-positive minimum) in the interior of $ {\Omega}$ unless $ {u}$ is constant.*
 
 It also follows a useful *comparison principle*: if $ {u}$ is a *subsolution* to the equation $ {Lu=f}$, i.e.  
 

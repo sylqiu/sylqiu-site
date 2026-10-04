@@ -22,7 +22,7 @@ $ \displaystyle \text{\{step functions}\}\subset\text{\{simple functions}\}\subs
 
 By construction, the family of simple functions is in dense in $ {L^{1}(\mathbb{R}^{n})}$. The family of step functions is also dense in the family of simple functions, which follows from the regulariy of Lebesgue measurable sets:  
 
-> **Lemma 1** *[](https://www.blogger.com/null)(Littlewood's First principle) Let $ {\mathfrak{M}}$ be the $ {\sigma}$-algebra of Lebesgue measurable sets in $ {\mathbb{R}^{n}}$. Then for any $ {E\in\mathfrak{M}}$, there exist an open set $ {G}$ and closed set $ {F}$ with $ {F\subset E\subset G}$ and $ {\mu(G-F)<\epsilon}$.*  
+> **Lemma 1** *(Littlewood's First principle) Let $ {\mathfrak{M}}$ be the $ {\sigma}$-algebra of Lebesgue measurable sets in $ {\mathbb{R}^{n}}$. Then for any $ {E\in\mathfrak{M}}$, there exist an open set $ {G}$ and closed set $ {F}$ with $ {F\subset E\subset G}$ and $ {\mu(G-F)<\epsilon}$.*  
 > *Since closed sets in $ {\mathbb{R}^{n}}$ are $ {\sigma}$-compact, so in particular if $ {\mu(E)<\infty}$ we can choose $ {F}$ to be compact (this is the inner regularity of Lebesgue measurable sets). Consequently, there exist an $ {F\_{\sigma}}$ set $ {A}$ and a $ {G\_{\delta}}$ set $ {B}$ such that $ {A\subset F\subset B}$ and $ {\mu(B-A)=0}$.*
 
 In fact, the Lebesgue outer measure $ {\mu\_{\*}}$ defines a *pesudometric* on the set of subsets of $ {\mathbb{R}^{n}}$, namely, by defining  
@@ -33,11 +33,11 @@ where $ {\Delta}$ refers to symmetric difference of the two sets. The pseudometi
 
 > **Theorem 2** *(Riesz-Fischer) $ {L^{1}(\mathbb{R}^{n})}$ is a Banach space with respect to $ {\|\cdot\|\_{1}}$. More generally, $ {L^{p}(\mathbb{R}^{n})}$ is complete with respect to $ {\|\cdot\|\_{p}}$ for $ {1\leq p\leq\infty}$.*
 
-Combined with the Lemma [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lem1), we have the following *compeletion* with respect to $ {\|\cdot\|\_{1}}$-norm[](https://www.blogger.com/null)  
+Combined with the Lemma [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lem1), we have the following *compeletion* with respect to $ {\|\cdot\|\_{1}}$-norm  
 
-[$ \displaystyle \overline{\text{\{step functions}\}}=\overline{\text{\{simple functions}\}}=L^{1}(\mathbb{R}^{n}). \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \overline{\text{\{step functions}\}}=\overline{\text{\{simple functions}\}}=L^{1}(\mathbb{R}^{n}).      (1)$
 
-[](https://www.blogger.com/null)On the other hand, in light of Riesz representation theorem, one can also approximate measurable functions with continuous functions of compact support. Thus we also have another completion with respect to $ {\|\cdot\|\_{1}}$-norm  
+On the other hand, in light of Riesz representation theorem, one can also approximate measurable functions with continuous functions of compact support. Thus we also have another completion with respect to $ {\|\cdot\|\_{1}}$-norm  
 
 $ \displaystyle \overline{\{C\_{c}(\mathbb{R}^{n})\}}=L^{1}(\mathbb{R}^{n}). $
 
@@ -105,7 +105,7 @@ $ \displaystyle \liminf\_{y\rightarrow x\_{0}}f(y)\geq f(x\_{0}). $
 
 Combining the two, we see that a function is continuous if and only if it is both l.s.c and u.s.c. Semi-continuous functions are "stable'' under operation of supremum and infimum:  
 
-> **Proposition 7** *[](https://www.blogger.com/null)Let $ {\{f\_{i}:X\rightarrow\mathbb{R}\}\_{i\in I}}$ be a collection of u.s.c. functions. Then the pointwise supremum defines a new u.s.c. function, i.e.*  
+> **Proposition 7** *Let $ {\{f\_{i}:X\rightarrow\mathbb{R}\}\_{i\in I}}$ be a collection of u.s.c. functions. Then the pointwise supremum defines a new u.s.c. function, i.e.*  
 > 
 > *$ \displaystyle f(x):=\sup\_{i\in I}f\_{i}(x) $*
 > 
@@ -152,7 +152,7 @@ $ \displaystyle f\_{r}(x):=\frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}\left|
 
 is continuous. This follows directly from the following lemma. $ \Box$  
 
-> **Lemma 10** *[](https://www.blogger.com/null)(Absolute continuity) Let $ {f\in L^{1}(\mu)}$. Then for each $ {\epsilon>0}$, there is some $ {\delta>0}$ such that*  
+> **Lemma 10** *(Absolute continuity) Let $ {f\in L^{1}(\mu)}$. Then for each $ {\epsilon>0}$, there is some $ {\delta>0}$ such that*  
 > 
 > *$ \displaystyle \int\_{E}|f|d\mu<\epsilon $*
 > 
@@ -180,11 +180,11 @@ $ \displaystyle m(E)=\lambda\mathcal{L}^{n}(E) $
 
 for all $ {E\in\mathcal{B}}$. By finite additivity and translation invariance, we see that the conclusion obviously hold for *dyadic meshes*, i.e. the cubes with sides of length $ {2^{n}}$, $ {n\in\mathbb{Z}}$. Since dyadic meshes are dense in the space of measurable sets, using Fatou's lemma, we see that the result holds by taking limit. In this subsection we are interested in the following convergence theorem, a generalization of *the first fundamental theorem of calculus*:  
 
-> **Theorem 11** *[](https://www.blogger.com/null)(Lebesgue differentiation theorem) Let $ {f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ be absolutely integrable. Then for almost every $ {x\in\mathbb{R}^{n}}$,[](https://www.blogger.com/null)*  
+> **Theorem 11** *(Lebesgue differentiation theorem) Let $ {f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ be absolutely integrable. Then for almost every $ {x\in\mathbb{R}^{n}}$,*  
 > 
-> *[$ \displaystyle \lim\_{r\rightarrow0^{+}}\frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}\left|f(y)-f(x)\right|dy=0 \ \ \ \ \ (2)$](https://www.blogger.com/null)*
+> *$ \displaystyle \lim\_{r\rightarrow0^{+}}\frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}\left|f(y)-f(x)\right|dy=0      (2)$*
 > 
-> *[](https://www.blogger.com/null)and*  
+> *and*  
 > 
 > *$ \displaystyle \lim\_{r\rightarrow0^{+}}\frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}f(y)dy=f(x). $*
 > 
@@ -207,7 +207,7 @@ $ \displaystyle \begin{array}{rcl} \lambda\cdot\mathcal{L}^{n}(\{x\in\mathbb{R}^
 
 $ \Box$  
 
-> **Theorem 13** *[](https://www.blogger.com/null)(Hardy-Littlewood mximal inequality, weak type estimate) Let $ {f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ be absolutely integrable, and $ {\lambda>0}$. Then*  
+> **Theorem 13** *(Hardy-Littlewood mximal inequality, weak type estimate) Let $ {f:\mathbb{R}^{n}\rightarrow\mathbb{R}}$ be absolutely integrable, and $ {\lambda>0}$. Then*  
 > 
 > *$ \displaystyle \mathcal{L}^{n}(\{x\in\mathbb{R}^{n}:Mf(x)\geq\lambda\})\leq\frac{C\_{n}}{\lambda}\int\_{\mathbb{R}^{n}}|f(t)|dt $*
 > 
@@ -252,11 +252,11 @@ To establish the HL maximal inequality, it suffices to deal with the strict ineq
 
 $ \displaystyle E=\{x\in\mathbb{R}^{n}:M(f-g)(x)>\lambda\} $
 
-since the non-strict case follows by an epsilon adjustment on $ {\lambda}$. This formulation allows us to deduce that whenever $ {x\in E}$, there exists $ {r>0}$ such that[](https://www.blogger.com/null)  
+since the non-strict case follows by an epsilon adjustment on $ {\lambda}$. This formulation allows us to deduce that whenever $ {x\in E}$, there exists $ {r>0}$ such that  
 
-[$ \displaystyle \frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}\left|f(y)\right|dy>\lambda. \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \frac{1}{\mathcal{L}^{n}(B(x,r))}\int\_{B(x,r)}\left|f(y)\right|dy>\lambda.      (3)$
 
-[](https://www.blogger.com/null)We will also take advantage of the inner regularity of Lebesgue measure (as again a manifestation of Littlewood's first principle): it suffices to establish the estimate for all compact $ {K\subset E}$. For each $ {x\in K}$, let $ {B(x,r)}$ be such that ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) holds. Then $ {\{B(x,r)\}\_{x\in K}}$ forms a covering of $ {K}$ and  
+We will also take advantage of the inner regularity of Lebesgue measure (as again a manifestation of Littlewood's first principle): it suffices to establish the estimate for all compact $ {K\subset E}$. For each $ {x\in K}$, let $ {B(x,r)}$ be such that ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) holds. Then $ {\{B(x,r)\}\_{x\in K}}$ forms a covering of $ {K}$ and  
 
 $ \displaystyle \mathcal{L}^{n}(B(x,r))<\frac{1}{\lambda}\int\_{B(x,r)}\left|f(y)\right|dy. $
 
@@ -283,15 +283,15 @@ Finally we prove the Vitali covering lemma.
 
 #### **1.3. Signed measures and Radon-Nikodym derivatives**
 
-One usually goes through the contruction of Lebesgue integration on $ {\mathbb{R}}$ by definining first integrals of *non-negative functions*, then decomposing a function $ {f}$ into its positive and negative parts, i.e. the *Jordan decomposition of functions*[](https://www.blogger.com/null)  
+One usually goes through the contruction of Lebesgue integration on $ {\mathbb{R}}$ by definining first integrals of *non-negative functions*, then decomposing a function $ {f}$ into its positive and negative parts, i.e. the *Jordan decomposition of functions*  
 
-[$ \displaystyle f=f^{+}-f^{-} \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle f=f^{+}-f^{-}      (4)$
 
-[](https://www.blogger.com/null)where $ {f^{+}=\max\{f,0\}}$ and $ {f^{-}=\max\{-f,0\}}$. Then define[](https://www.blogger.com/null)  
+where $ {f^{+}=\max\{f,0\}}$ and $ {f^{-}=\max\{-f,0\}}$. Then define  
 
-[$ \displaystyle \int fd\mathcal{L}^{1}=\int f^{+}d\mathcal{L}^{1}-\int f^{-}d\mathcal{L}^{1} \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \int fd\mathcal{L}^{1}=\int f^{+}d\mathcal{L}^{1}-\int f^{-}d\mathcal{L}^{1}      (5)$
 
-[](https://www.blogger.com/null)if the RHS is finite. $ {f}$ is thus called abolutely integrable. This process has its measure-theoretic analog. We have defined unsigned measures on a $ {\sigma}$-algebra. In view of ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we introduce the notion of a *signed measure*.  
+if the RHS is finite. $ {f}$ is thus called abolutely integrable. This process has its measure-theoretic analog. We have defined unsigned measures on a $ {\sigma}$-algebra. In view of ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)), we introduce the notion of a *signed measure*.  
 
 > **Definition 15** *(Signed measure) A *signed measure* is a set function $ {\mu:\mathcal{\mathfrak{M}\rightarrow\mathbb{R}}}$ on the $ {\sigma}$-algebra $ {\mathfrak{M}}$ of $ {X}$ such that*  
 >   
@@ -351,7 +351,7 @@ $ \displaystyle \lambda\_{f}(E)=\int\_{E}fd\mu $
 
 provided the RHS can possibly reach either $ {+\infty}$ or $ {-\infty}$ but not both. Indeed, by taking the Jordan decomposition of $ {f=f^{+}-f^{-}}$, $ {\lambda}$ can be seen as a difference of two unsigned measures (in fact the Jordan decomposition of $ {\lambda}$). Since RHS, when ranging over $ {E\in\mathfrak{M}}$, can take at most one of the infinity values $ {+\infty}$ and $ {-\infty}$, we see that at least one of the two unsigned measure is finite. Moreover, one has an essentially uniqueness result when the $ {\mu}$ is $ {\sigma}$-finite;  
 
-> **Lemma 18** *[](https://www.blogger.com/null)If $ {\mu}$ is $ {\sigma}$-finite, and there are two signed measures $ {\lambda\_{f}}$, $ {\lambda\_{g}}$ such that $ {\lambda\_{f}=\lambda\_{g}}$, then $ {f=g}$ a.e..*
+> **Lemma 18** *If $ {\mu}$ is $ {\sigma}$-finite, and there are two signed measures $ {\lambda\_{f}}$, $ {\lambda\_{g}}$ such that $ {\lambda\_{f}=\lambda\_{g}}$, then $ {f=g}$ a.e..*
 
 *Proof:* By Jordan decomposition, it suffices to prove when $ {f,g:X\rightarrow[0,\infty]}$. Assume first $ {\mu}$ is a finite measure on $ {X}$. Suppose $ {f\neq g}$ on a set of positive measure, say $ {E}$. We claim that there is a set $ {E'\subset E}$ such that on $ {E'}$ either $ {f>g}$ or $ {f<g}$. Let $ {E\_{1}=\{x\in E:f(x)>g(x)\}}$. We have $ {E\_{1}}$ and $ {E\backslash E\_{1}}$ are measurable. If $ {E\_{1}}$ has positive measure, then we are done; otherwise $ {E\backslash E\_{1}}$ has positive measure. Let $ {E'}$ be the one with positive measure. Then it is clear that $ {\lambda\_{f}(E')>\lambda\_{g}(E')>0}$, a contradiction. $ \Box$  
 

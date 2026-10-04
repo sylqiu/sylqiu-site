@@ -10,23 +10,23 @@ In this article we present the basic methods of Cartan's moving frame method, an
 
   **1\. Frames and co-frames in a tangent space**
 
-An *frame* at a point $ {p\in\mathbb{R}^{3}}$ is a choice of a basis in the *tangent space* $ {T\_{p}\mathbb{R}^{3}\cong\mathbb{R}^{3}}$. The frame is called orthonormal if the basis is orthonormal. We would like to think of a frame $ {E}$ as a row of basis vectors, that is[](https://www.blogger.com/null)  
+An *frame* at a point $ {p\in\mathbb{R}^{3}}$ is a choice of a basis in the *tangent space* $ {T\_{p}\mathbb{R}^{3}\cong\mathbb{R}^{3}}$. The frame is called orthonormal if the basis is orthonormal. We would like to think of a frame $ {E}$ as a row of basis vectors, that is  
 
-[$ \displaystyle E=\begin{pmatrix}E\_{1} & E\_{2} & E\_{3}\end{pmatrix},\quad E\_{i}\in T\_{p}\mathbb{R}^{3} \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle E=\begin{pmatrix}E\_{1} & E\_{2} & E\_{3}\end{pmatrix},\quad E\_{i}\in T\_{p}\mathbb{R}^{3}      (1)$
 
-[](https://www.blogger.com/null)and if $ {E^{i}}$'s are consistently represented as column vectors in $ {\mathbb{R}^{3}}$, we can then identify $ {E}$ with an element in the general linear group $ {GL(3,\mathbb{R})}$, or in the case of an orthonormal frame, the orthogonal group $ {O(3,\mathbb{R})}$. We shall almost always deal with orthonormal frames, so frames mentioned below the fold are always othonormal, if not specified.  
+and if $ {E^{i}}$'s are consistently represented as column vectors in $ {\mathbb{R}^{3}}$, we can then identify $ {E}$ with an element in the general linear group $ {GL(3,\mathbb{R})}$, or in the case of an orthonormal frame, the orthogonal group $ {O(3,\mathbb{R})}$. We shall almost always deal with orthonormal frames, so frames mentioned below the fold are always othonormal, if not specified.  
 
-For another frame $ {F}$, we have the transformation rule[](https://www.blogger.com/null)  
+For another frame $ {F}$, we have the transformation rule  
 
-[$ \displaystyle F=EA^{T},\quad A\in O(3). \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle F=EA^{T},\quad A\in O(3).      (2)$
 
-[](https://www.blogger.com/null)That $ {A}$ \`\`acts on the right hand side'' is to represent the fact that basis vectors of $ {F}$ is obtained from linear combination of basis vectors of $ {E}$, and clearly this is due to the convention that we represent $ {E}$ in the way of ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
+That $ {A}$ \`\`acts on the right hand side'' is to represent the fact that basis vectors of $ {F}$ is obtained from linear combination of basis vectors of $ {E}$, and clearly this is due to the convention that we represent $ {E}$ in the way of ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)).  
 
-At the same time we can consider the *co-frame* $ {\theta}$ of a frame $ {E}$. This is a set of *1-forms*, or dual basis vectors of those of $ {E}$, namely they should satisfy the real-linear duality[](https://www.blogger.com/null)  
+At the same time we can consider the *co-frame* $ {\theta}$ of a frame $ {E}$. This is a set of *1-forms*, or dual basis vectors of those of $ {E}$, namely they should satisfy the real-linear duality  
 
-[$ \displaystyle \theta^{i}(E\_{j})=\langle E\_{j},\theta^{i}\rangle=\delta\_{j}^{i}=\begin{cases} 1 & \text{if }i=j\\ 0 & \text{othewise} \end{cases}, \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \theta^{i}(E\_{j})=\langle E\_{j},\theta^{i}\rangle=\delta\_{j}^{i}=\begin{cases} 1 & \text{if }i=j\\ 0 & \text{othewise} \end{cases},      (3)$
 
-[](https://www.blogger.com/null)and for all $ {a,b\in\mathbb{R}}$  
+and for all $ {a,b\in\mathbb{R}}$  
 
 $ \displaystyle \begin{array}{rcl} \langle E\_{k},a\theta^{i}+b\theta^{j}\rangle & = & a\langle E^{k},\theta\_{i}\rangle+b\langle E^{k},\theta\_{j}\rangle,\\ \langle aE\_{i}+bE\_{j},\theta^{k}\rangle & = & a\langle E\_{i},\theta^{k}\rangle+b\langle E\_{j},\theta^{k}\rangle. \end{array} $
 
@@ -66,17 +66,17 @@ where $ {A(0)=i.d.}$, $ {A(t)\in O(3,\mathbb{R})}$ for each $ {t}$ and is smooth
 
 $ \displaystyle \nabla\_{v}E=\begin{pmatrix}\nabla\_{v}E\_{1} & \nabla\_{v}E\_{2} & \nabla\_{v}E\_{3}\end{pmatrix}. $
 
-Since we are in the Euclidean space, by using the Cartesian coordinate of an open neighborhood $ {U}$ of $ {p}$, we can also consider a frame field in $ {U}$, and again with the *identification* of all tangent spaces $ {T\_{x}\mathbb{R}^{3}}$ by translations, we have the equation[](https://www.blogger.com/null)  
+Since we are in the Euclidean space, by using the Cartesian coordinate of an open neighborhood $ {U}$ of $ {p}$, we can also consider a frame field in $ {U}$, and again with the *identification* of all tangent spaces $ {T\_{x}\mathbb{R}^{3}}$ by translations, we have the equation  
 
-[$ \displaystyle E(x)=E(p)A(x)^T,\quad x\in U. \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle E(x)=E(p)A(x)^T,\quad x\in U.      (4)$
 
-[](https://www.blogger.com/null)Now let us make two important observations:  
+Now let us make two important observations:  
 
 -   For a fixed $ {v,x}$, the mapping $ {E(x)\mapsto\nabla\_{v}E(x)}$ is linear;
 -   For a fixed smooth frame field $ {E}$ in $ {U}$, the mapping $ {v\mapsto\nabla\_{v}E}$ is well defined ($ {\nabla\_{v}E}$ depends only on the vector $ {v}$, not anything else, in particular how it varies in that neighborhood), and is linear in $ {v}$.
 
 From these observations we call $ {\nabla\_{v}E}$ a *covariant derivative* of $ {E}$ with direction $ {v}$ at $ {p}$, and we can express the mapping $ {(v,E)\mapsto\nabla\_{v}E}$ as $ \nabla\_{v}E  =  E(x)\omega^{T}(v)  
-\=  \langle v,(\omega^{T})\_{i}^{j}\rangle E\_{j}(x)$,[](https://www.blogger.com/null) where $ {\omega^{T}}$ is the transpose of a matrix of 1-forms $ {\omega}$. Equivalently, the value of $ {\omega\_{j}^{i}}$ is given by the Euclidean inner product of $ {\nabla\_{v}E\_{i}}$ and $ {E\_{j}}$  
+=  \langle v,(\omega^{T})\_{i}^{j}\rangle E\_{j}(x)$, where $ {\omega^{T}}$ is the transpose of a matrix of 1-forms $ {\omega}$. Equivalently, the value of $ {\omega\_{j}^{i}}$ is given by the Euclidean inner product of $ {\nabla\_{v}E\_{i}}$ and $ {E\_{j}}$  
 
 $ \displaystyle \omega\_{j}^{i}(v)=\nabla\_{v}E\_{i}\cdot E\_{j}. $
 
@@ -200,11 +200,11 @@ These equations baiscally determine how the surface $ {M}$ is isometrically imme
 
 > **Theorem 8** *(Bonnet) Suppose there is a connection form $ {\omega}$ associated to a two-dimensional manifold $ {M}$, satisfying the Gauss and Codazzi equations. Then the neighborhood of every point of $ {M}$ can be isometrically emedded in $ {\mathbb{R}^{3}}$ with that connection form realised in the way we described in Section 2.*
 
-Let's plug in $ {E\_{1},E\_{2}}$ in the RHS of the Gauss equation, and recall that they are an orthonormal frame on $ {M}$, and $ {E\_{3}}$ is the unit outer normal,[](https://www.blogger.com/null)  
+Let's plug in $ {E\_{1},E\_{2}}$ in the RHS of the Gauss equation, and recall that they are an orthonormal frame on $ {M}$, and $ {E\_{3}}$ is the unit outer normal,  
 
-[$ \displaystyle \begin{array}{rcl} \omega\_{2}^{3}\wedge\omega\_{1}^{3}(E\_{1},E\_{2}) & = & \omega\_{2}^{3}(E\_{1})\omega\_{1}^{3}(E\_{2})-\omega\_{2}^{3}(E\_{2})\omega\_{1}^{3}(E\_{1})\nonumber \\ & = & (\nabla\_{E\_{1}}E\_{3}\cdot E\_{2})(\nabla\_{E\_{2}}E\_{3}\cdot E\_{1})-\nonumber \\ & & \quad(\nabla\_{E\_{2}}E\_{3}\cdot E\_{2})(\nabla\_{E\_{1}}E\_{3}\cdot E\_{1})\\ & := & -K,\nonumber \end{array} $](https://www.blogger.com/null)
+$ \displaystyle \begin{array}{rcl} \omega\_{2}^{3}\wedge\omega\_{1}^{3}(E\_{1},E\_{2}) & = & \omega\_{2}^{3}(E\_{1})\omega\_{1}^{3}(E\_{2})-\omega\_{2}^{3}(E\_{2})\omega\_{1}^{3}(E\_{1}) \\ & = & (\nabla\_{E\_{1}}E\_{3}\cdot E\_{2})(\nabla\_{E\_{2}}E\_{3}\cdot E\_{1})- \\ & & \quad(\nabla\_{E\_{2}}E\_{3}\cdot E\_{2})(\nabla\_{E\_{1}}E\_{3}\cdot E\_{1})\\ & := & -K, \end{array} $
 
-[](https://www.blogger.com/null)where the quantity $ {K}$ is called the *Gaussian curvature* of the surface $ {M}$. This is clearly related to the mapping $ {N:p\mapsto E\_{3}}$, called the *Gauss map* of the surface $ {M}$. The differential of this mapping  
+where the quantity $ {K}$ is called the *Gaussian curvature* of the surface $ {M}$. This is clearly related to the mapping $ {N:p\mapsto E\_{3}}$, called the *Gauss map* of the surface $ {M}$. The differential of this mapping  
 
 $ \displaystyle dN:TM\rightarrow TS^{2} $
 

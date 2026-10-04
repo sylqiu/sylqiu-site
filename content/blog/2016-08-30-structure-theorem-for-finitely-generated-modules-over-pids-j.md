@@ -176,7 +176,7 @@ $ \displaystyle \left(\begin{pmatrix}1 & 1\\ 0 & 1 \end{pmatrix}-\begin{pmatrix}
 
 would only define a $ {1}$-diemensional eigenspace. One would say that the linear transformation is somehow deficient. Then we have the notion of generalized eigenvector: a vector $ {v\in V}$ is called a generalized eigenvector of rank $ {m}$ associated with the eigenvalue $ {\lambda}$ of the linear transformation $ {T}$ if  
 
-$ \displaystyle (T-\lambda I)^{m}v=0\,\,\mbox{but}\,\,(T-\lambda I)^{m-1}v\neq0. $
+$ \displaystyle (T-\lambda I)^{m}v=0\,\,\text{but}\,\,(T-\lambda I)^{m-1}v\neq0. $
 
 In the above case, since $ {\begin{pmatrix}0 & 1\\ 0 & 0 \end{pmatrix}^{2}=0}$ is nilpotent, any vector $ {v\in\mathbb{R}^{2}}$ not in the subspace $ {\{c\cdot\begin{pmatrix}1\\ 0 \end{pmatrix}:c\in\mathbb{R}\}}$ will be a generalized eigenvector of rank-$ {2}$ associated the eigenvalue $ {1}$. Let us take $ {v=\begin{pmatrix}0\\ 1 \end{pmatrix}}$. Notice that the set  
 

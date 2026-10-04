@@ -12,11 +12,11 @@ Solving a linear system
 
 $ \displaystyle B{\bf x}={\bf c} $
 
-can be recast as a optimization problem[](https://www.blogger.com/null)  
+can be recast as a optimization problem  
 
-[$ \displaystyle \min\_{{\bf x}\in\mathbb{R}^{n}}f({\bf x})=\|B{\bf x}-{\bf c}\|^{2}. \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \min\_{{\bf x}\in\mathbb{R}^{n}}f({\bf x})=\|B{\bf x}-{\bf c}\|^{2}.      (1)$
 
-[](https://www.blogger.com/null)One easily sees that a necessary condition for the optimum is  
+One easily sees that a necessary condition for the optimum is  
 
 $ \displaystyle B^{T}B{\bf x}=B^{T}{\bf c}. $
 

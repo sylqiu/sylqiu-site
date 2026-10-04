@@ -47,7 +47,7 @@ A more interesting question is when we have convergence, at least at the subsequ
 
  In particular, any sequence in a bounded subset $ {E\subset\mathbb{R}}$ contains a converging subsequence. Such $ {E}$ is said to be *sequential precompact*. If the limit always belongs to the set $ {E}$, it is then said to be *sequential compact*. For metric spaces, sequential compactness has a rather complete characterisation:  
 
-> **Theorem 3** *[](https://www.blogger.com/null)(Heine-Borel) Let $ {(X,d)}$ be a metric space. The following are equivalent:*  
+> **Theorem 3** *(Heine-Borel) Let $ {(X,d)}$ be a metric space. The following are equivalent:*  
 > 
 > *-   $ {X}$ is sequential compact;
 > -   $ {X}$ is compact, i.e. every open cover has a finite subcover;
@@ -132,7 +132,7 @@ Familiar examples include metric balls in a metric topology, where they form a b
 
 Perhaps surprisinly, pointwise convergence can be formulated as convergence in a product space.  
 
-> **Example 3** *[](https://www.blogger.com/null)Let $ {(X,\mathcal{F})}$ be a topological space and $ {Y}$ a set. We define*  
+> **Example 3** *Let $ {(X,\mathcal{F})}$ be a topological space and $ {Y}$ a set. We define*  
 > 
 > *$ \displaystyle X^{Y}:=\{f:Y\rightarrow X\} $*
 > 
@@ -163,7 +163,7 @@ $ \displaystyle d(f,g):=\sup\_{x\in X}d\_{Y}(f(x),g(x)). $
 
 And if $ {Y}$ is complete, so will be $ {BC(X\rightarrow Y)}$. Convergence under this metric topology is the uniform convergence. The property of equicontinuity can upgrade a pointwisely convergent sequence of bounded continuous functions on a compact topological space to a uniform convergent one:  
 
-> **Lemma 16** *[](https://www.blogger.com/null)Let $ {(X,\mathcal{F})}$ be a compact topological space, $ {(Y,d\_{Y})}$ be a metric space, and $ {f\_{n}\rightarrow f}$ is a pointwisely convergent sequence in $ {BC(X\rightarrow Y)}$, then the convergence is also uniform. The conclusion is also true when we only have $ {f\_{n}\rightarrow f}$ pointwisely on a sense subset of $ {X}$.*
+> **Lemma 16** *Let $ {(X,\mathcal{F})}$ be a compact topological space, $ {(Y,d\_{Y})}$ be a metric space, and $ {f\_{n}\rightarrow f}$ is a pointwisely convergent sequence in $ {BC(X\rightarrow Y)}$, then the convergence is also uniform. The conclusion is also true when we only have $ {f\_{n}\rightarrow f}$ pointwisely on a sense subset of $ {X}$.*
 
 *Proof:* Let $ {\epsilon>0}$. For each $ {x\in X}$, there is $ {N\_{x}>0}$ such that $ {d\_{Y}(f\_{n}(x),f(x))\leq\epsilon}$ for all $ {n\geq N}$. Since the family $ {f\_{n}}$ is equicontinuous, $ {x}$ has an open neighborhood $ {U\_{x}}$ such that $ {d\_{Y}(f\_{n}(x),f\_{n}(x'))\leq\epsilon}$ for all $ {x'\in U\_{x}}$ and all $ {n}$. So is the case in the limit  
 

@@ -40,11 +40,11 @@ This post has been mainly influenced by Terry's notes, where many quotations are
 
 From now we shall focus on the case $ {\Omega=\mathbb{R}^{d}}$.  
 
-> **Definition 1** *A *distribution* $ {\lambda}$ in $ {\mathbb{R}^{d}}$ is a linear functional on $ {C\_{c}^{\infty}(\mathbb{R}^{d})}$ such that for every compact set $ {K\subset\mathbb{R}^{d}}$, there is $ {C=C(K)>0}$, $ {k=k(K)\in\mathbb{N}}$ such that[](https://www.blogger.com/null)*  
+> **Definition 1** *A *distribution* $ {\lambda}$ in $ {\mathbb{R}^{d}}$ is a linear functional on $ {C\_{c}^{\infty}(\mathbb{R}^{d})}$ such that for every compact set $ {K\subset\mathbb{R}^{d}}$, there is $ {C=C(K)>0}$, $ {k=k(K)\in\mathbb{N}}$ such that*  
 > 
-> *[$ \displaystyle |\langle\varphi,\lambda\rangle|\leq C\sum\_{|\alpha|\leq k}\sup|\partial^{\alpha}\varphi| \ \ \ \ \ (1)$](https://www.blogger.com/null)*
+> *$ \displaystyle |\langle\varphi,\lambda\rangle|\leq C\sum\_{|\alpha|\leq k}\sup|\partial^{\alpha}\varphi|      (1)$*
 > 
-> *[](https://www.blogger.com/null)for all $ {\varphi\in C\_{c}^{\infty}(\mathbb{R}^{d})}$.*
+> *for all $ {\varphi\in C\_{c}^{\infty}(\mathbb{R}^{d})}$.*
 
 Being defined by linear duality, a distribution will be studied through testing it against $ {C\_{c}^{\infty}(\mathbb{R}^{d})}$ functions. Thus these functions are often called test functions, when the type of duality is clear.  
 
@@ -120,7 +120,7 @@ $ \displaystyle \int\psi(x)\varphi\_{n}(x)\thinspace dx=\psi(0)\int\_{B(0,r)}\va
 
 we see that the sequence $ {\varphi\_{n}}$ converges to the Dirac delta $ {\varphi\_{n}\rightarrow\delta}$ in distribution. What is more, we have the following useful facts  
 
-> **Lemma 3** *[](https://www.blogger.com/null)Let $ {\varphi\_{n}}$ be an approximation to the identity.*  
+> **Lemma 3** *Let $ {\varphi\_{n}}$ be an approximation to the identity.*  
 > 
 > *-   If $ {f\in C\_{c}^{\infty}(\mathbb{R}^{d})}$, then $ {f\*\varphi\_{n}\rightarrow f}$ in the smooth topology;
 > -   If $ {f\in C(\mathbb{R}^{d})}$, then $ {f\*\varphi\_{n}\rightarrow f}$ uniformly on compact sets;
@@ -142,11 +142,11 @@ It's also easy to see that the distributional derivative of $ {\chi\_{(a,b)}}$ i
 
 $ \displaystyle \int\_{\mathbb{R}}\varphi(x)\chi\_{(a,b)}'(x)\,dx=-\int\varphi'(x)\chi\_{(a,b)}(x)\,dx=\varphi(a)-\varphi(b). $
 
-We also have the high dimensional analog of the above, known as the *Gauss-Green formula*, or *divergence theorem*. Assume that $ {\Omega\subset\mathbb{R}^{d}}$ is an open set with $ {C^{1}}$-boundary, then it holds that[](https://www.blogger.com/null)  
+We also have the high dimensional analog of the above, known as the *Gauss-Green formula*, or *divergence theorem*. Assume that $ {\Omega\subset\mathbb{R}^{d}}$ is an open set with $ {C^{1}}$-boundary, then it holds that  
 
-[$ \displaystyle \int\_{\mathbb{R}^{d}}(\partial\_{j}\varphi)\chi\_{\Omega}\,dx=-\int\_{\partial\Omega}\varphi\nu\_{j}d\Gamma, \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \int\_{\mathbb{R}^{d}}(\partial\_{j}\varphi)\chi\_{\Omega}\,dx=-\int\_{\partial\Omega}\varphi\nu\_{j}d\Gamma,      (2)$
 
-[](https://www.blogger.com/null)where $ {\nu\_{j}}$ is the $ {j}$-th component of the unit outward normal vector, and $ {d\Gamma}$ is the Euclidean surface measure on $ {\partial\Omega}$. Thus we have the distributional equality  
+where $ {\nu\_{j}}$ is the $ {j}$-th component of the unit outward normal vector, and $ {d\Gamma}$ is the Euclidean surface measure on $ {\partial\Omega}$. Thus we have the distributional equality  
 
 $ \displaystyle \partial\_{j}\chi\_{S}=\nu\_{j}d\Gamma. $  
 
@@ -188,17 +188,17 @@ $ \displaystyle \tau\_{x}f(y):=f(y-x). $
 
 The linear operator $ {\tau\_{x}}$ leaves the space $ {C\_{c}^{\infty}(\mathbb{R}^{d})}$ (say) invariant, and is continuous. In many cases when the function space is a normed vector space, the operator norm is one. Most importantly, it is *unitary* with respect to the inner product $ {\langle f,g\rangle:=\int\_{\mathbb{R}^{d}}fg\thinspace dx}$. We are now interested in finding its eigenfunctions; those are functions with the property  
 
-$ \displaystyle f(y-x)=c(x)f(y)\ y\in\mathbb{R}^{d} $
+$ \displaystyle f(y-x)=c(x)f(y) y\in\mathbb{R}^{d} $
 
 for all $ {x\in\mathbb{R}^{d}}$, for some $ {c(x)}$. Observe that the function is determined by its value at the origin and $ {c(x)}$. If $ {f(0)=0}$, then $ {f\equiv0}$ on $ {\mathbb{R}^{d}}$. Discard this uninteresting case and assume $ {f(0)=1}$, we have  
 
 $ \displaystyle c(x)=f(-x) $
 
-and therefore,[](https://www.blogger.com/null)  
+and therefore,  
 
-[$ \displaystyle f(y-x)=f(-x)f(y). \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle f(y-x)=f(-x)f(y).      (3)$
 
-[](https://www.blogger.com/null)Assuming $ {f}$ is absolutely integrable, observe that if $ {g\in C\_{c}^{\infty}(\mathbb{R}^{d})}$, then  
+Assuming $ {f}$ is absolutely integrable, observe that if $ {g\in C\_{c}^{\infty}(\mathbb{R}^{d})}$, then  
 
 $ \displaystyle \begin{array}{rcl} \int\_{\mathbb{R}^{d}}f(x)g(y-x)\thinspace dx & = & \int\_{\mathbb{R}^{d}}f(y-x)g(x)\thinspace dx\\ & = & f(y)\int\_{\mathbb{R}^{d}}f(-x)g(x)\thinspace dx. \end{array} $
 
@@ -208,7 +208,7 @@ $ \displaystyle \partial\_{j}f(y-x)=f(-x)\partial\_{j}f(y). $
 
 Taking value at $ {y=0}$ and making a change of variable, we have a system of differential equations  
 
-$ \displaystyle \partial\_{j}f(x)=f(x)\partial\_{j}f(0),\ x\in\mathbb{R}^{d}. $
+$ \displaystyle \partial\_{j}f(x)=f(x)\partial\_{j}f(0), x\in\mathbb{R}^{d}. $
 
 By the assumption $ {f(0)=1}$, and writing $ {a=(\partial\_{j}f(0))\_{j=1}^{d}}$  
 
@@ -218,29 +218,29 @@ Thus we have determined all eigenfunctions of the translation operator; these fu
 
 $ \displaystyle f^{\wedge}(\xi)=\int\_{\mathbb{R}^{d}}f(x)e^{-2\pi ix\cdot\xi}\thinspace dx. $
 
-As a first manifestation of the relation between the Fourier transform and translation, one considers the action of translation before and after the Fourier transform, respectively. One has, for integrable $ {f}$,[](https://www.blogger.com/null)  
+As a first manifestation of the relation between the Fourier transform and translation, one considers the action of translation before and after the Fourier transform, respectively. One has, for integrable $ {f}$,  
 
-[$ \displaystyle (\tau\_{x\_{0}}f)^{\wedge}(\xi)=e^{-2\pi ix\_{0}\cdot\xi}f^{\wedge}(\xi), \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle (\tau\_{x\_{0}}f)^{\wedge}(\xi)=e^{-2\pi ix\_{0}\cdot\xi}f^{\wedge}(\xi),      (4)$
 
-[](https://www.blogger.com/null)and[](https://www.blogger.com/null)  
+and  
 
-[$ \displaystyle \tau\_{\xi\_{0}}f^{\wedge}(\xi)=\left(e^{2\pi ix\cdot\xi\_{0}}f(x)\right)^{\wedge}. \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \tau\_{\xi\_{0}}f^{\wedge}(\xi)=\left(e^{2\pi ix\cdot\xi\_{0}}f(x)\right)^{\wedge}.      (5)$
 
-[](https://www.blogger.com/null)In other words,  
+In other words,  
 
  *the Fourier transform takes translation to frequency modulation, and conversely.* 
 
  Note also that ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq7)) in effect states that Fourier transform *diagonalises* translation. More aspects of this relation will be explored in what follows. Because of this feature, the Fourier transform tends to simplify any problem that enjoys a translational symmetry; this is in particular the case with PDE with constant coefficients.  
 
-**The Fourier transform on $ {\mathcal{S}(\mathbb{R}^d)'}$.** We shall first recall the fact that the Fourier transform is a continuous bijection on $ {\mathcal{S}(\mathbb{R}^{d})}$. That it is so follows from the rapid decrease of a Schwartz function $ {\varphi}$ and all its derivatives, where it is legitmate to perform differentiation up to any order of the integral $ {\int\_{\mathbb{R}^{d}}\varphi(x)e^{-2\pi ix\cdot\xi}\thinspace dx}$. We have by differentiating in $ {\xi}$-variable,[](https://www.blogger.com/null)  
+**The Fourier transform on $ {\mathcal{S}(\mathbb{R}^d)'}$.** We shall first recall the fact that the Fourier transform is a continuous bijection on $ {\mathcal{S}(\mathbb{R}^{d})}$. That it is so follows from the rapid decrease of a Schwartz function $ {\varphi}$ and all its derivatives, where it is legitmate to perform differentiation up to any order of the integral $ {\int\_{\mathbb{R}^{d}}\varphi(x)e^{-2\pi ix\cdot\xi}\thinspace dx}$. We have by differentiating in $ {\xi}$-variable,  
 
-[$ \displaystyle \partial\_{j}\varphi^{\wedge}(\xi)=-2\pi i(x\_{j}\varphi)^{\wedge}(\xi), \ \ \ \ \ (6)$](https://www.blogger.com/null)
+$ \displaystyle \partial\_{j}\varphi^{\wedge}(\xi)=-2\pi i(x\_{j}\varphi)^{\wedge}(\xi),      (6)$
 
-[](https://www.blogger.com/null)and integrating by parts in $ {x}$-variable shows that[](https://www.blogger.com/null)  
+and integrating by parts in $ {x}$-variable shows that  
 
-[$ \displaystyle (\partial\_{j}\varphi)^{\wedge}(\xi)=2\pi i\xi\_{j}\varphi^{\wedge}(\xi). \ \ \ \ \ (7)$](https://www.blogger.com/null)
+$ \displaystyle (\partial\_{j}\varphi)^{\wedge}(\xi)=2\pi i\xi\_{j}\varphi^{\wedge}(\xi).      (7)$
 
-[](https://www.blogger.com/null)From here we get another important fact:    
+From here we get another important fact:    
 
 *the Fourier transform takes differentiation to multiplication (by polynomial up to constants), and conversely.* 
 
@@ -337,7 +337,7 @@ The classical result on finite dimensional linear algebra that commuting linear 
 
 > **Theorem 10** *Let $ {T}$ be a bounded linear operator mapping $ {L^{2}(\mathbb{R}^{d})}$ to itself. Then $ {T}$ commutes with all translations in $ {\mathbb{R}^{d}}$ if and only if there is a bounded measurable funciton $ {m:\mathbb{R}^{d}\rightarrow\mathbb{C}}$, called a "multiplier'', so that*  
 > 
-> *$ \displaystyle (Tf)^{\wedge}(\xi)=m(\xi)f^{\wedge}(\xi),\ f\in L^{2}(\mathbb{R}^{d}), $*
+> *$ \displaystyle (Tf)^{\wedge}(\xi)=m(\xi)f^{\wedge}(\xi), f\in L^{2}(\mathbb{R}^{d}), $*
 > 
 > *with $ {\|T\|=\|m\|\_{\infty}}$.*
 

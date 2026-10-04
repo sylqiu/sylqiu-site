@@ -14,16 +14,16 @@ Outer measure turns out to be an important construction not only appearing in me
 
 In Riemann integration theory on $ {\mathbb{R}^{n}}$, one debuts with defining for each box a volume, where a box is a cartesian product of simple finite intervals; then for *elementary sets*, which consist of *finite union of boxes*, with which then constructing a *Jordan measure*, denoted by $ {m}$. Elementary sets are good for approximating *Jordan measurable sets*, by definition.  
 
-> **Definition 1** *[](https://www.blogger.com/null)(Jordan measurability) A set $ {E\subset\mathbb{R}^{d}}$ is Jordan measurable if[](https://www.blogger.com/null)*  
+> **Definition 1** *(Jordan measurability) A set $ {E\subset\mathbb{R}^{d}}$ is Jordan measurable if*  
 > 
-> *[$ \displaystyle \sup\_{A\subset E}m(A)=\inf\_{B\supset E}m(B) \ \ \ \ \ (1)$](https://www.blogger.com/null)*
+> *$ \displaystyle \sup\_{A\subset E}m(A)=\inf\_{B\supset E}m(B)      (1)$*
 > 
-> *[](https://www.blogger.com/null)where $ {A}$ and $ {B}$ ranges over elementary sets. The supremum and infimum are called *inner Jordam measure* and *outer Jordan measure* respectively.*
+> *where $ {A}$ and $ {B}$ ranges over elementary sets. The supremum and infimum are called *inner Jordam measure* and *outer Jordan measure* respectively.*
 
 The flavour is really the same with that of a Riemann integral. However, this way of thinking -- approximating from above and below -- is also useful for later constructions.  
 Many desirable properties holds for a Jordan measure as listed in the following. Later they will be slightly adjusted in the Lebesgue case.  
 
-> **Proposition 2** *(Properties of Jordan measure) [](https://www.blogger.com/null)Let $ {E}$, $ {F}$ be Jordan measurable. Then*  
+> **Proposition 2** *(Properties of Jordan measure) Let $ {E}$, $ {F}$ be Jordan measurable. Then*  
 > 
 > *-   (Boolean closure property) $ {E\cap F}$,$ {E\cup F}$, $ {E\backslash F}$ are Jordan measurable, whence finite elementary set operations on finitely many Jordan measurable sets produce jordan measurable sets. We say that Jordan measurable sets form a Boolean algebra.
 > -   (Non-negativity) $ {m(E)\geq0}$;
@@ -38,7 +38,7 @@ By construction, the Jordan measure is not suitable for any unbounded set, becau
 
 So that we see, in particular, $ {\mathbb{Q}\cap[0,1]}$ is not Jordan measurable.  
 
-> **Remark 1** *[](https://www.blogger.com/null)It is worthwhile to point out that ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eqcaratheodory)) in Definiton [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Jordan-measurability\)-A) in fact points to a *Carathéodory type* of property: if $ {E}$ is Jordan measurable, and $ {B\supset E}$ is elementary, then*  
+> **Remark 1** *It is worthwhile to point out that ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eqcaratheodory)) in Definiton [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Jordan-measurability\)-A) in fact points to a *Carathéodory type* of property: if $ {E}$ is Jordan measurable, and $ {B\supset E}$ is elementary, then*  
 > 
 > *$ \displaystyle m(B)=m(E)+m(B\backslash E). $*
 > 
@@ -46,7 +46,7 @@ So that we see, in particular, $ {\mathbb{Q}\cap[0,1]}$ is not Jordan measurable
 
 To remedy, one has to forgo the restriction to elementary sets to embrace a family of more flexible sets, informally called a \`\`gauge'', and to allow approximation by *countably* many gauge sets (this being another reason why one would like to define $ {\sigma}$-algebras). In other words, we need an *extension* of Jordan measurability. The sub-additivity property (3) in Proposition [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#prop2) suggests one should approximate a set from above -- this is the basic idea of an *outer measure*.  
 
-> **Remark 2** *[](https://www.blogger.com/null)An \`\`inner measure'' can in fact follow from this outer measure approach, namely by approximating the complement from above. Of course, to avoid issues such as $ {\infty-\infty}$ we have to assume some boundedness of the set. However, these measures of a set need not agree. This, partially, will lead to the concept of a new set measurability.*
+> **Remark 2** *An \`\`inner measure'' can in fact follow from this outer measure approach, namely by approximating the complement from above. Of course, to avoid issues such as $ {\infty-\infty}$ we have to assume some boundedness of the set. However, these measures of a set need not agree. This, partially, will lead to the concept of a new set measurability.*
 
 Now we go back to $ {\mathbb{R}^{n}}$. Lebesgue's construction shows that *open boxes* in $ {\mathbb{R}^{n}}$ is more than enough to be a gauge. Recall that any open set $ {G\subset\mathbb{R}^{n}}$ can be written as a countable union of open boxes. Since countable set operations on open boxes generate the *Borel* $ {\sigma}$-*algebra* on $ {\mathbb{R}^{n}}$, the Lebesgue measure obtained is an example of *Borel measures*. A powerful way to construct Borel measures via *Riesz Representation Theorem*, along with the *regularity* issues of the measure, will be discussed by a following chapter.  
 As in the case for Jordan measure, we first assign a volume $ {|\cdot|}$ to every open box in $ {\mathbb{R}^{n}}$.  
@@ -67,7 +67,7 @@ Note that a Lebesgue outer measure is given to any subset of $ {\mathbb{R}^{n}}$
 > 
 > *$ \displaystyle m(E)=m^{\*}(E). $*
 
-> **Proposition 6** *(Properties of Lebesgue measure) [](https://www.blogger.com/null)Let $ {E}$, $ {F}$ be Lebesgue measurable. Then*  
+> **Proposition 6** *(Properties of Lebesgue measure) Let $ {E}$, $ {F}$ be Lebesgue measurable. Then*  
 > 
 > *-   ($ {\sigma}$-closure and Borel property) The collection of Lebesgue measurable sets in $ {\mathbb{R}^{n}}$ is a $ {\sigma}$-algebra, which is complete with respect to the Lebesgue measure, and contains the Borel $ {\sigma}$-algebra. In particular, it contains all Jordan measurable sets in $ {\mathbb{R}^{n}}$;
 > -   (Non-negativity) $ {m(E)\geq0}$;
@@ -95,16 +95,16 @@ Motivated by the above construction, we axiomatize outer measure:
 
 Here $ {X}$ need not be a topological space, and *a priori* there is no prefered \`\`gauge system'' in this abstract setting (although one can define one using a *pre-measure*, but I prefer to delay it, otherwise seems to make things just more confusing). To define the measurability is somewhat tricky at first. Remark [1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#remIt-is-worthwhile) and [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#remAn-inner-measure) somewhat explain the following approach taken by Carathéodory.  
 
-> **Definition 8** *[](https://www.blogger.com/null)(Carathéodory's measurability) Let $ {\mu^{\*}}$ be an outer measure on $ {X}$. A set $ {E\subset X}$ is said to be measurable with respect to $ {\mu^{\*}}$ if for ***any*** set $ {A\subset X}$,[](https://www.blogger.com/null)*  
+> **Definition 8** *(Carathéodory's measurability) Let $ {\mu^{\*}}$ be an outer measure on $ {X}$. A set $ {E\subset X}$ is said to be measurable with respect to $ {\mu^{\*}}$ if for ***any*** set $ {A\subset X}$,*  
 > 
-> *[$ \displaystyle \mu^{\*}(A)=\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E). \ \ \ \ \ (2)$](https://www.blogger.com/null)*
+> *$ \displaystyle \mu^{\*}(A)=\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E).      (2)$*
 > 
-> *[](https://www.blogger.com/null)*
+> **
 
 Note that the issue of $ {\infty-\infty}$ as admitted by the \`\`inner measure'' is cleverly avoided.  
 A first good sign is that null sets are always measurable under this definition.  
 
-> **Proposition 9** *[](https://www.blogger.com/null)If $ {E}$ is such that $ {\mu^{\*}(E)=0}$, then $ {E}$ is measurable.*
+> **Proposition 9** *If $ {E}$ is such that $ {\mu^{\*}(E)=0}$, then $ {E}$ is measurable.*
 
 *Proof:* Let $ {A}$ be any set in $ {X}$. Since $ {A\cap E\subset E}$, $ {A\backslash E\subset A}$, by monotonicity of outer measure we see that  
 
@@ -142,11 +142,11 @@ We are now interested in the question if one can extend a finite additive measur
 > 
 > *whenever $ {\{E\_{i}\}}$ is a collection of mutually disjoint elements in $ {\mathcal{A}}$.*
 
-The Boolean algebra $ {\mathcal{A}}$ can facilitate as a gauge system for $ {X}$, out of which one can construct an outer measure[](https://www.blogger.com/null)  
+The Boolean algebra $ {\mathcal{A}}$ can facilitate as a gauge system for $ {X}$, out of which one can construct an outer measure  
 
-[$ \displaystyle \mu^{\*}(E)=\inf\{\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}):E\subset\bigcup\_{i=1}^{\infty}E\_{i},\quad E\_{i}\in\mathcal{A}\text{ for all }i\}. \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \mu^{\*}(E)=\inf\{\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}):E\subset\bigcup\_{i=1}^{\infty}E\_{i},\quad E\_{i}\in\mathcal{A}\text{ for all }i\}.      (3)$
 
-[](https://www.blogger.com/null)Then by Caratheodory's extension theorem, one can obtain from this outer measure a countable additive measure.  
+Then by Caratheodory's extension theorem, one can obtain from this outer measure a countable additive measure.  
 
 > **Definition 13** *A meaure $ {\nu}$, finitely or countably additive, on respectively a Boolean or $ {\sigma}$-algebra $ {\mathcal{E}}$ on $ {X}$, is said to be $ {\sigma}$-finite if $ {X}$ is a countable union of sets $ {\{E\_{i}\}\_{i=1}^{\infty}}$ in $ {\mathcal{E}}$ of finite measure, i.e. $ {\nu(E\_{i})<\infty}$ for all $ {i}$.*
 
@@ -165,9 +165,9 @@ It is useful to introduce the following machinery to prove the uniqueness part o
 
 It is clear that a Boolean algebra is a $ {\pi}$-system, though it may not be a $ {\lambda}$-system. The basic relations of these set families is the following.  
 
-> **Proposition 16** *[](https://www.blogger.com/null)Let $ {\mathcal{P}}$ be a $ {\pi}$-system. The smallest $ {\lambda}$-system containing $ {\mathcal{P}}$ is a $ {\pi}$-system.*
+> **Proposition 16** *Let $ {\mathcal{P}}$ be a $ {\pi}$-system. The smallest $ {\lambda}$-system containing $ {\mathcal{P}}$ is a $ {\pi}$-system.*
 
-> **Proposition 17** *[](https://www.blogger.com/null)A collection $ {\mathcal{F}}$ of sets in $ {X}$ is a $ {\sigma}$-algebra if and only if it is both a $ {\pi}$-system and a $ {\lambda}$-system.*
+> **Proposition 17** *A collection $ {\mathcal{F}}$ of sets in $ {X}$ is a $ {\sigma}$-algebra if and only if it is both a $ {\pi}$-system and a $ {\lambda}$-system.*
 
 *Proof:* The \`\`only if'' part is trivial. Suppose $ {\mathcal{F}}$ is both a $ {\pi}$-system and a $ {\lambda}$-system. Consequently $ {X\in\mathcal{F}}$, and also $ {\mathcal{F}}$ is closed under complement. Also, since for any $ {E,F\in\mathcal{F}}$,  
 
@@ -181,18 +181,18 @@ Hence $ {E\in\mathcal{F}}$ as desired. $ \Box$ Combining Proposition [16](https:
 
 > **Theorem 18** *(Dykin's $ {\pi}$-$ {\lambda}$ lemma) If $ {\mathcal{P}\subset\mathcal{L}}$ with $ {\mathcal{P}}$ a $ {\pi}$-system and $ {\mathcal{L}}$ a $ {\lambda}$-system, then the $ {\sigma}$-algebra $ {\sigma(\mathcal{P})}$ generated by $ {\mathcal{P}}$ is contained in $ {\mathcal{L}}$, i.e. $ {\sigma(\mathcal{P})\subset\mathcal{L}}$.*
 
-> **Proposition 19** *[](https://www.blogger.com/null)Following thw previous notations, if two measures $ {\mu\_{1}}$ and $ {\mu\_{2}}$ on $ {(X,\mathcal{P})}$ agree on the $ {\pi}$-system $ {\mathcal{P}}$, and $ {\mu\_{1}}$,$ {\mu\_{2}}$ are $ {\sigma}$-finite, then $ {\mu\_{1}=\mu\_{2}}$.*
+> **Proposition 19** *Following thw previous notations, if two measures $ {\mu\_{1}}$ and $ {\mu\_{2}}$ on $ {(X,\mathcal{P})}$ agree on the $ {\pi}$-system $ {\mathcal{P}}$, and $ {\mu\_{1}}$,$ {\mu\_{2}}$ are $ {\sigma}$-finite, then $ {\mu\_{1}=\mu\_{2}}$.*
 
 Now we can prove the Hahn-Kolmogorov extension theorem.  
 *Proof:* The uniqueness part follows from Proposition [19](https://www.blogger.com/blogger.g?blogID=4046755691971152965#propunique). Now we show the extension part. Recall the outer measure defined in ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#3)):  
 
 $ \displaystyle \mu^{\*}(E)=\inf\{\sum\_{i=1}^{\infty}\mu\_{0}(E\_{i}):E\subset\bigcup\_{i=1}^{\infty}E\_{i},\quad E\_{i}\in\mathcal{A}\text{ for all }i\}. $
 
-Let $ {\mathcal{B}}$ be the collection of all sets $ {E\subset X}$ that are measurable in the sense of Carathéodory with respect to $ {\mu^{\*}}$, and let $ {\mu}$ be the restriction of $ {\mu^{\*}}$ to $ {\mathcal{B}}$. By Carathéodory extension theorem, $ {\mathcal{B}}$ is a $ {\sigma}$-algebra and $ {\mu}$ is a countably additive measure. It now remains to show that $ {\mathcal{B}\_{0}\subset\mathcal{B}}$ and $ {\mu}$ extends $ {\mu}$. Let $ {E\in\mathcal{B}\_{0}}$. We need to show that it satisfies ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) in Definition [8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Carath=0000E9odory%27s-measurability\)-L). Let $ {A\subset X}$ be any subset. It suffices to show[](https://www.blogger.com/null)  
+Let $ {\mathcal{B}}$ be the collection of all sets $ {E\subset X}$ that are measurable in the sense of Carathéodory with respect to $ {\mu^{\*}}$, and let $ {\mu}$ be the restriction of $ {\mu^{\*}}$ to $ {\mathcal{B}}$. By Carathéodory extension theorem, $ {\mathcal{B}}$ is a $ {\sigma}$-algebra and $ {\mu}$ is a countably additive measure. It now remains to show that $ {\mathcal{B}\_{0}\subset\mathcal{B}}$ and $ {\mu}$ extends $ {\mu}$. Let $ {E\in\mathcal{B}\_{0}}$. We need to show that it satisfies ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) in Definition [8](https://www.blogger.com/blogger.g?blogID=4046755691971152965#def\(Carath=0000E9odory%27s-measurability\)-L). Let $ {A\subset X}$ be any subset. It suffices to show  
 
-[$ \displaystyle \mu^{\*}(A)\geq\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E). \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \mu^{\*}(A)\geq\mu^{\*}(A\cap E)+\mu^{\*}(A\backslash E).      (4)$
 
-[](https://www.blogger.com/null)Fix $ {\epsilon>0}$. By definition of $ {\mu^{\*}}$, one can find $ {E\_{1},E\_{2},\dots\in\mathcal{B}\_{0}}$ whose union covers $ {A}$ and such that  
+Fix $ {\epsilon>0}$. By definition of $ {\mu^{\*}}$, one can find $ {E\_{1},E\_{2},\dots\in\mathcal{B}\_{0}}$ whose union covers $ {A}$ and such that  
 
 $ \displaystyle \sum\_{n=1}^{\infty}\mu\_{0}(E\_{n})\leq\mu^{\*}(A)+\epsilon. $
 
@@ -208,7 +208,7 @@ But
 
 $ \displaystyle \mu\_{0}(E\_{n}\cap E)+\mu\_{0}(E\_{n}\backslash E)=\mu\_{0}(E\_{n}) $
 
-by finite additivity of $ {\mu\_{0}}$. Therefore, \\begin{eqnarray} & & \\mu^{\*}(A\\cap E)+\\mu^{\*}(A\\backslash E)\\\\ & \\leq & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\cap E)+\\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\backslash E) \\\\ & = & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}) \\\\ & \\leq & \\mu^{\*}(A)+\\epsilon. \\end{eqnarray} Since $ {\epsilon}$ is arbitrary, ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) follows. To show that $ {\mu^{\*}(E)=\mu\_{0}(E)}$, it suffices to show  
+by finite additivity of $ {\mu\_{0}}$. Therefore, \\begin{aligned} & & \\mu^{\*}(A\\cap E)+\\mu^{\*}(A\\backslash E)\\\\ & \\leq & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\cap E)+\\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}\\backslash E) \\\\ & = & \\sum\_{n=1}^{\\infty}\\mu\_{0}(E\_{n}) \\\\ & \\leq & \\mu^{\*}(A)+\\epsilon. \\end{aligned} Since $ {\epsilon}$ is arbitrary, ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) follows. To show that $ {\mu^{\*}(E)=\mu\_{0}(E)}$, it suffices to show  
 
 $ \displaystyle \mu^{\*}(E)\geq\mu\_{0}(E) $
 

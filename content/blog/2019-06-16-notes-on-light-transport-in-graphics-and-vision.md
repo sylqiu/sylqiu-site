@@ -51,7 +51,7 @@ $$where $\theta\_i$ is the angle between $\omega\_i$ and the surface normal $\ma
 Now we are ready to derive the light transport equation. For a scene point $p$, we must have conservatoin of energy. This means the difference in the radiant exitant and irradiance must equate the amount of photons emitted minus the amount absorbed per unit time. Moving the irradiance to the right hand side, and reformulate this equality in terms of incident radiance $L\_i(p, \omega\_i)$, exitant radiance $L\_o(p, \omega\_o)$, emitted radiance $L\_e(p, \omega\_o)$ in direction $\omega\_o$ and the BSDF, we have  
 
 $\displaystyle L\_o(p, \omega\_o) = L\_e(p, \omega\_o) + \int\_{\mathbf{S}^2}  
-                f(p, \omega\_o, \omega\_i)L\_i(p, \omega\_i)|\cos(\theta\_i)| \, d\omega\_i \ \ \ \ (1) $
+                f(p, \omega\_o, \omega\_i)L\_i(p, \omega\_i)|\cos(\theta\_i)| \, d\omega\_i     (1) $
 
 This light transport equation will be the central theme. We will next turn to the evaluation of the solution of this integral equation given scene geometry, materials (in terms of BSDFs), and light sources through Monte-Carlo integration.  
 
@@ -73,7 +73,7 @@ $ \displaystyle G(p', p'') = V(p', p'')\frac{|\cos(\theta')||\cos(\theta'')|}{\|
 
 where $V(p', p'')$ is $1$ if $p''$ is visible from $p'$ and $0$ otherwise. Then the light transport equation write 
 
-$ \displaystyle L(p'\to p) = L\_e(p'\to p) + \int\_A f(p''\to p' \to p) L(p'' \to p') G(p', p'') dA(p'') \ \ \ (2) $
+$ \displaystyle L(p'\to p) = L\_e(p'\to p) + \int\_A f(p''\to p' \to p) L(p'' \to p') G(p', p'') dA(p'')    (2) $
 
 Note that if we consider all pairs of $(p, p')$ and record the radiance in an "array" as $L$, the integration term above can be seen as a linear operator on $L$. Hence, in operator form (2) is  
 
@@ -105,7 +105,7 @@ $ \displaystyle \widehat{L\_o}(p, \omega\_o) = \sum\_{p'} \frac{1}{P(p')}f(p'\to
 
 where $\theta\_i$ is the angle between the light ray $p'p$ and the surface normal at $p$, and $P(p') = P(\omega\_i(p)) \frac{|\cos(\theta')|}{\|p'-p\|^2}$ is the transformed probability. Hence in fact the above equation can be simplified to  
 
-$\displaystyle \widehat{L\_o}(p, \omega\_o) = \sum\_{i} \frac{1}{P(\omega\_i)} f(p, \omega\_o, \omega\_i) V(p',p)|\cos(\theta\_i)|L(p'\to p). \ \ \ (3)$
+$\displaystyle \widehat{L\_o}(p, \omega\_o) = \sum\_{i} \frac{1}{P(\omega\_i)} f(p, \omega\_o, \omega\_i) V(p',p)|\cos(\theta\_i)|L(p'\to p).    (3)$
 
 Note that this simplification can be made only if there is no "delta distribution" in the integrand. These deltas, such as point light source or specular component in BSDF, must be handled separately.  
 
@@ -246,11 +246,11 @@ where $\delta t$ denotes the time interval starting from the instant when a *tem
 
 Suppose we have a temporally varing light $l(\tau)$. Because of translational symmetry in time dimesion, we have the resulting cummulative image at pixel $p$ up to time $t$ as a superposition of above images with different $\delta t$:  
 
-$\displaystyle I(t,p) = \int\_{-\infty}^{\infty} \sum\_{q} T(\tau, p, q)~l(t-\tau, q) d\tau \ \ \ \ \ \ (5)$
+$\displaystyle I(t,p) = \int\_{-\infty}^{\infty} \sum\_{q} T(\tau, p, q)~l(t-\tau, q) d\tau       (5)$
 
 Taking Fourier transform on both sides, we have  
 
-$ \displaystyle I^{\omega}(p) = \sum\_{q} \widehat{T}(\omega, p, q)~ l^{\omega}(q) \ \ \ \ \ \ (6) $
+$ \displaystyle I^{\omega}(p) = \sum\_{q} \widehat{T}(\omega, p, q)~ l^{\omega}(q)       (6) $
 
 where $\widehat{T}(\omega, \cdot, \cdot)$ denotes the time-dimension Fourier transform of $T(\tau, \cdot, \cdot)$. Note that Equation (6) is in the same form with Equation (4). We now have a familiar form of image space single frequency light transport.  
 

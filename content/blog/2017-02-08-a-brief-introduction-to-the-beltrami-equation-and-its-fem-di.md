@@ -52,21 +52,21 @@ $ \displaystyle G:\Omega\rightarrow S(2), $
 
 namely, $ {G=\left(\det A\right)^{-1/2}A}$. We say that $ {G}$ is *bounded* if the set $ {\{G(z):z\in\Omega\}}$ is bounded in $ {\mathbb{R}^{4}}$, and *measurable* if individual slots in the matrix are mesurable functions from $ {\Omega}$ to $ {\mathbb{R}}$.  
 
-> **Definition 1** *(Mesurable conformal structure) If $ {G:\Omega\rightarrow S(2)}$ is bounded and measurable, we call $ {G}$ a *measurable conformal structure* on $ {\Omega}$. If $ {H:\Omega'\rightarrow S(2)}$ is a measurable conformal strucrture on $ {\Omega'}$, a homeomorphism $ {f:\Omega\rightarrow\Omega'}$ is said to be conformal from $ {\left(\Omega,G\right)}$ to $ {\left(\Omega',H\right)}$ if $ {f}$ preserves angles, i.e. for each $ {z\in\Omega}$, and vectors $ {\xi,\zeta}$ in the tangent plane at $ {z}$,[](https://www.blogger.com/null)*  
+> **Definition 1** *(Mesurable conformal structure) If $ {G:\Omega\rightarrow S(2)}$ is bounded and measurable, we call $ {G}$ a *measurable conformal structure* on $ {\Omega}$. If $ {H:\Omega'\rightarrow S(2)}$ is a measurable conformal strucrture on $ {\Omega'}$, a homeomorphism $ {f:\Omega\rightarrow\Omega'}$ is said to be conformal from $ {\left(\Omega,G\right)}$ to $ {\left(\Omega',H\right)}$ if $ {f}$ preserves angles, i.e. for each $ {z\in\Omega}$, and vectors $ {\xi,\zeta}$ in the tangent plane at $ {z}$,*  
 > 
-> *[$ \displaystyle \langle f\_{\*}\xi,f\_{\*}\zeta\rangle\_{H}=\phi\langle\xi,\zeta\rangle\_{G} \ \ \ \ \ (1)$](https://www.blogger.com/null)*
+> *$ \displaystyle \langle f\_{\*}\xi,f\_{\*}\zeta\rangle\_{H}=\phi\langle\xi,\zeta\rangle\_{G}      (1)$*
 > 
-> *[](https://www.blogger.com/null)for some positive measurable function $ {\phi}$.*
+> *for some positive measurable function $ {\phi}$.*
 
 The conformal equivalence relation ([1](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq1)) can be translated to be a differential equation  
 
 $ \displaystyle D^{T}f(z)H(f(z))Df(z)=\phi(z)G(z), $
 
-where the derivative is interpreted in the weak sense. Note that taking determinants of both sides, we get $ {\phi(z)=J(z,f)}$, resulting the so-called *Beltrami system*[](https://www.blogger.com/null)  
+where the derivative is interpreted in the weak sense. Note that taking determinants of both sides, we get $ {\phi(z)=J(z,f)}$, resulting the so-called *Beltrami system*  
 
-[$ \displaystyle D^{T}f(z)H(f(z))Df(z)=J(z,f)G(z). \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle D^{T}f(z)H(f(z))Df(z)=J(z,f)G(z).      (2)$
 
-[](https://www.blogger.com/null)  
+  
 
 > **Remark 2** *If we take both $ {G=H=I}$, then we recover the usual conformal structure induced by the Euclidean metric. If $ {f=(u,v)}$ is conformal and differentiable, the equation ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq2)) then reads*  
 > 
@@ -114,11 +114,11 @@ define a conformal structure on the domain $ {\Omega}$, where $ {f}$ is a confor
 
 Having only uniform control on the linear distortion does not guarantee the regularity of the mapping. This forces us to consider mappings in Sobolev spaces.  
 
-> **Definition 3** *(Quasiconformal mapping) A homeomorphism $ {f:\Omega\rightarrow\Omega'}$ is called $ {K}$-quasiconformal if it is orientation-preserving, and $ {f\in W\_{loc}^{1,2}(\Omega)}$, and the directional derivatives[](https://www.blogger.com/null)*  
+> **Definition 3** *(Quasiconformal mapping) A homeomorphism $ {f:\Omega\rightarrow\Omega'}$ is called $ {K}$-quasiconformal if it is orientation-preserving, and $ {f\in W\_{loc}^{1,2}(\Omega)}$, and the directional derivatives*  
 > 
-> *[$ \displaystyle \max\_{\alpha}|\partial\_{\alpha}f(z)|\leq K\min\_{\alpha}|\partial\_{\alpha}f(z)| \ \ \ \ \ (3)$](https://www.blogger.com/null)*
+> *$ \displaystyle \max\_{\alpha}|\partial\_{\alpha}f(z)|\leq K\min\_{\alpha}|\partial\_{\alpha}f(z)|      (3)$*
 > 
-> *[](https://www.blogger.com/null)for almost every $ {z\in\Omega}$.*
+> *for almost every $ {z\in\Omega}$.*
 
 > **Remark 3** *Being merely a Sobolev function is not enough for a.e. differentiability, but only differentiable on lines a.e.. For this reason, in the above definition we had set*  
 > 
@@ -134,11 +134,11 @@ for almost every $ {z\in\Omega}$. This means quasiconformal mappings map infinit
 
 $ \displaystyle |f\_{\bar{z}}(z)|\leq\frac{K-1}{K+1}|f\_{z}(z)|. $
 
-Writing $ {\mu\_{f}(z)=f\_{\bar{z}}(z)/f\_{z}(z)}$ when $ {f\_{z}(z)\neq0}$ (which only happens on a measure zero set), we get $ {|\mu\_{f}(z)|\leq\frac{K-1}{K+1}<1}$. Working backwards, we see that the equation[](https://www.blogger.com/null)  
+Writing $ {\mu\_{f}(z)=f\_{\bar{z}}(z)/f\_{z}(z)}$ when $ {f\_{z}(z)\neq0}$ (which only happens on a measure zero set), we get $ {|\mu\_{f}(z)|\leq\frac{K-1}{K+1}<1}$. Working backwards, we see that the equation  
 
-[$ \displaystyle \frac{\partial f}{\partial\bar{z}}=\mu(z)\frac{\partial f}{\partial z} \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle \frac{\partial f}{\partial\bar{z}}=\mu(z)\frac{\partial f}{\partial z}      (4)$
 
-[](https://www.blogger.com/null)called the *Beltrami euqation*, where the *Beltrami coeffiecient* satisfies $ {\|\mu\|\_{\infty}<1}$, is equivalent to the inequality ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)). The existence of the solution (as a $ {K}$-quasiconformal homeomorphism) to the equation ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) when $ {\|\mu\|\_{\infty}<1}$ is known as the *measurable Riemann mapping theorem*, and up to precomposition of comformal mappings is uniquely determined by $ {\mu:\Omega\rightarrow\Omega'}$. Let's convert ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) into matrix form. Write $ {\mu=\rho+i\tau}$. Separating the real and imaginary parts, we have  
+called the *Beltrami euqation*, where the *Beltrami coeffiecient* satisfies $ {\|\mu\|\_{\infty}<1}$, is equivalent to the inequality ([3](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq3)). The existence of the solution (as a $ {K}$-quasiconformal homeomorphism) to the equation ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) when $ {\|\mu\|\_{\infty}<1}$ is known as the *measurable Riemann mapping theorem*, and up to precomposition of comformal mappings is uniquely determined by $ {\mu:\Omega\rightarrow\Omega'}$. Let's convert ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)) into matrix form. Write $ {\mu=\rho+i\tau}$. Separating the real and imaginary parts, we have  
 
 $ \displaystyle \begin{bmatrix}\rho-1 & \tau\\ \tau & -(\rho+1) \end{bmatrix}\begin{bmatrix}u\_{x}\\ u\_{y} \end{bmatrix}=\begin{bmatrix}\rho+1 & \tau\\ \tau & 1-\rho \end{bmatrix}\begin{bmatrix}-v\_{y}\\ v\_{x} \end{bmatrix}. $
 
@@ -150,11 +150,11 @@ Denote $ {C=\begin{bmatrix}\rho-1 & \tau\\ \tau & -(\rho+1) \end{bmatrix}}$ and 
 
 $ \displaystyle \begin{bmatrix}-v\_{y}\\ v\_{x} \end{bmatrix}=\frac{1}{1-\rho^{2}-\tau^{2}}C^{T}C\begin{bmatrix}u\_{x}\\ u\_{y} \end{bmatrix}. $
 
-Finally, denote $ {-A=\frac{-1}{1-\rho^{2}-\tau^{2}}C^{T}C=\frac{-1}{1-\rho^{2}-\tau^{2}}\begin{bmatrix}-(1-\rho)^{2}-\tau^{2} & 2\tau\\ 2\tau & -\tau^{2}-(\rho+1)^{2} \end{bmatrix}}$ and it is easy to see that $ {A}$ is positive definite. Using the relation $ {v\_{xy}=v\_{yx}}$, we obtain a second order elliptic equation in divergence form:[](https://www.blogger.com/null)  
+Finally, denote $ {-A=\frac{-1}{1-\rho^{2}-\tau^{2}}C^{T}C=\frac{-1}{1-\rho^{2}-\tau^{2}}\begin{bmatrix}-(1-\rho)^{2}-\tau^{2} & 2\tau\\ 2\tau & -\tau^{2}-(\rho+1)^{2} \end{bmatrix}}$ and it is easy to see that $ {A}$ is positive definite. Using the relation $ {v\_{xy}=v\_{yx}}$, we obtain a second order elliptic equation in divergence form:  
 
-[$ \displaystyle -\nabla\cdot(A\nabla u)=0, \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle -\nabla\cdot(A\nabla u)=0,      (5)$
 
-[](https://www.blogger.com/null)where $ {\nabla\cdot(A\nabla)}$ is called the *generalized Laplacian operator*.  
+where $ {\nabla\cdot(A\nabla)}$ is called the *generalized Laplacian operator*.  
 
 > **Remark 4** *A solution $ {u}$ to the equation ([5](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq5)) can be used to determine $ {v}$ via the formula*  
 > 
@@ -208,9 +208,9 @@ $ \displaystyle \begin{bmatrix}a\_{T} & b\_{T}\\ c\_{T} & d\_{T} \end{bmatrix}\b
 
 The determinant of $ {\begin{bmatrix}g\_{j}-g\_{i} & g\_{k}-g\_{i}\\ h\_{j}-h\_{i} & h\_{k}-h\_{i} \end{bmatrix}}$is just the signed area of the parallelogram, which is $ {2\cdot Area(T)}$. Note that we have chosen the same orientation for every $ {T}$ so the determinants calculated for each face are positive. Thus,  
 
-[$\displaystyle \begin{eqnarray} \begin{bmatrix}a\_{T} & b\_{T}\\ c\_{T} & d\_{T}\end{bmatrix} & = & \frac{1}{2\cdot Area(T)} \begin{bmatrix}s\_{j}-s\_{i} & s\_{k}-s\_{i}\\ t\_{j}-t\_{i} & t\_{k}-t\_{i}\end{bmatrix} \begin{bmatrix}h\_{k}-h\_{i} & g\_{i}-g\_{k}\\ h\_{i}-h\_{j} & g\_{j}-g\_{i} \end{bmatrix} \\ & = & \begin{bmatrix}A\_{T}^{i}s\_{i}+A\_{T}^{j}s\_{j}+A\_{T}^{k}s\_{k} & B\_{T}^{i}s\_{i}+B\_{T}^{j}s\_{j}+B\_{T}^{k}s\_{k}\\ A\_{T}^{i}t\_{i}+A\_{T}^{j}t\_{j}+A\_{T}^{k}t\_{k} & B\_{T}^{i}t\_{i}+B\_{T}^{j}t\_{j}+B\_{T}^{k}t\_{k} \end{bmatrix}.\end{eqnarray} \ \ \ \ \ (6)$](https://www.blogger.com/null)
+$\displaystyle \begin{aligned} \begin{bmatrix}a\_{T} & b\_{T}\\ c\_{T} & d\_{T}\end{bmatrix} & = & \frac{1}{2\cdot Area(T)} \begin{bmatrix}s\_{j}-s\_{i} & s\_{k}-s\_{i}\\ t\_{j}-t\_{i} & t\_{k}-t\_{i}\end{bmatrix} \begin{bmatrix}h\_{k}-h\_{i} & g\_{i}-g\_{k}\\ h\_{i}-h\_{j} & g\_{j}-g\_{i} \end{bmatrix} \\ & = & \begin{bmatrix}A\_{T}^{i}s\_{i}+A\_{T}^{j}s\_{j}+A\_{T}^{k}s\_{k} & B\_{T}^{i}s\_{i}+B\_{T}^{j}s\_{j}+B\_{T}^{k}s\_{k}\\ A\_{T}^{i}t\_{i}+A\_{T}^{j}t\_{j}+A\_{T}^{k}t\_{k} & B\_{T}^{i}t\_{i}+B\_{T}^{j}t\_{j}+B\_{T}^{k}t\_{k} \end{bmatrix}.\end{aligned}      (6)$
 
-[](https://www.blogger.com/null)where  
+where  
 
 $ \displaystyle A\_{T}^{i}=\left(h\_{j}-h\_{k}\right)/2\cdot Area(T);\quad A\_{T}^{j}=\left(h\_{k}-h\_{i}\right)/2\cdot Area(T);\quad A\_{T}^{k}=\left(h\_{i}-h\_{j}\right)/2\cdot Area(T); $
 

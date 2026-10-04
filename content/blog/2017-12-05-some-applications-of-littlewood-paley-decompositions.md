@@ -48,7 +48,7 @@ $ \displaystyle 2^{p}\|f\|\_{L^{p}}^{p}\int\_{|r|>\delta}|\Psi\_{N}(r)|^{p}dr\le
 
 when $ {N=N(\delta)}$ is large enough. We thus obtained  
 
-> **Theorem 1** *[](https://www.blogger.com/null)Whenever $ {f\in L^{p}}$, $ {1\leq p<\infty}$,*  
+> **Theorem 1** *Whenever $ {f\in L^{p}}$, $ {1\leq p<\infty}$,*  
 > 
 > *$ \displaystyle P\_{\leq N}f\rightarrow f\quad\text{in }L^{p}. $*
 
@@ -62,7 +62,7 @@ $ \displaystyle Mf(x)=\sup\_{r>0}\frac{c}{r^{d}}\int\_{B(x,r)}|f(y)|dy. $
 
 And in fact, the pointwise convergence at Lebesgue points is of a local character, so the convergence can be obtained for all $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$.  
 
-> **Theorem 2** *[](https://www.blogger.com/null)Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$, and $ {x\in\mathbb{R}^{d}}$ be a Lebesgue point of $ {f}$. Then*  
+> **Theorem 2** *Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$, and $ {x\in\mathbb{R}^{d}}$ be a Lebesgue point of $ {f}$. Then*  
 > 
 > *$ \displaystyle f(x)=\lim\_{N\rightarrow\infty}P\_{\leq N}f(x). $*
 
@@ -87,7 +87,7 @@ $ \displaystyle |E\_{3}|\lesssim\frac{1}{\alpha^{p}}\|g-f\|\_{L^{p}}^{p}, $
 
 and $ {|E\_{1}|\leq|\{x:3AM(f-g)>\alpha\}\lesssim\frac{1}{\alpha^{p}}\|f-g\|\_{L^{p}}^{p}}$, where $ {A=A=\int\_{\mathbb{R}^{d}}\Psi^{\*}(x)dx}$, and the first inequality follows from the following lemma, and second from the weak-$ {(p,p)}$ estimate. Now by density of $ {C\_{c}(\mathbb{R}^{d})}$ in $ {L^{p}}$, $ {1\leq p<\infty}$, we may choose $ {g}$ such that $ {\|g-f\|\_{L^{p}}\leq\epsilon}$ and hence this special case is proved.  
 
-> **Lemma 3** *[](https://www.blogger.com/null)Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$.*  
+> **Lemma 3** *Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$.*  
 > 
 > *$ \displaystyle \sup\_{N\in\mathbb{Z}}|f\*\Psi\_{N}|(x)\leq\sup\_{N\in\mathbb{Z}}|f|\*\Psi\_{N}^{\*}(x)\leq AMf(x), $*
 > 
@@ -126,13 +126,13 @@ and let $ {N\rightarrow\infty}$ we see that $ {f\*\Psi\_{-N}}$ is not in $ {L^{1
 
 Nevertheless by the virtue of the proof of Theorem [2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#thm2) and the fact that $ {\Phi\_{N}=\left(\sum\_{|k|\leq N}\varphi\_{k}\right)^{\vee}}$ is such that $ {\int\Phi\_{N}=0}$, the pointwise almost everywhere convergence result still holds.  
 
-> **Theorem 5** *[](https://www.blogger.com/null)Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$, and $ {x\in\mathbb{R}^{d}}$ be a Lebesgue point of $ {f}$. Then*  
+> **Theorem 5** *Let $ {f\in L^{p}}$, $ {1\leq p\leq\infty}$, and $ {x\in\mathbb{R}^{d}}$ be a Lebesgue point of $ {f}$. Then*  
 > 
 > *$ \displaystyle f(x)=\sum\_{k\in\mathbb{Z}}P\_{k}f(x). $*
 
 Next we turn to the point of interaction between Littlewood-Paley pieces and derivatives.  
 
-> **Lemma 6** *[](https://www.blogger.com/null)Let $ {1\leq p\leq\infty}$, $ {P\_{k}f}$ be defined as above. Then we have*  
+> **Lemma 6** *Let $ {1\leq p\leq\infty}$, $ {P\_{k}f}$ be defined as above. Then we have*  
 > 
 > *$ \displaystyle \|\partial\_{x\_{i}}(P\_{k}f)\|\_{L^{p}}\sim2^{k}\|P\_{k}f\|\_{L^{p}}. $*
 
@@ -170,7 +170,7 @@ $ \displaystyle |Sf|(x)=\|P\_{k}f(x)\|\_{\ell^{2}(\mathbb{Z})}. $
 
 We think of $ {Sf=(Pf,P\_{1}f,P\_{2}f,\dots)}$ or $ {Sf=(P\_{k}f)\_{k\in\mathbb{Z}}}$ as sequencies. Roughly speaking, these alomost orthogonal pieces are sumed as if squared sumed. More precisely,  
 
-> **Theorem 7** *[](https://www.blogger.com/null)(Littlewood-Paley inequality) Let $ {f\in\mathcal{S}(\mathbb{R}^{d})}$ and $ {Sf}$ be defined either one of the form as above. Then for $ {1<p<\infty}$,*  
+> **Theorem 7** *(Littlewood-Paley inequality) Let $ {f\in\mathcal{S}(\mathbb{R}^{d})}$ and $ {Sf}$ be defined either one of the form as above. Then for $ {1<p<\infty}$,*  
 > 
 > *$ \displaystyle \||Sf|\|\_{L^{p}}\sim\|f\|\_{L^{p}}. $*
 
@@ -186,11 +186,11 @@ Using Hölder, it is bounded by
 
 $ \displaystyle \|f\|\_{L^{p}}\|\|\sum\_{k\in\mathbb{Z}}(P\_{k}g\_{k})(x)\|\_{L^{p'}}. $
 
-We apply the vector valued singular integral again, now to $ {(g\_{k}(x))\_{k\in\mathbb{Z}}\mapsto\|P\_{k}g\_{k}(x)\|\_{\ell^{2}(\mathbb{Z})}}$, to obtain[](https://www.blogger.com/null)  
+We apply the vector valued singular integral again, now to $ {(g\_{k}(x))\_{k\in\mathbb{Z}}\mapsto\|P\_{k}g\_{k}(x)\|\_{\ell^{2}(\mathbb{Z})}}$, to obtain  
 
-[$ \displaystyle \|\sum\_{k\in\mathbb{Z}}(P\_{k}g\_{k})(x)\|\_{L^{p'}}\lesssim\left\Vert \|g\_{k}(x)\|\_{\ell^{2}(\mathbb{Z})}\right\Vert \_{L^{p'}}. \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \|\sum\_{k\in\mathbb{Z}}(P\_{k}g\_{k})(x)\|\_{L^{p'}}\lesssim\left\Vert \|g\_{k}(x)\|\_{\ell^{2}(\mathbb{Z})}\right\Vert \_{L^{p'}}.      (1)$
 
-[](https://www.blogger.com/null)Therefore, $ {Sf}$ is a continuous linear functional on $ {L^{p'}(\mathbb{R}^{d},\ell^{2})}$  
+Therefore, $ {Sf}$ is a continuous linear functional on $ {L^{p'}(\mathbb{R}^{d},\ell^{2})}$  
 
 $ \displaystyle |\langle Sf,(g\_{k})\_{k\in\mathbb{Z}}\rangle|\leq\|f\|\_{L^{p}}\left\Vert \|g\_{k}(x)\|\_{\ell^{2}(\mathbb{Z})}\right\Vert \_{L^{p'}}, $
 
@@ -208,7 +208,7 @@ $ \displaystyle \|f\|\_{L^{p}}\lesssim\|\|P\_{k}f\|\_{\ell^{2}(\mathbb{Z})}\|\_{
 
 Finally, we turn to the point that lower $ {L^{p}}$ norms of $ {P\_{k}f}$ control its higher $ {L^{q}}$ norms.  
 
-> **Lemma 8** *(Bernstein inequality) [](https://www.blogger.com/null)Let $ {P\_{k}f}$ be defined as before, $ {k\in\mathbb{Z}}$, $ {1\leq p\leq q\leq\infty}$. Then*  
+> **Lemma 8** *(Bernstein inequality) Let $ {P\_{k}f}$ be defined as before, $ {k\in\mathbb{Z}}$, $ {1\leq p\leq q\leq\infty}$. Then*  
 > 
 > *$ \displaystyle \|P\_{k}f\|\_{L^{q}}\lesssim2^{kd(1/p-1/q)}\|P\_{k}f\|\_{L^{p}}. $*
 
@@ -237,11 +237,11 @@ Recall $ {P\_{k}f=\int f(x-y)\Psi\_{k}(y)dy}$ where $ {\int\Psi\_{k}(y)dy=0}$. T
 
 $ \displaystyle P\_{k}f(x)=\int\left(f(x-y)-f(x)\right)\Psi\_{k}(y)dy $
 
-and so[](https://www.blogger.com/null)  
+and so  
 
-[$ \displaystyle \|P\_{k}f\|\_{L^{\infty}}\lesssim\int|y|^{\gamma}|\Psi\_{k}(y)|dy\lesssim2^{-k\gamma}. \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \|P\_{k}f\|\_{L^{\infty}}\lesssim\int|y|^{\gamma}|\Psi\_{k}(y)|dy\lesssim2^{-k\gamma}.      (2)$
 
-[](https://www.blogger.com/null)This implication can in fact be reversed. Suppose now the above holds. Then first of all  
+This implication can in fact be reversed. Suppose now the above holds. Then first of all  
 
 $ \displaystyle \|f\|\_{L^{\infty}}\leq\|Pf\|\_{L^{\infty}}+\sum\_{k\geq1}\|P\_{k}f\|\_{L^{\infty}}\lesssim1. $
 
@@ -253,11 +253,11 @@ Now if $ {|y|>2^{-k}}$, we compare at a rather global scale
 
 $ \displaystyle |P\_{k}f(x+y)-P\_{k}f(x)|\leq2\|P\_{k}f\|\_{L^{\infty}}\lesssim2^{-k\gamma}, $
 
-otherwise we can use Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lem5) to get[](https://www.blogger.com/null)  
+otherwise we can use Lemma [6](https://www.blogger.com/blogger.g?blogID=4046755691971152965#lem5) to get  
 
-[$ \displaystyle |P\_{k}f(x+y)-P\_{k}f(x)|\leq|y|\|\nabla P\_{k}f\|\_{L^{\infty}}\lesssim|y|2^{k(1-\gamma)}. \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle |P\_{k}f(x+y)-P\_{k}f(x)|\leq|y|\|\nabla P\_{k}f\|\_{L^{\infty}}\lesssim|y|2^{k(1-\gamma)}.      (3)$
 
-[](https://www.blogger.com/null)Consequently the above expression is summbale wherever $ {y}$ is  
+Consequently the above expression is summbale wherever $ {y}$ is  
 
 $ \displaystyle \begin{array}{rcl} \sum\_{k\geq1}|P\_{k}f(x+y)-P\_{k}f(x)| & \lesssim & \sum\_{2^{k}\leq|y|^{-1}}2^{k(1-\gamma)}|y|+\sum\_{2^{k}>|y|^{-1}}2^{-k\gamma}\\ & \lesssim & |y|^{1-\gamma}|y|+|y|^{\gamma}\lesssim|y|^{\gamma}. \end{array} $
 
@@ -353,15 +353,15 @@ Next we deal with the endpoint case $ {\frac{1}{p}-\frac{1}{q}=\frac{1}{d}}$. We
 $ \displaystyle |\{|f|>\lambda\}|\lesssim\frac{\|\nabla f\|\_{L^{p}}^{q}}{\lambda^{q}}, $
 
 and subsequently show how to bootstrap to strong-type estimate.  
-Suppose $ {f\in W^{1,p}}$. We first treat for a single Littlewood-Paley piece where we will obtain several useful observations. By Chebyshev we have[](https://www.blogger.com/null)  
+Suppose $ {f\in W^{1,p}}$. We first treat for a single Littlewood-Paley piece where we will obtain several useful observations. By Chebyshev we have  
 
-[$ \displaystyle |\{|P\_{k}f|>\lambda\}|\lesssim\frac{\|P\_{k}f\|\_{L^{p}}^{p}}{\lambda^{p}}\sim\frac{(2^{-k}\|\nabla P\_{k}f\|\_{L^{p}})^{p}}{\lambda^{p}}. \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle |\{|P\_{k}f|>\lambda\}|\lesssim\frac{\|P\_{k}f\|\_{L^{p}}^{p}}{\lambda^{p}}\sim\frac{(2^{-k}\|\nabla P\_{k}f\|\_{L^{p}})^{p}}{\lambda^{p}}.      (4)$
 
-[](https://www.blogger.com/null)Now using Bernstein's inequality[](https://www.blogger.com/null)  
+Now using Bernstein's inequality  
 
-[$ \displaystyle \|P\_{k}f\|\_{L^{\infty}}\lesssim2^{dk/p}\|P\_{k}f\|\_{L^{p}}\lesssim2^{dk/p-k}\|\nabla P\_{k}f\|\_{L^{p}} \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \|P\_{k}f\|\_{L^{\infty}}\lesssim2^{dk/p}\|P\_{k}f\|\_{L^{p}}\lesssim2^{dk/p-k}\|\nabla P\_{k}f\|\_{L^{p}}      (5)$
 
-[](https://www.blogger.com/null)hence $ {|\{|P\_{k}f|>\lambda\}|=0}$ unless $ {\lambda\lesssim2^{dk/p-k}\|\nabla P\_{k}f\|\_{L^{p}}}$. Putting this back to ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)), we get  
+hence $ {|\{|P\_{k}f|>\lambda\}|=0}$ unless $ {\lambda\lesssim2^{dk/p-k}\|\nabla P\_{k}f\|\_{L^{p}}}$. Putting this back to ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#eq4)), we get  
 
 $ \displaystyle \begin{array}{rcl} |\{|P\_{k}f|>\lambda\}| & \lesssim & 2^{-kp}\|\nabla P\_{k}f\|\_{L^{p}}^{p}\lambda^{-q}\left(2^{dk/p-k}\|\nabla P\_{k}f\|\_{L^{p}}\right)^{q-p}\\ & = & \lambda^{-q}\|\nabla P\_{k}f\|\_{L^{p}}^{q}, \end{array} $
 

@@ -12,11 +12,11 @@ Already in the 18th century, Leonhard Euler had considered the problem of findin
 
 $ \displaystyle \frac{dx}{dt}(t)=f(t,x(t))\quad x(0)=x\_{0} $
 
-where, say, the solution lies in the plane $ {x(t)\in\mathbb{R}^{2}}$ for time interval $ {t\in(0,1)}$, and $ {f:(0,1)\times\mathbb{R}^{2}\rightarrow\mathbb{R}^{2}}$. The famous *Picard-Lindel{ö}f theorem* asserts that if $ {f}$ is *uniformly Lipschitz* in the spatial variable $ {x}$ and continuous in the time variable $ {y}$, then there exists a unique solution $ {x(t)}$ to the initial value problem. Of course, we don't expect to get closed form solution for every given right hand side satisfying the theorem. So, as Euler did, we want to try to directly *integrate* the differential equation by discrete approximation. The obvious thing to try is[](https://www.blogger.com/null)  
+where, say, the solution lies in the plane $ {x(t)\in\mathbb{R}^{2}}$ for time interval $ {t\in(0,1)}$, and $ {f:(0,1)\times\mathbb{R}^{2}\rightarrow\mathbb{R}^{2}}$. The famous *Picard-Lindel{ö}f theorem* asserts that if $ {f}$ is *uniformly Lipschitz* in the spatial variable $ {x}$ and continuous in the time variable $ {y}$, then there exists a unique solution $ {x(t)}$ to the initial value problem. Of course, we don't expect to get closed form solution for every given right hand side satisfying the theorem. So, as Euler did, we want to try to directly *integrate* the differential equation by discrete approximation. The obvious thing to try is  
 
-[$ \displaystyle x(t\_{i})-x(t\_{i-1})\approx\Delta t\cdot f(t\_{i-1},x(t\_{i-1})), \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle x(t\_{i})-x(t\_{i-1})\approx\Delta t\cdot f(t\_{i-1},x(t\_{i-1})),      (1)$
 
-[](https://www.blogger.com/null)where the time interval has been discretized $ {0=t\_{0}<t\_{1}<\cdots<t\_{n}=1}$ with equal distance $ {\Delta t}$. Taking approximation  
+where the time interval has been discretized $ {0=t\_{0}<t\_{1}<\cdots<t\_{n}=1}$ with equal distance $ {\Delta t}$. Taking approximation  
 
 $ \displaystyle \tilde{x}(t\_{i})-\tilde{x}(t\_{i-1})=\Delta t\cdot f(t\_{i-1},\tilde{x}(t\_{i-1})), $
 
@@ -34,11 +34,11 @@ $ \displaystyle \frac{dx}{dt}(t)=-k\cdot x(t),k>0 $
 
 This equation has solutions of the form $ {x(t)=Ae^{-kt}+C}$. Clearly any particular solution decays to a fixed value as $ {t\rightarrow\infty}$, but one can check if the time step $ {h\gg1/k}$, then the numerical solution will oscillate or even diverge to infinity. In some sense the solution is only *stable* (here, we mean continuous dependence on the initial condition with fixed step size) within a region of choice of $ {h}$, or sometimes a expression in terms of h; we call a *stability region* the subset where the numerical solution for the stiff problem is stable. It turns out that here much of the analysis of a difference method (e.g. Euler's method) to solving the stiff problem is about the associated difference equation, which further breaks down to a linear algebraic problem of analysing eigenvalues of the associated linear system, recalling that the solution of a difference equation can be written as a linear combination of roots of the characteristic polynomial (though the case of multiple roots is slightly more complicated).  
 
-We shall see how these ideas in this case of Euler method correspond to those in the analysis of finite difference methods for hyperbolic PDEs, by examining the prototypical example, that of the one way wave equation with the initial condition[](https://www.blogger.com/null)  
+We shall see how these ideas in this case of Euler method correspond to those in the analysis of finite difference methods for hyperbolic PDEs, by examining the prototypical example, that of the one way wave equation with the initial condition  
 
-[$ \displaystyle u\_{t}+au\_{x}=0\quad u(0,x)=u\_{0}(x),{\tag{$\\star$}} \ \ \ \ \ $](https://www.blogger.com/null)
+$ \displaystyle u\_{t}+au\_{x}=0\quad u(0,x)=u\_{0}(x),{}      $
 
-[](https://www.blogger.com/null)where $ {u:(0,T)\times\mathbb{R}\rightarrow\mathbb{R}}$, and $ {a}$ is a constant. We note that if $ {b,f=0}$, the unique solution is given by  
+where $ {u:(0,T)\times\mathbb{R}\rightarrow\mathbb{R}}$, and $ {a}$ is a constant. We note that if $ {b,f=0}$, the unique solution is given by  
 
 $ \displaystyle u(t,x)=u\_{0}(x-at), $
 
@@ -114,24 +114,24 @@ where $ {P\_{k,h}}$ is a *finite difference operator* and $ {R\_{k,h}}$ is an ap
 
 **1.3. A quick review of $ {L^{2}}$ theory of Fourier series**
 
-At a certain time level, the function $ {v\_{m}}$ is defined on the spatial gird which is isomorphic to $ {h\mathbb{Z}}$. We will consider the grid functions that are *squared summable*: $ {v\_{m}\in\ell^{2}(h\mathbb{Z})}$. Applying the *Fourier transform* to $ {v\_{m}}$, we get[](https://www.blogger.com/null)  
+At a certain time level, the function $ {v\_{m}}$ is defined on the spatial gird which is isomorphic to $ {h\mathbb{Z}}$. We will consider the grid functions that are *squared summable*: $ {v\_{m}\in\ell^{2}(h\mathbb{Z})}$. Applying the *Fourier transform* to $ {v\_{m}}$, we get  
 
-[$ \displaystyle \hat{v}(\xi)=\sum\_{m=-\infty}^{+\infty}v\_{m}h\cdot e^{-imh\xi} \ \ \ \ \ (3)$](https://www.blogger.com/null)
+$ \displaystyle \hat{v}(\xi)=\sum\_{m=-\infty}^{+\infty}v\_{m}h\cdot e^{-imh\xi}      (3)$
 
-[](https://www.blogger.com/null)for $ {\xi\in[-\pi/h,\pi/h]}$, which can be easily checked to be a function lying in $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$. *Parseval's identity* asserts that Fourier transform is a *unitary transform* from $ {\ell^{2}(h\mathbb{Z})}$ to $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$, namely the norms are preserved  
+for $ {\xi\in[-\pi/h,\pi/h]}$, which can be easily checked to be a function lying in $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$. *Parseval's identity* asserts that Fourier transform is a *unitary transform* from $ {\ell^{2}(h\mathbb{Z})}$ to $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$, namely the norms are preserved  
 
 $ \displaystyle \|v\|\_{h}^{2}=h\sum\_{m=-\infty}^{+\infty}|v\_{m}|^{2}=\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}|\hat{v}(\xi)|^{2}d\xi=\|\hat{v}\|^{2}. $
 
-And the *Fourier inversion formula*[](https://www.blogger.com/null)  
+And the *Fourier inversion formula*  
 
-[$ \displaystyle v\_{m}=\frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}e^{imh\xi}\hat{v}(\xi)d\xi \ \ \ \ \ (4)$](https://www.blogger.com/null)
+$ \displaystyle v\_{m}=\frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}e^{imh\xi}\hat{v}(\xi)d\xi      (4)$
 
-[](https://www.blogger.com/null)that recovers the grid function from its Fourier transform. So Fourier transform from $ {\ell^{2}(h\mathbb{Z})}$ to $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$ is in fact an *isometry*. Because of the above facts, we will in turn study the Fourier transform $ {\hat{v}(\xi)}$ of the grid function at certain time level, and how it evolutes with time.  
+that recovers the grid function from its Fourier transform. So Fourier transform from $ {\ell^{2}(h\mathbb{Z})}$ to $ {L^{2}[-\frac{\pi}{h},\frac{\pi}{h}]}$ is in fact an *isometry*. Because of the above facts, we will in turn study the Fourier transform $ {\hat{v}(\xi)}$ of the grid function at certain time level, and how it evolutes with time.  
 
 The first observation to make is that, by ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#3)), $ {v\_{m}}$ is now a *superposition of waves* of frequencies $ {\xi\in[-\pi/h,\pi/h]}$, with ampflitude $ {\hat{v}(\xi)}$. The high frequecy component correspond to the more oscillating behavior of the grid function. Thus if the computed solution $ {v\_{m}}$ is non-smooth or oscillating quickly, we would expect a large value of $ {\hat{v}(\xi)}$ for $ {|\xi|}$ large. This corresponds to the fact that the more non-smooth the function get, the slower the decay of its Fourier transform.  
 
-Another notable fact is that Fourier transform turns \`\`differentiation'' into \`\`multiplication''. This also has a (though not perfect) analog in the discrete case (as differentiation is not available). Indeed, differencing ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#3)) under the integral sign, we see that for example $\frac{v\_{m+1}-v\_{m}}{h}  = \frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}\frac{1}{h}(e^{i(m+1)h\xi}-e^{imh\xi})\hat{v}(\xi)d\xi\nonumber  
-\= \frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}\left(\frac{e^{ih\xi}-1}{h}\right)e^{imh\xi}\hat{v}(\xi)d\xi$.[](https://www.blogger.com/null) By this we will be able to obtain certain recurrence relation for the Fourier transfrom $ {\hat{v}^{n}(\xi)}$ for different time levels. This is the basis of *von Neumann analysis*.  
+Another notable fact is that Fourier transform turns \`\`differentiation'' into \`\`multiplication''. This also has a (though not perfect) analog in the discrete case (as differentiation is not available). Indeed, differencing ([4](https://www.blogger.com/blogger.g?blogID=4046755691971152965#3)) under the integral sign, we see that for example $\frac{v\_{m+1}-v\_{m}}{h}  = \frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}\frac{1}{h}(e^{i(m+1)h\xi}-e^{imh\xi})\hat{v}(\xi)d\xi  
+= \frac{1}{\sqrt{2\pi}}\int\_{-\frac{\pi}{h}}^{\frac{\pi}{h}}\left(\frac{e^{ih\xi}-1}{h}\right)e^{imh\xi}\hat{v}(\xi)d\xi$. By this we will be able to obtain certain recurrence relation for the Fourier transfrom $ {\hat{v}^{n}(\xi)}$ for different time levels. This is the basis of *von Neumann analysis*.  
 
 **1.4. Convergence; accuracy and stability**
 
@@ -189,11 +189,11 @@ Since Fourier transform is unique, writing $ {\theta=h\xi\in[-\pi,\pi]}$, we con
 
 $ \displaystyle \hat{v}^{n+1}=\left(\frac{a\lambda}{2}\left(e^{-i\theta}-e^{i\theta}\right)+1\right)\hat{v}^{n}=\left(1-ia\lambda sin(\theta)\right)\hat{v}^{n}. $
 
-The quantity $ {g}$ such that[](https://www.blogger.com/null)  
+The quantity $ {g}$ such that  
 
-[$ \displaystyle \hat{v}^{n+1}(\xi)=g(\theta)\hat{v}^{n}(\xi) \ \ \ \ \ (5)$](https://www.blogger.com/null)
+$ \displaystyle \hat{v}^{n+1}(\xi)=g(\theta)\hat{v}^{n}(\xi)      (5)$
 
-[](https://www.blogger.com/null)is called the *amplification factor* of the scheme. In general, a finite difference scheme $ {P\_{k,h}v=0}$ can be seen as a linear relation with variables at the $ {n+1}$ time level of interest. There may be a number of terms of the same time level but at different spatial positions, making it difficult to analyse. Applying the Fourier transform, the spatial variables are turned into multipliers, so that at the same frequency level, we obtain a simpler relation between the fourier transforms of different time levels. This relation will thus always be a difference equation, so in practice, we often make the substitution  
+is called the *amplification factor* of the scheme. In general, a finite difference scheme $ {P\_{k,h}v=0}$ can be seen as a linear relation with variables at the $ {n+1}$ time level of interest. There may be a number of terms of the same time level but at different spatial positions, making it difficult to analyse. Applying the Fourier transform, the spatial variables are turned into multipliers, so that at the same frequency level, we obtain a simpler relation between the fourier transforms of different time levels. This relation will thus always be a difference equation, so in practice, we often make the substitution  
 
 $ \displaystyle v\_{m}^{n}=g^{n}e^{im\theta} $
 

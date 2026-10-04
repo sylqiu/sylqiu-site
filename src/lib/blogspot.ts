@@ -65,3 +65,68 @@ export function fixBlogspotMathBody(body: string): string {
   }
   return out;
 }
+
+function collectNullLinks(node: any, out: Span[]): void {
+  if (!node || typeof node !== 'object') return;
+  if (
+    node.type === 'link' &&
+    node.url === 'https://www.blogger.com/null' &&
+    node.position &&
+    node.position.start &&
+    node.position.end &&
+    typeof node.position.start.offset === 'number' &&
+    typeof node.position.end.offset === 'number'
+  ) {
+    out.push({ start: node.position.start.offset, end: node.position.end.offset });
+  }
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) collectNullLinks(child, out);
+  }
+}
+
+const NULL_LINK_SUFFIX = '](https://www.blogger.com/null)';
+
+/**
+ * Strip two Blogger archive artifacts:
+ *  - links to the meaningless https://www.blogger.com/null anchor: unwrap the
+ *    link text (or drop the link when the text is empty), and
+ *  - \tag{...} equation tags, which KaTeX only allows in *display* math while
+ *    the archive stored these equations inline.
+ */
+export function cleanBlogspotArtifacts(body: string): string {
+  const tree: any = parser.parse(body);
+  const links: Span[] = [];
+  collectNullLinks(tree, links);
+  // Replace from the end so earlier offsets stay valid.
+  links.sort((a, b) => b.start - a.start);
+  let out = body;
+  for (const { start, end } of links) {
+    const raw = body.slice(start, end);
+    const text = raw.endsWith(NULL_LINK_SUFFIX)
+      ? raw.slice(1, raw.length - NULL_LINK_SUFFIX.length)
+      : raw;
+    out = out.slice(0, start) + text + out.slice(end);
+  }
+  return (
+    out
+      // Equation tags are meaningless without display math, and KaTeX rejects
+      // them inline.
+      .replace(/\\tag\{[^}]*\}/g, '')
+      // MathJax control spaces (\ ) become plain spaces: KaTeX ignores plain
+      // spaces in math mode but errors on a trailing control space. Do not
+      // touch a doubled backslash (a \\ line break) that happens to precede a
+      // space.
+      .replace(/(?<!\\)\\ /g, ' ')
+      // eqnarray is not a KaTeX environment; aligned is the closest match.
+      .replace(/\\begin\{eqnarray\}/g, '\\begin{aligned}')
+      .replace(/\\end\{eqnarray\}/g, '\\end{aligned}')
+      .replace(/\\nonumber/g, '')
+      // KaTeX has \text but not \mbox; \ensuremath is a no-op wrapper.
+      .replace(/\\mbox\{/g, '\\text{')
+      .replace(/\\ensuremath\{/g, '{')
+      // A line-leading \= is a MathJax macron accent; here it is a relation.
+      .replace(/(^|\n)\\=\s/g, '$1= ')
+      // \quad is invalid inside \text{...}.
+      .replace(/(\\text\{[^}]*?)\\quad/g, '$1')
+  );
+}

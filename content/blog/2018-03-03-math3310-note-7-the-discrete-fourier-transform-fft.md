@@ -40,7 +40,7 @@ $ \displaystyle T\_{L}F=F\Lambda:=F\begin{pmatrix}1 & & & 0\\ & e^{2\pi ik/N}\\ 
 
 Now we employ a crucial result from linear algebra.  
 
-> **Exercise 3** *[](https://www.blogger.com/null)Let $ {A,B}$ be matrices with entries in $ {\mathbb{C}}$. Suppose that two matrices commute, that is*  
+> **Exercise 3** *Let $ {A,B}$ be matrices with entries in $ {\mathbb{C}}$. Suppose that two matrices commute, that is*  
 > 
 > *$ \displaystyle AB=BA. $*
 > 

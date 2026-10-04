@@ -36,7 +36,7 @@ One can think of convolution $ {f\*g\;(x)}$ as a $ {g}$-weighted averaged versio
 
 We gather some basic properties of convolution below.  
 
-> **Exercise 2** *[](https://www.blogger.com/null)Suppose $ {f,g,h:\mathbb{R}\rightarrow\mathbb{C}}$ are continuous and $ {2\pi}$-periodic. Show that*  
+> **Exercise 2** *Suppose $ {f,g,h:\mathbb{R}\rightarrow\mathbb{C}}$ are continuous and $ {2\pi}$-periodic. Show that*  
 > 
 > *-   $ {f\*(g+h)=(f\*g)+(f\*h)}$.
 > -   $ {(cf)\*g=c(f\*g)=f\*(cg)}$ for any $ {c\in\mathbb{C}}$.
@@ -44,7 +44,7 @@ We gather some basic properties of convolution below.
 
 The relation between convolution and Fourier coefficient is contained in the next proposition.  
 
-> **Proposition 1** *[](https://www.blogger.com/null)Suppose $ {f,g:\mathbb{R}\rightarrow\mathbb{C}}$ are continuous and $ {2\pi}$-periodic. Then*  
+> **Proposition 1** *Suppose $ {f,g:\mathbb{R}\rightarrow\mathbb{C}}$ are continuous and $ {2\pi}$-periodic. Then*  
 > 
 > *$ \displaystyle \widehat{f\*g}(n)=2\pi\hat{f}(n)\hat{g}(n). $*
 
@@ -91,15 +91,15 @@ $ \displaystyle \begin{cases} \frac{\partial u}{\partial t}-\frac{\partial^{2}u}
 
 Below I record the solution version from last year. Unfortunately **the argument** is wrong. You are invited to think about why the correct solution is obtained by pure luck with the method below.  
 
-Write $ {u(x,t)=a\_0(t)+\sum^\infty\_{k=1}a\_k(t)\cos kx+b\_k(t)\sin kx}$. Using the PDE $ {0=\frac{\partial u}{\partial t}-\frac{\partial^2u}{\partial x^2}}$,[](https://www.blogger.com/null)  
+Write $ {u(x,t)=a\_0(t)+\sum^\infty\_{k=1}a\_k(t)\cos kx+b\_k(t)\sin kx}$. Using the PDE $ {0=\frac{\partial u}{\partial t}-\frac{\partial^2u}{\partial x^2}}$,  
 
-[$ \displaystyle 0=(a\_0)\_t+\sum^\infty\_{k=1}\left((a\_k)\_t+k^2a\_k\right)\cos kx+\left((b\_k)\_t+k^2b\_k\right)\sin kx \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle 0=(a\_0)\_t+\sum^\infty\_{k=1}\left((a\_k)\_t+k^2a\_k\right)\cos kx+\left((b\_k)\_t+k^2b\_k\right)\sin kx      (1)$
 
-[](https://www.blogger.com/null)Using the initial condition[](https://www.blogger.com/null)  
+Using the initial condition  
 
-[$ \displaystyle \sin2x+\sin5x+\sin7x=a\_0(0)+\sum^\infty\_{k=1}a\_k(0)\cos kx+b\_k(0)\sin kx \ \ \ \ \ (2)$](https://www.blogger.com/null)
+$ \displaystyle \sin2x+\sin5x+\sin7x=a\_0(0)+\sum^\infty\_{k=1}a\_k(0)\cos kx+b\_k(0)\sin kx      (2)$
 
-[](https://www.blogger.com/null)Comparing the coefficients of ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#5-1)),  
+Comparing the coefficients of ([2](https://www.blogger.com/blogger.g?blogID=4046755691971152965#5-1)),  
 
 $ \displaystyle \begin{aligned} b\_k(0)&=\begin{cases} 1,&\text{ if } k=2,5,7\\ 0,&\text{otherwise} \end{cases}\\ a\_k(0)&=0\quad\forall k\geq0 \end{aligned} $
 

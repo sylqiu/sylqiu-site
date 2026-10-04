@@ -31,7 +31,7 @@ $ \displaystyle \begin{array}{rcl} F(x,y) & = & \int\_{\mathbb{R}}f^{\wedge}(\xi
 
 which harmonically extends the function $ {f}$ into the upper half-space $ {\mathbb{R}\_{+}^{2}}$. We shall turn to the $ {n}$-dimension generalisation of the latter case, namely the Poisson integral for $ {f\in L^{2}(\mathbb{R}^{d})}$,  
 
-$ \displaystyle F(y,x\_{1}\dots,x\_{n})=\int\_{\mathbb{R}}f^{\wedge}(\xi)e^{-2\pi y|\xi|}e^{2\pi i\langle x,\xi\rangle}\thinspace d\xi,\ y>0. $
+$ \displaystyle F(y,x\_{1}\dots,x\_{n})=\int\_{\mathbb{R}}f^{\wedge}(\xi)e^{-2\pi y|\xi|}e^{2\pi i\langle x,\xi\rangle}\thinspace d\xi, y>0. $
 
 The convolutional kernel corresponds to the Poisson integral is the inverse Fourier transform of the multiplier, that is $ {\int\_{\mathbb{R}^{d}}e^{-2\pi y|\xi|}e^{2\pi i\langle x,\xi\rangle}\thinspace d\xi}$, where $ {\xi\in\mathbb{R}^{d}}$. For $ {d=1}$ this is easy to compute:  
 
@@ -64,11 +64,11 @@ $ \displaystyle y^{-\frac{d-1}{2}}\int\_{0}^{\infty}e^{-\pi yt}e^{-\pi\frac{x^{2
 here, $ {C\_{d}=\frac{\Gamma(\frac{d+1}{2})}{\pi^{\frac{d+1}{2}}}}$, $ {\Gamma(\alpha)=\int\_{0}^{\infty}e^{s}s^{\alpha}\frac{ds}{s}}$ is the Gamma function. There are other ways to arrive at this formula for the Poisson kernel; for example, differentiating the fundamental solution of $ {-\Delta}$ on $ {\mathbb{R}\_{+}^{d}}$ along the $ {y}$-direction.  
 There are $ {d}$ number of *conjugate Poisson kernels*, namely  
 
-$ \displaystyle \mathcal{Q}\_{y}^{j}(x\_{1},\dots,x\_{d}):=C\_{d}\frac{x\_{j}}{(y^{2}+|x|^{2})^{\frac{d+1}{2}}},\ j=1,\dots,d. $
+$ \displaystyle \mathcal{Q}\_{y}^{j}(x\_{1},\dots,x\_{d}):=C\_{d}\frac{x\_{j}}{(y^{2}+|x|^{2})^{\frac{d+1}{2}}}, j=1,\dots,d. $
 
 And in terms of Fourier multipliers they correspond to  
 
-$ \displaystyle -i\frac{\xi\_{j}}{|\xi|}e^{-2\pi y|\xi|}\ j=1,\dots,d. $
+$ \displaystyle -i\frac{\xi\_{j}}{|\xi|}e^{-2\pi y|\xi|} j=1,\dots,d. $
 
 Let $ {F\_{j}}$ be the function obtained by convoluting $ {f\_{j}}$ with the $ {j}$-th conjugate Poisson kernel  
 
@@ -251,8 +251,8 @@ Let $ {P(\xi)}$ be the symbol of an constant coefficient linear elliptic operato
 
 $ \displaystyle |P(\xi)|\geq c|\xi|^{m}\text{ for all }|\xi|>C. $
 
-The idea is to use the \`\`divide and conquer'', namely take a function $ {\eta(\xi)}$ supported in $ {|\xi|>C}$ and equals $ {1}$ for $ {|\xi|}$ large enough, and decomposite the multiplier into \\frac{1}{P(\\xi)} & = & \\frac{1-\\eta}{P(\\xi)}+\\frac{\\eta}{P(\\xi)}\\nonumber  
-& =: & K\_{0}+K\_{1}.[](https://www.blogger.com/null) Now $ {K\_{0}}$ is a distribution of compact support and so whose inverse Fourier transform $ {K\_{0}^{\vee}}$ is a slowly increasing $ {C^{\infty}}$ function. For $ {K\_{1}}$, observe from the defining inequality,  
+The idea is to use the \`\`divide and conquer'', namely take a function $ {\eta(\xi)}$ supported in $ {|\xi|>C}$ and equals $ {1}$ for $ {|\xi|}$ large enough, and decomposite the multiplier into \\frac{1}{P(\\xi)} & = & \\frac{1-\\eta}{P(\\xi)}+\\frac{\\eta}{P(\\xi)}  
+& =: & K\_{0}+K\_{1}. Now $ {K\_{0}}$ is a distribution of compact support and so whose inverse Fourier transform $ {K\_{0}^{\vee}}$ is a slowly increasing $ {C^{\infty}}$ function. For $ {K\_{1}}$, observe from the defining inequality,  
 
 $ \displaystyle |K\_{1}(\xi)|\lesssim|\xi|^{-m}, $
 

@@ -25,7 +25,7 @@ So far we have not mentioned the curvature properties of the deformation. If the
 
 The above simple discussion should provide a basic geometric concept of the rigid deformation modeling, as we next explain in detail.  
 
-> **Problem 1** *[](https://www.blogger.com/null)Find a deformation of a $ {d}$-dimensional ($ {d=2,3}$) manifold possibly with boundary, satisfying selected point position constraints, so that the deformation is visually physically plausible (e.g. length preserving, volume repserving, smooth etc.).*
+> **Problem 1** *Find a deformation of a $ {d}$-dimensional ($ {d=2,3}$) manifold possibly with boundary, satisfying selected point position constraints, so that the deformation is visually physically plausible (e.g. length preserving, volume repserving, smooth etc.).*
 
 [![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjczeQhsDiyyDXGBWF5eFbvNalfU_Zqdp5IZu5ehoaKLPPjHzA6nYJ5WtVK5l6yTuUTS8OZyHT1OxbR_ZRpgt8JkzZozSnD8Z01h-uj6cw27qhkSncF7n0koQxU5OKja_PfywyZWn2RgOs/s400/fig1.png)](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjczeQhsDiyyDXGBWF5eFbvNalfU_Zqdp5IZu5ehoaKLPPjHzA6nYJ5WtVK5l6yTuUTS8OZyHT1OxbR_ZRpgt8JkzZozSnD8Z01h-uj6cw27qhkSncF7n0koQxU5OKja_PfywyZWn2RgOs/s1600/fig1.png)
 
@@ -57,11 +57,11 @@ The area term in the denominator as well as the matrix $\begin{pmatrix}0 & -1\\ 
 
 $ \displaystyle \begin{array}{rcl} \langle\nabla\varphi(T),\nabla\phi(T)\rangle\_{T} & = & -\frac{1}{4\text{Area}(T)}\sum\_{i,j}\varphi\_{i}\phi\_{j}(v\_{2+i}-v\_{1+i})^{T}(v\_{2+j}-v\_{1+j})\\ & = & -\sum\_{i,j}\omega\_{ij}(T)\varphi\_{i}\phi\_{j} \end{array} $
 
-where[](https://www.blogger.com/null)  
+where  
 
-[$ \displaystyle \omega\_{ij}(T)=\begin{cases} -\frac{1}{2}\cot\theta\_{k},\,k\neq i,j & \text{if }i\neq j\\ \frac{1}{2}(\cot\theta\_{i+1}+\cot\theta\_{i+2}) & \text{if }i=j \end{cases} \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \omega\_{ij}(T)=\begin{cases} -\frac{1}{2}\cot\theta\_{k},\,k\neq i,j & \text{if }i\neq j\\ \frac{1}{2}(\cot\theta\_{i+1}+\cot\theta\_{i+2}) & \text{if }i=j \end{cases}      (1)$
 
-[](https://www.blogger.com/null)where $ {\theta\_{k}}$ is the angle of the triangle at $ {v\_{k}}$. (Note that we have used the $ {\omega\_{ij}(T)}$ to differentiate itself from the common notation of $ {\omega\_{ij}}$, which is the accumulated weight). This is called the *cotangent weight*. The corresponding assembled matrix $ {\mathcal{L}}$ approximating the Laplace-Beltrami operator will be called the *cotangent matrix*. Now, the LSCM minimises the quadratic discrepancy of the Cauchy-Riemann  
+where $ {\theta\_{k}}$ is the angle of the triangle at $ {v\_{k}}$. (Note that we have used the $ {\omega\_{ij}(T)}$ to differentiate itself from the common notation of $ {\omega\_{ij}}$, which is the accumulated weight). This is called the *cotangent weight*. The corresponding assembled matrix $ {\mathcal{L}}$ approximating the Laplace-Beltrami operator will be called the *cotangent matrix*. Now, the LSCM minimises the quadratic discrepancy of the Cauchy-Riemann  
 
 $ \displaystyle \begin{array}{rcl} & \int\_{M}\|\nabla u-\begin{pmatrix}0 & -1\\ 1 & 0 \end{pmatrix}\nabla v\|^{2}d\text{Vol}\\ \leftrightarrow & \sum\_{T\in\mathcal{T}}\|\nabla u\|\_{T}^{2}+2\langle\nabla u,\begin{pmatrix}0 & -1\\ 1 & 0 \end{pmatrix}\nabla v\rangle\_{T}+\|\nabla v\|\_{T}^{2}. \end{array} $
 

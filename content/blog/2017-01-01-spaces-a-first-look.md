@@ -26,11 +26,11 @@ $ \displaystyle \|f\|\_{p}=\left(\int\_{X}|f|^{p}d\mu\right)^{1/p}. $
 
 We also define $ {L^{\infty}(\mu)}$ to be the space of *essentially bounded* measurable functions, namely there exists $ {0<M<+\infty}$ such that  
 
-$ \displaystyle |f(x)|\leq M\quad a.e.\ x $
+$ \displaystyle |f(x)|\leq M\quad a.e. x $
 
 and the notation  
 
-$ \displaystyle \|f\|\_{\infty}=\inf\{M:|f(x)|\leq M\quad a.e.\ x\}. $
+$ \displaystyle \|f\|\_{\infty}=\inf\{M:|f(x)|\leq M\quad a.e. x\}. $
 
 In this post we shall look into some generalities of $ {L^{p}}$ spaces.  
 
@@ -57,11 +57,11 @@ E & =\\{x\\in X:|f(x)|\\neq0\\} \\end{align\*} so that
 
 $ \displaystyle E=\bigcup\_{n=1}^{\infty}E\_{n}. $
 
-It is often easier to deal with subparts $ {E\_{n}}$ which have specific controls, rather than $ {E}$ itself. Indeed, a contradiction argument shows that $ {E\_{n}}$ is null for each $ {n}$, and hence $ {E}$ as a countable union of null set is null. We thus conclude that $ {\|f\|\_{p}=0}$ implies $ {f=0}$ a.e.. Now if $ {0<p<1}$, by the elementary inequality $ {(x+y)^{p}\leq x^{p}+y^{p}}$ for $ {x,y>0}$, we have[](https://www.blogger.com/null)  
+It is often easier to deal with subparts $ {E\_{n}}$ which have specific controls, rather than $ {E}$ itself. Indeed, a contradiction argument shows that $ {E\_{n}}$ is null for each $ {n}$, and hence $ {E}$ as a countable union of null set is null. We thus conclude that $ {\|f\|\_{p}=0}$ implies $ {f=0}$ a.e.. Now if $ {0<p<1}$, by the elementary inequality $ {(x+y)^{p}\leq x^{p}+y^{p}}$ for $ {x,y>0}$, we have  
 
-[$ \displaystyle \|f+g\|\_{p}^{p}\leq\|f\|\_{p}^{p}+\|g\|\_{p}^{p}. \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \|f+g\|\_{p}^{p}\leq\|f\|\_{p}^{p}+\|g\|\_{p}^{p}.      (1)$
 
-[](https://www.blogger.com/null)Thus it is possible to equip $ {L^{p}}$, $ {0<p<1}$, a metric structure by declaring $ {d(f,g)=\|f-g\|\_{p}^{p}}$. However, this metric is not *homogeneous*. While the homogeneity of $ {\|\cdot\|\_{p}}$, $ {0<p\leq\infty}$ is clear, not all $ {0<p\leq\infty}$ can be endowed with a norm structure.  
+Thus it is possible to equip $ {L^{p}}$, $ {0<p<1}$, a metric structure by declaring $ {d(f,g)=\|f-g\|\_{p}^{p}}$. However, this metric is not *homogeneous*. While the homogeneity of $ {\|\cdot\|\_{p}}$, $ {0<p\leq\infty}$ is clear, not all $ {0<p\leq\infty}$ can be endowed with a norm structure.  
 
 > **Proposition 1** *Let $ {0<p\leq\infty}$, and $ {f,g\in L^{p}}$.*  
 > 
@@ -184,7 +184,7 @@ $ \displaystyle \|\sum\_{n=1}^{l}f\_{n}-\sum\_{n=1}^{k}f\_{n}\|\leq\|\sum\_{n=k+
 
 Thus $ {\{\sum\_{n=1}^{N}f\_{n}\}\_{N}}$ is a Cauchy sequence, and converges to a limit in $ {X}$. Reversing the argument we obtain the converse. $ \Box$  
 
-> **Proposition 5** *[](https://www.blogger.com/null)$ {L^{p}}$ is a Banach space for every $ {1\leq p\leq\infty}$.*
+> **Proposition 5** *$ {L^{p}}$ is a Banach space for every $ {1\leq p\leq\infty}$.*
 
 *Proof:* We show that any absolutely convergent series $ {\sum\_{n=1}^{\infty}f\_{n}}$ in $ {L^{p}}$ is also conditionally convergent in $ {L^{p}}$.  
 For $ {1\leq p<\infty}$, let $ {M:=\sum\_{n=1}^{\infty}\|f\_{n}\|\_{p}<\infty}$. By triangle inequality,  

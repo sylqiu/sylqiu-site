@@ -89,7 +89,7 @@ $ \displaystyle f\*g(x)=\int\_{\mathbb{R}}f(y)g(x-y)dy $
 
 whenever the right hand side makes sense (convergent). With straightforward computations we can show  
 
-> **Exercise 2**    *[](https://www.blogger.com/null)$ {\hat{f}(\omega)\hat{g}(\omega)=\widehat{f\*g}(\omega).}$*
+> **Exercise 2**    *$ {\hat{f}(\omega)\hat{g}(\omega)=\widehat{f\*g}(\omega).}$*
 
 Of course this is in spirit the same with the result about the Fourier coefficients. Here we have essentially the same interpretation: the Fourier transform on $ {\mathbb{R}}$ diagonalizes convolution on $ {\mathbb{R}}$.  
 

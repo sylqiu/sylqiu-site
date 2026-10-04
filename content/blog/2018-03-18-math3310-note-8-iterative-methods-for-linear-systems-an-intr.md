@@ -36,7 +36,7 @@ This means the convergence is controled by the powers of the error matrix $ {B}$
 
 $ \displaystyle B^{n}\rightarrow0\text{ as }n\rightarrow\infty. $
 
-> **Exercise 1** [](https://www.blogger.com/null)Show that $ {B^{n}\rightarrow0}$ if and only if every eigenvalue $ {\lambda\_{i}}$ of ${B}$ has modulus strictly less than one, i.e.  
+> **Exercise 1** Show that $ {B^{n}\rightarrow0}$ if and only if every eigenvalue $ {\lambda\_{i}}$ of ${B}$ has modulus strictly less than one, i.e.  
 > 
 > *$ \displaystyle |\lambda\_{i}|<1\quad\forall i. $*
 > 
@@ -86,7 +86,7 @@ where we recognize $ {D-A}$ is the negative non-diagonal part of $ {A}$. So $ {B
 > 
 > *$ \displaystyle |a\_{ii}|>\sum\_{j\neq i}|a\_{ij}|. $*
 
-> **Exercise 4** *[](https://www.blogger.com/null)Show that a SDD matrix is invertible.*
+> **Exercise 4** *Show that a SDD matrix is invertible.*
 
 **1.2. The Gauss-Seidel iteration**
 
@@ -102,7 +102,7 @@ $ \displaystyle A=\begin{bmatrix}2 & -1\\ -1 & 2 \end{bmatrix},\quad M=\begin{bm
 
 one Gauss-Seidel iteration looks like the following  
 
-$ \displaystyle \begin{bmatrix}2\\ -1 & 2 \end{bmatrix}\begin{bmatrix}x\_{0}^{1}\\ x\_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\ \ \end{bmatrix}\begin{bmatrix}x\_{0}^{0}\\ x\_{1}^{0} \end{bmatrix}+b. $
+$ \displaystyle \begin{bmatrix}2\\ -1 & 2 \end{bmatrix}\begin{bmatrix}x\_{0}^{1}\\ x\_{1}^{1} \end{bmatrix}=\begin{bmatrix} & 1\\  \end{bmatrix}\begin{bmatrix}x\_{0}^{0}\\ x\_{1}^{0} \end{bmatrix}+b. $
 
 Note that to obtain $ {x\_{1}^{1}}$, one needs $ {x\_{0}^{1}}$ and $ {x\_{1}^{0}}$ but not $ {x\_{0}^{0}}$, due to our choice that $ {M}$ is the lower triangular part of $ {A}$, and cpnsequently $ {M-A}$ is strictly upper triangular. So, instead of storing the entire $ {x^{0}}$ before $ {x^{1}}$ is obtained, one can replace the entry $ {x\_{0}^{0}}$ with the computed $ {x\_{0}^{1}}$ immediately, hence saving half of the storage.  
 

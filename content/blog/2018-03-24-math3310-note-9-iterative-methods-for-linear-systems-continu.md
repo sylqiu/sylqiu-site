@@ -72,11 +72,11 @@ Such a scheme can be preferable for a parallel computer. There are more general 
 
 **Iterative method as preconditioning.** A preconditioner for a square linear system $ {Ax=b}$ is a matrix $ {P}$, of the same size with $ {A}$, which is used to produce a equivalent system $ {PAx=Pb}$, with (hopefully) $ {PA}$ having smaller condition number (usually defined as the ratio between the modulus of the largest and smallest eigenvalue). The preconditioned system can be preferable in terms of stability and convergence rate.  
 
-We can view the Jacobi, Gauss-Seidel and SOR as fixed point iteration on a precondtioned system[](https://www.blogger.com/null)  
+We can view the Jacobi, Gauss-Seidel and SOR as fixed point iteration on a precondtioned system  
 
-[$ \displaystyle M^{-1}A=M^{-1}b, \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle M^{-1}A=M^{-1}b,      (1)$
 
-[](https://www.blogger.com/null)where $ {M}$ is same notation in $ {A=M+(A-M)}$ as before. To see this, recall that the general scheme is of the form  
+where $ {M}$ is same notation in $ {A=M+(A-M)}$ as before. To see this, recall that the general scheme is of the form  
 
 $ \displaystyle x^{k+1}=(I-M^{-1}A)x^{k}+M^{-1}b $
 

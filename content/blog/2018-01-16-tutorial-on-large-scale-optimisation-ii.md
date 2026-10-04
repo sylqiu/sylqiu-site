@@ -23,11 +23,11 @@ As you will see, once the machinery is developed, all the convergence proofs are
 
 **1\. Examples of implementation of ADMM**
 
-In the last post we derived the ADMM algorithm from the Douglas-Rachford splitting. Recall that the ADMM algorithm for the problem[](https://www.blogger.com/null)  
+In the last post we derived the ADMM algorithm from the Douglas-Rachford splitting. Recall that the ADMM algorithm for the problem  
 
-[$ \displaystyle \begin{aligned} &\min\_{\substack{x\in \mathbb{R}^{d\_1}, y\in \mathbb{R}^{d\_2}}} \; & & f\_1(x) + f\_2(y)\\ & \text{subject to} & & Ax + By = b \end{aligned} \ \ \ \ \ (1)$](https://www.blogger.com/null)
+$ \displaystyle \begin{aligned} &\min\_{\substack{x\in \mathbb{R}^{d\_1}, y\in \mathbb{R}^{d\_2}}} \; & & f\_1(x) + f\_2(y)\\ & \text{subject to} & & Ax + By = b \end{aligned}      (1)$
 
-[](https://www.blogger.com/null)with step size $ {\tau}$, and initialisation $ {s^0, y^0}$, is the following iteration  
+with step size $ {\tau}$, and initialisation $ {s^0, y^0}$, is the following iteration  
 
 $ \displaystyle \begin{aligned} x^{k+1} & = \arg\min\_{x} f\_1(x) + \langle s^k, Ax\rangle + \frac{1}{2}\| Ax + By^k - b\|^2; \\ y^{k+1} &= \arg\min\_{y} f\_2(y) + \langle s^k, By\rangle + \frac{1}{2\tau}\| Ax^{k+1} + By - b\|^2; \\ s^{k+1} &= s^k + \frac{Ax^{k+1} + By^{k+1} - b}{\tau}. \end{aligned} $
 
@@ -50,11 +50,11 @@ Note that $ {u^k}$ is basically a running sum of residuals. And in case $ {A=B=\
 
 > **Example 1 (Basis pursuit)** *The original problem is of the form*  
 > 
-> *$ \displaystyle \begin{aligned} &\min \|x\|\_1 \\ &\text{subject to } Mx=c \end{aligned} \ \ \ \ \ (2)$*
+> *$ \displaystyle \begin{aligned} &\min \|x\|\_1 \\ &\text{subject to } Mx=c \end{aligned}      (2)$*
 > 
 > *In order to apply ADMM, we can transform the problem into*  
 > 
-> *$ \displaystyle \begin{aligned} &\min \|x\|\_1 + I\_{\{y:My=c\}} \\ &\text{subject to } x-y=0 \end{aligned} \ \ \ \ \ (3)$*
+> *$ \displaystyle \begin{aligned} &\min \|x\|\_1 + I\_{\{y:My=c\}} \\ &\text{subject to } x-y=0 \end{aligned}      (3)$*
 > 
 > *The we can write down the $ {x}$-subproblem, which is the familiar soft-thresholding*  
 > 
@@ -66,11 +66,11 @@ Note that $ {u^k}$ is basically a running sum of residuals. And in case $ {A=B=\
 
 > **Example 2 (Lasso)** *The original problem is*  
 > 
-> *$ \displaystyle \min \frac{\mu}{2}\|Mx-c\|^2+\|x\|\_1 \ \ \ \ \ (4)$*
+> *$ \displaystyle \min \frac{\mu}{2}\|Mx-c\|^2+\|x\|\_1      (4)$*
 > 
 > *Where $ {\mu>0}$ is a parameter. Then we do splitting by introducing a new variable $ {y}$ and reformulate the problem as*  
 > 
-> *$ \displaystyle \begin{aligned} &\min\_{x,y} \frac{1}{2}\|Mx-c\|^2+\lambda\|y\|\_1 \\ &\text{subject to } x-y=0 \end{aligned} \ \ \ \ \ (5)$*
+> *$ \displaystyle \begin{aligned} &\min\_{x,y} \frac{1}{2}\|Mx-c\|^2+\lambda\|y\|\_1 \\ &\text{subject to } x-y=0 \end{aligned}      (5)$*
 > 
 > *Where $ {\lambda>0}$ is a parameter. Then the $ {x}$-subproblem is a *ridge regression*, or *Tikhonov regularisation* on a quadratic problem*  
 > 
@@ -84,11 +84,11 @@ Note that $ {u^k}$ is basically a running sum of residuals. And in case $ {A=B=\
 
 > **Example 3 (TV-deblurring)** *The original problem is*  
 > 
-> *$ \displaystyle \begin{aligned} \min\_{x\in\mathbb{R}^{m\times n}} \mu \|Dx\|\_{2,1} + \frac{1}{2}\|Ax-x^{\diamond}\|^2 \end{aligned} \ \ \ \ \ (6)$*
+> *$ \displaystyle \begin{aligned} \min\_{x\in\mathbb{R}^{m\times n}} \mu \|Dx\|\_{2,1} + \frac{1}{2}\|Ax-x^{\diamond}\|^2 \end{aligned}      (6)$*
 > 
 > *In order to apply ADMM, we need to introduce a splitting variable. We let $ {p=Dx}$. The problem becomes*  
 > 
-> *$ \displaystyle \begin{aligned} &\min\_{x,p} \mu \|p\|\_{2,1} + \frac{1}{2}\|Ax-x^{\diamond}\|^2\\ &\text{subject to } Dx-p=0 \end{aligned} \ \ \ \ \ (7)$*
+> *$ \displaystyle \begin{aligned} &\min\_{x,p} \mu \|p\|\_{2,1} + \frac{1}{2}\|Ax-x^{\diamond}\|^2\\ &\text{subject to } Dx-p=0 \end{aligned}      (7)$*
 > 
 > *Then the $ {p}$-subproblem can be computed by Moreau decomposition*  
 > 
