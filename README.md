@@ -29,8 +29,9 @@ Push to `main` deploys to Pages automatically:
 | Route | What it is |
 |---|---|
 | `#/` | Minimal landing: name, role, links, three doors. |
+| `#/exploreflow` | ExploreFlow hub: Research, Writing, and Courses. |
 | `#/research` | Publications. Content in `src/lib/site.ts`. |
-| `#/courses` | ExploreFlow index — all courses. |
+| `#/courses` | Courses index — all courses. |
 | `#/courses/:id` | One course: modules and lesson list. |
 | `#/lesson/:id` | Lesson player: boxes, scenes, narration beats, checks. |
 | `#/blog` | Writing index (migrated blogspot archive). |

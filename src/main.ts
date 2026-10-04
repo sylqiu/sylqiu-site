@@ -57,9 +57,7 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 
 const NAV = [
   { href: '#/', label: 'Home' },
-  { href: '#/research', label: 'Research' },
-  { href: '#/courses', label: exploreFlow.name },
-  { href: '#/blog', label: 'Writing' },
+  { href: '#/exploreflow', label: exploreFlow.name },
 ];
 
 function renderNav() {
@@ -69,11 +67,11 @@ function renderNav() {
 }
 
 function markActiveNav(hash: string) {
-  const section =
-    hash.match(/^#\/(research|courses|blog)/)?.[1] ??
-    (hash.startsWith('#/lesson/') ? 'courses' : '');
+  // ExploreFlow owns everything beneath it (research, writing, courses, lessons).
+  const inExplore = /^#\/(exploreflow|research|courses|blog|lesson)/.test(hash);
   topnav.querySelectorAll<HTMLAnchorElement>('a[data-nav]').forEach((a) => {
-    a.classList.toggle('active', a.dataset.nav === `#/${section}` || (section === '' && a.dataset.nav === '#/'));
+    const target = a.dataset.nav;
+    a.classList.toggle('active', inExplore ? target === '#/exploreflow' : target === '#/');
   });
 }
 
@@ -82,7 +80,7 @@ function markActiveNav(hash: string) {
 function viewHome() {
   const doors = [
     { href: '#/research', title: 'Research', blurb: `${publications.length} publications — graphics, vision, geometry.` },
-    { href: '#/courses', title: exploreFlow.name, blurb: 'Interactive courses with live demos and narration.' },
+    { href: '#/exploreflow', title: exploreFlow.name, blurb: 'Research, writing, and interactive courses — in one place.' },
     { href: '#/blog', title: 'Writing', blurb: 'Notes on analysis, geometry, and numerical methods.' },
   ]
     .map(
@@ -114,6 +112,45 @@ function viewHome() {
 
 /* -------------------------------- research -------------------------------- */
 
+/* ------------------------------ exploreflow ------------------------------- */
+
+function viewExploreFlow() {
+  const cards = [
+    {
+      href: '#/research',
+      title: 'Research',
+      blurb: `${publications.length} publications — graphics, vision, geometry.`,
+    },
+    {
+      href: '#/blog',
+      title: 'Writing',
+      blurb: 'Notes on analysis, geometry, and numerical methods.',
+    },
+    {
+      href: '#/courses',
+      title: 'Courses',
+      blurb: courses.length
+        ? `${courses.length} interactive course${courses.length === 1 ? '' : 's'} with live demos and narration.`
+        : 'Interactive courses with live demos and narration.',
+    },
+  ]
+    .map(
+      (c) => `<a class="door" href="${c.href}">
+        <span class="door-title">${esc(c.title)}</span>
+        <span class="door-blurb">${esc(c.blurb)}</span>
+      </a>`,
+    )
+    .join('');
+
+  app.innerHTML = `<article class="page">
+    <header>
+      <h1>${esc(exploreFlow.name)}</h1>
+      <p class="reading">${esc(exploreFlow.tagline)}</p>
+    </header>
+    <div class="doors">${cards}</div>
+  </article>`;
+}
+
 function viewResearch() {
   const pubs = publications
     .map((p) => {
@@ -143,7 +180,9 @@ function viewResearch() {
     .join('');
 
   app.innerHTML = `<article class="page">
-    <header><h1>Research</h1>
+    <header>
+      <a class="back" href="#/exploreflow">← ExploreFlow</a>
+      <h1>Research</h1>
       <p class="reading">Selected publications. Full list on
       <a href="https://scholar.google.com.hk/citations?user=ZYVfX7UAAAAJ&hl" target="_blank" rel="noopener">Google Scholar</a>.</p>
     </header>
@@ -155,7 +194,9 @@ function viewResearch() {
 
 function viewCourses() {
   if (!courses.length) {
-    app.innerHTML = `<article class="page"><header><h1>${esc(exploreFlow.name)}</h1></header>
+    app.innerHTML = `<article class="page"><header>
+      <a class="back" href="#/exploreflow">← ExploreFlow</a>
+      <h1>Courses</h1></header>
       <p class="dim">No courses built yet.</p></article>`;
     return;
   }
@@ -174,7 +215,9 @@ function viewCourses() {
     })
     .join('');
   app.innerHTML = `<article class="page">
-    <header><h1>${esc(exploreFlow.name)}</h1>
+    <header>
+      <a class="back" href="#/exploreflow">← ExploreFlow</a>
+      <h1>Courses</h1>
       <p class="reading">${esc(exploreFlow.blurb)}</p>
     </header>
     <div class="courses">${cards}</div>
@@ -218,7 +261,7 @@ function viewCourse(id: string) {
 async function viewBlog() {
   const index = await fetchJson<BlogIndexEntry[]>('./data/blog.json');
   if (!index) {
-    app.innerHTML = `<article class="page"><header><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
+    app.innerHTML = `<article class="page"><header><a class="back" href="#/exploreflow">← ExploreFlow</a><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
     return;
   }
   const items = index
@@ -230,7 +273,9 @@ async function viewBlog() {
     )
     .join('');
   app.innerHTML = `<article class="page">
-    <header><h1>Writing</h1>
+    <header>
+      <a class="back" href="#/exploreflow">← ExploreFlow</a>
+      <h1>Writing</h1>
       <p class="reading">${index.length} posts, migrated from
         <a href="${esc(site.blogArchive)}" target="_blank" rel="noopener">the blogspot archive</a>.</p>
     </header>
@@ -462,6 +507,7 @@ function route() {
   const course = hash.match(/^#\/courses\/(.+)$/);
   if (course) return void viewCourse(course[1]);
 
+  if (hash.startsWith('#/exploreflow')) return void viewExploreFlow();
   if (hash.startsWith('#/blog')) return void viewBlog();
   if (hash.startsWith('#/courses')) return void viewCourses();
   if (hash.startsWith('#/research')) return void viewResearch();
