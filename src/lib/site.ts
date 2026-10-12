@@ -57,6 +57,50 @@ export const exploreFlow = {
 
 export const publications: Publication[] = [
   {
+    title: 'GNM Head: A Generative aNthropometric Model of the Human Head',
+    href: 'https://arxiv.org/abs/2607.23687',
+    authors:
+      'Stylianos Ploumpis, Jan Bednarik, Gaspard Zoss, Ruslan Guseinov, Luca Prasso, Prashanth Chandran, Oliver Boyne, Vasileios Choutas, Timo Bolkart, Daoye Wang, Menglei Chai, Di Qiu, Sebastian Winberg, Gilles Rainer, Lewis Bridgeman, Leonhard Helminger, Edo Collins, Delio Vicini, Jérémy Riviere, Yannick Boetzel, Alexander Koumis, Stylianos Moschoglou, Jay Busch, Cynthia Herrera, Jacob Still, Scott Ysebert, Peter Lincoln, Sergio Orts Escolano, Christoph Rhemann, Erroll Wood, Thabo Beeler, Stefanos Zafeiriou',
+    venue: 'arXiv preprint, 2026',
+    images: [],
+    links: [],
+    blurb:
+      'A publicly released parametric model of the human head - face, neck, eyeballs, teeth and tongue - for animation, rendering, and as conditioning for generative models.',
+  },
+  {
+    title: 'Concurrent Image Understanding and Generation: Self-Correcting Coupled Markov Jump Processes',
+    href: 'https://arxiv.org/abs/2607.13188',
+    authors:
+      'Minh-Quan Le, Armand Comas, Alexandros Lattas, Stylianos Moschoglou, Pedro Vélez, Amit Raj, Aaron Germuth, Thabo Beeler, Dimitris Samaras, Di Qiu',
+    venue: 'arXiv preprint, 2026',
+    images: [],
+    links: [],
+    blurb:
+      "Joint multimodal sampling where each modality's transition rates follow the other's confidence, with a remasking jump that retracts cross-modal contradictions.",
+  },
+  {
+    title: 'Loc3Diff: Local Diffusion for 3D Human Head Synthesis and Editing',
+    href: 'https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/08166.pdf',
+    authors:
+      'Yushi Lan, Feitong Tan, Qiangeng Xu, Di Qiu, Kyle Genova, Zeng Huang, Sean Fanello, Rohit Pandey, Thomas Funkhouser, Chen Change Loy, Yinda Zhang',
+    venue: 'ECCV, 2024',
+    images: [],
+    links: [],
+    blurb:
+      'Generates photorealistic 3D heads by diffusing UV-anchored local tri-planes, giving semantic-aligned local control for head synthesis and editing.',
+  },
+  {
+    title: 'CHOSEN: Contrastive Hypothesis Selection for Multi-View Depth Refinement',
+    href: 'https://arxiv.org/abs/2404.02225',
+    authors:
+      'Di Qiu, Yinda Zhang, Thabo Beeler, Vladimir Tankovich, Christian Häne, Sean Fanello, Christoph Rhemann, Sergio Orts Escolano',
+    venue: 'arXiv preprint, 2024',
+    images: [],
+    links: [],
+    blurb:
+      'Iteratively re-samples and selects the best depth hypotheses with contrastive learning; drops into any multi-view stereo pipeline.',
+  },
+  {
     title: 'MonoAvatar: Learning Personalized High Quality Volumetric Head Avatars from Monocular RGB Videos',
     href: 'https://arxiv.org/abs/2304.01436',
     authors:

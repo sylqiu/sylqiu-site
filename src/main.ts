@@ -77,9 +77,9 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: name plus two links (Google Scholar, Writing).
+  // Deliberately tiny: name plus two links (Curriculum Vitae, Writing).
   const links = [
-    { label: 'Google Scholar', href: 'https://scholar.google.com.hk/citations?user=ZYVfX7UAAAAJ&hl' },
+    { label: 'Curriculum Vitae', href: '#/cv' },
     { label: 'Writing', href: '#/blog' },
   ]
     .map(
@@ -94,6 +94,49 @@ function viewHome() {
       <p class="landing-links">${links}</p>
     </section>
   `;
+}
+
+/* ----------------------------------- cv ----------------------------------- */
+
+function viewCv() {
+  const links = site.links
+    .map(
+      (l) =>
+        `<a href="${esc(l.href)}"${l.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${esc(l.label)}</a>`,
+    )
+    .join('<span class="sep">·</span>');
+
+  const pubs = publications
+    .map((p) => {
+      const title = p.href
+        ? `<a href="${esc(p.href)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
+        : esc(p.title);
+      const extra = p.links
+        .map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`)
+        .join(' · ');
+      return `<article class="pub">
+        <div class="pub-body">
+          <h3 class="pub-title">${title}</h3>
+          <p class="pub-authors">${authorsHtml(p.authors)}</p>
+          <p class="pub-venue"><em>${esc(p.venue)}</em></p>
+          ${extra ? `<p class="pub-links">${extra}</p>` : ''}
+          <p class="pub-blurb">${esc(p.blurb)}</p>
+        </div>
+      </article>`;
+    })
+    .join('');
+
+  app.innerHTML = `<article class="page">
+    <header>
+      <h1>Curriculum Vitae</h1>
+      <p class="landing-links">${links}</p>
+      <p class="reading">${esc(site.bio)}</p>
+    </header>
+    <section class="cv-section">
+      <h2>Publications</h2>
+      <div class="pubs">${pubs}</div>
+    </section>
+  </article>`;
 }
 
 /* -------------------------------- research -------------------------------- */
@@ -494,6 +537,7 @@ function route() {
   if (course) return void viewCourse(course[1]);
 
   if (hash.startsWith('#/exploreflow')) return void viewExploreFlow();
+  if (hash.startsWith('#/cv')) return void viewCv();
   if (hash.startsWith('#/blog')) return void viewBlog();
   if (hash.startsWith('#/courses')) return void viewCourses();
   if (hash.startsWith('#/research')) return void viewResearch();
