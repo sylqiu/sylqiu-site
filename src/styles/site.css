@@ -424,6 +424,16 @@ h1, h2, h3 { line-height: 1.25; }
 /* ----------------------------------- cv ----------------------------------- */
 
 .cv-section { margin: 34px 0 0; }
+.cv-scholar {
+  float: right;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.cv-scholar:hover { text-decoration: underline; }
 .cv-section > h2 {
   font-size: 15px;
   font-weight: 600;

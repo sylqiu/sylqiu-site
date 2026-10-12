@@ -99,13 +99,6 @@ function viewHome() {
 /* ----------------------------------- cv ----------------------------------- */
 
 function viewCv() {
-  const links = site.links
-    .map(
-      (l) =>
-        `<a href="${esc(l.href)}"${l.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${esc(l.label)}</a>`,
-    )
-    .join('<span class="sep">·</span>');
-
   const entries = (items: CvEntry[]) =>
     items
       .map(
@@ -160,54 +153,26 @@ function viewCv() {
     })
     .join('');
 
-  const list = (items: string[]) =>
-    `<ul class="cv-list">${items.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`;
-
   app.innerHTML = `<article class="page cv">
     <header>
       <h1>Curriculum Vitae</h1>
-      <p class="landing-links">${links}</p>
-      <p class="reading">${esc(site.bio)}</p>
     </header>
 
     <section class="cv-section">
-      <h2>Education</h2>
-      ${entries(cv.education)}
-    </section>
-
-    <section class="cv-section">
-      <h2>Work Experience</h2>
+      <h2>Experience</h2>
       ${orgs}
     </section>
 
     <section class="cv-section">
-      <h2>Publications</h2>
+      <h2>Publications
+        <a class="cv-scholar" href="https://scholar.google.com.hk/citations?user=ZYVfX7UAAAAJ&hl" target="_blank" rel="noopener">Google Scholar ↗</a>
+      </h2>
       <div class="pubs">${pubs}</div>
     </section>
 
     <section class="cv-section">
-      <h2>Academic Activities</h2>
-      ${entries(cv.activities)}
-    </section>
-
-    <section class="cv-section">
-      <h2>Services</h2>
-      ${list(cv.services)}
-    </section>
-
-    <section class="cv-section">
-      <h2>Teaching Experience</h2>
-      ${entries(cv.teaching)}
-    </section>
-
-    <section class="cv-section">
-      <h2>Skills</h2>
-      <dl class="cv-skills">${cv.skills.map((s) => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join('')}</dl>
-    </section>
-
-    <section class="cv-section">
-      <h2>Interests &amp; Miscellaneous</h2>
-      ${list(cv.interests)}
+      <h2>Education</h2>
+      ${entries(cv.education)}
     </section>
   </article>`;
 }

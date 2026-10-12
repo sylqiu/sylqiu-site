@@ -69,53 +69,20 @@ export interface CvOrg {
 
 /** Structured Curriculum Vitae content, from CV.pdf. */
 export const cv = {
-  education: [
-    {
-      dates: '2016 - 2021',
-      what: 'Doctor of Philosophy in Applied Mathematics',
-      where: 'The Chinese University of Hong Kong · Sha Tin, Hong Kong',
-      note: 'Computational geometry and data-driven methods in low-level vision and graphics. Advisor: Prof. Lok Ming Lui.',
-    },
-    {
-      dates: '2012 - 2016',
-      what: 'Bachelor of Science in Mathematics (First Honor)',
-      where: 'The University of Hong Kong · Hong Kong',
-      note: "HK Government Scholarship; HKU Foundation Scholarships for Outstanding Mainland Students; C.V. Starr Scholarship; 2013 Dean's List.",
-    },
-    {
-      dates: 'Fall 2014',
-      what: 'Exchange Student in Mathematics and Philosophy',
-      where: 'University of California, Los Angeles · CA, USA',
-      note: '',
-    },
-    {
-      dates: 'Summer 2013',
-      what: 'Exchange Student in Japanese Language',
-      where: 'Ritsumeikan University · Kyoto, Japan',
-      note: '',
-    },
-    {
-      dates: '2009 - 2012',
-      what: 'Pre-university secondary education',
-      where: 'The High School Affiliated to Yunnan Normal University · Kunming, China',
-      note: 'Bronze medal, national biology olympiad; first prize, provincial physics olympiad; second prize, provincial mathematics olympiad.',
-    },
-  ] as CvEntry[],
   experience: [
     {
       org: 'Google',
       place: 'Canada',
       roles: [
         {
-          title: 'Software Developer',
+          title: 'Software Developer, Syntec',
           dates: 'Apr 2022 - present',
-          note: 'Syntec team, working on 3D reconstruction and generative AI for AR/VR.',
+          note: '3D reconstruction and generative AI for AR/VR. Own the end-to-end stack - from multi-view capture and data generation through to production-grade avatar rendering for Google AR.',
         },
-        { title: 'Student Researcher (remote)', dates: 'Jan 2021 - Sep 2021' },
         {
-          title: 'Research Intern (remote)',
-          dates: 'Sep 2020 - Dec 2020',
-          note: 'Data-generation team, reporting to Dr. Sergio Orts Escolano; multi-view depth estimation for human digitization and performance capture for AR.',
+          title: 'Research Intern → Student Researcher (remote)',
+          dates: 'Sep 2020 - Sep 2021',
+          note: 'Data-generation team, reporting to Dr. Sergio Orts Escolano. Developed multi-view depth-estimation methods for human digitization and performance capture that fed into Google AR capture efforts.',
         },
       ],
     },
@@ -126,66 +93,25 @@ export const cv = {
         {
           title: 'Research Intern · Intern Star award',
           dates: 'Jul 2018 - Aug 2019',
-          note: 'Computational photography division, reporting to Dr. Jiahao Pang and Dr. Wenxiu Sun. Depth refinement for Time-of-Flight sensors (ICCV 2019 paper); awarded Intern Star for the synthetic data-generation pipeline; proposed the ToF relighting project.',
-        },
-      ],
-    },
-    {
-      org: 'Department of Computer Science, The University of Hong Kong',
-      place: 'Hong Kong',
-      roles: [
-        {
-          title: 'Research Assistant',
-          dates: 'Jul 2015 - Sep 2015',
-          note: 'With Prof. Kwok-Ping Chan: graphical models and an exemplar-based Bayesian network for facial-expression recognition from key-points; helped collect a facial-expression dataset.',
-        },
-      ],
-    },
-    {
-      org: 'Department of Mathematics, The University of Hong Kong',
-      place: 'Hong Kong',
-      roles: [
-        {
-          title: 'Research Assistant',
-          dates: 'Jul 2015 - Sep 2015',
-          note: 'With Dr. James Fullwood: Riemannian geometry.',
+          note: 'Computational photography division, reporting to Dr. Jiahao Pang and Dr. Wenxiu Sun. Authored the ICCV 2019 Time-of-Flight RGB-D alignment and refinement work; built the synthetic data-generation pipeline adopted by the team (Intern Star award); initiated the ToF relighting project.',
         },
       ],
     },
   ] as CvOrg[],
-  activities: [
-    { dates: '2021', what: 'Poster — Modal uncertainty estimation for medical image based diagnosis', where: 'MICCAI UNSURE workshop · Online' },
-    { dates: '2020', what: 'Poster — Towards Geometry Guided Neural Relighting with Flash Photography', where: 'International Conference on 3D Vision · Online' },
-    { dates: '2019', what: 'Poster — Deep End-to-End Alignment and Refinement for Time-of-Flight RGB-D Modules', where: 'International Conference on Computer Vision · Seoul, Korea' },
-    { dates: '2019', what: 'Poster — Deep End-to-End Alignment and Refinement for Time-of-Flight RGB-D Modules', where: 'Hong Kong Computer Vision Workshop · CUHK' },
-    { dates: '2018', what: 'Talk — Parametrizing flat-foldable surfaces with incomplete data', where: 'SIAM Conference on Imaging Science · Bologna, Italy' },
-    { dates: '2018', what: 'Talk — A conformal geometry approach to surface folding', where: 'Annual Meeting of Hong Kong Mathematical Society · City University of Hong Kong' },
-    { dates: '2016', what: 'Participant — Berlin Mathematical School Summer School on Imaging', where: 'Berlin, Germany' },
-    { dates: '2016', what: 'Participant — Grenoble Summer School on Geometric Analysis', where: 'Grenoble, France' },
+  education: [
+    {
+      dates: '2016 - 2021',
+      what: 'PhD in Applied Mathematics',
+      where: 'The Chinese University of Hong Kong',
+      note: 'Computational geometry and data-driven methods in low-level vision and graphics. Advisor: Prof. Lok Ming Lui.',
+    },
+    {
+      dates: '2012 - 2016',
+      what: 'BSc in Mathematics (First Class Honours)',
+      where: 'The University of Hong Kong',
+      note: '',
+    },
   ] as CvEntry[],
-  services: [
-    'Social chair, SIAM student chapter of CUHK (2018): organizing weekly gatherings and seminars.',
-    'Reviewer, Pattern Recognition Letters.',
-    'Reviewer, MICCAI UNSURE workshop.',
-  ],
-  teaching: [
-    { dates: 'Spring 2020', what: 'CUHK MATH 2530 — Advanced Calculus for Physics and Engineering', where: 'The Chinese University of Hong Kong' },
-    { dates: 'Spring 2020', what: 'CUHK MMAT 5240 — Optimization and Modelling', where: 'The Chinese University of Hong Kong' },
-    { dates: 'Spring 2018', what: 'CUHK MATH 3310 — Computational Mathematics', where: 'The Chinese University of Hong Kong' },
-    { dates: 'Fall 2017', what: 'CUHK MATH 3360 — Mathematical Image Processing', where: 'The Chinese University of Hong Kong' },
-    { dates: 'Spring 2017', what: 'CUHK MATH 1010 — University Mathematics', where: 'The Chinese University of Hong Kong' },
-    { dates: 'Fall 2016', what: 'CUHK MATH 1510 — Mathematics for Engineers', where: 'The Chinese University of Hong Kong' },
-  ] as CvEntry[],
-  skills: [
-    { label: 'Programming', value: 'Python (proficient); C++, JavaScript, Java (familiar).' },
-    { label: 'Frameworks', value: 'Django, React, Redux.' },
-    { label: 'Software', value: 'Blender, MATLAB.' },
-    { label: 'Languages', value: 'Mandarin, Cantonese, English; German (intermediate), Japanese (intermediate).' },
-  ],
-  interests: [
-    'Knowledge exposition — I keep a personal blog for intuitive write-ups of interesting algorithms and theories.',
-    'Charity volunteering — Ghana (toilette hygiene promotion, Jun 2015); Nepal (earthquake relief, Jan 2016).',
-  ],
 };
 
 export const publications: Publication[] = [
