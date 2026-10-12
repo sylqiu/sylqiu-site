@@ -16,7 +16,7 @@ import 'katex/dist/katex.min.css';
 import './styles/site.css';
 import { mountScene, type SceneHost } from './lib/registry.ts';
 import { Narration } from './lib/narration.ts';
-import { publications, site, exploreFlow, authorsHtml } from './lib/site.ts';
+import { publications, site, exploreFlow, authorsHtml, cv, type CvEntry } from './lib/site.ts';
 import type { Block, CourseManifest, Lesson } from './lib/types.ts';
 
 const app = document.getElementById('app')!;
@@ -106,6 +106,40 @@ function viewCv() {
     )
     .join('<span class="sep">·</span>');
 
+  const entries = (items: CvEntry[]) =>
+    items
+      .map(
+        (e) => `<div class="cv-entry">
+        <div class="cv-when">${esc(e.dates)}</div>
+        <div class="cv-what">
+          <h3>${esc(e.what)}</h3>
+          ${e.where ? `<p class="cv-where">${esc(e.where)}</p>` : ''}
+          ${e.note ? `<p class="cv-note">${esc(e.note)}</p>` : ''}
+        </div>
+      </div>`,
+      )
+      .join('');
+
+  const orgs = cv.experience
+    .map((o) => {
+      const roles = o.roles
+        .map(
+          (r) => `<div class="cv-entry">
+          <div class="cv-when">${esc(r.dates)}</div>
+          <div class="cv-what">
+            <h3>${esc(r.title)}</h3>
+            ${r.note ? `<p class="cv-note">${esc(r.note)}</p>` : ''}
+          </div>
+        </div>`,
+        )
+        .join('');
+      return `<div class="cv-org">
+        <h3 class="cv-org-name">${esc(o.org)} <span class="cv-place">${esc(o.place)}</span></h3>
+        ${roles}
+      </div>`;
+    })
+    .join('');
+
   const pubs = publications
     .map((p) => {
       const title = p.href
@@ -126,15 +160,54 @@ function viewCv() {
     })
     .join('');
 
-  app.innerHTML = `<article class="page">
+  const list = (items: string[]) =>
+    `<ul class="cv-list">${items.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`;
+
+  app.innerHTML = `<article class="page cv">
     <header>
       <h1>Curriculum Vitae</h1>
       <p class="landing-links">${links}</p>
       <p class="reading">${esc(site.bio)}</p>
     </header>
+
+    <section class="cv-section">
+      <h2>Education</h2>
+      ${entries(cv.education)}
+    </section>
+
+    <section class="cv-section">
+      <h2>Work Experience</h2>
+      ${orgs}
+    </section>
+
     <section class="cv-section">
       <h2>Publications</h2>
       <div class="pubs">${pubs}</div>
+    </section>
+
+    <section class="cv-section">
+      <h2>Academic Activities</h2>
+      ${entries(cv.activities)}
+    </section>
+
+    <section class="cv-section">
+      <h2>Services</h2>
+      ${list(cv.services)}
+    </section>
+
+    <section class="cv-section">
+      <h2>Teaching Experience</h2>
+      ${entries(cv.teaching)}
+    </section>
+
+    <section class="cv-section">
+      <h2>Skills</h2>
+      <dl class="cv-skills">${cv.skills.map((s) => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join('')}</dl>
+    </section>
+
+    <section class="cv-section">
+      <h2>Interests &amp; Miscellaneous</h2>
+      ${list(cv.interests)}
     </section>
   </article>`;
 }
@@ -195,8 +268,11 @@ function viewResearch() {
       const extra = p.links
         .map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">[${esc(l.label)}]</a>`)
         .join(' ');
+      const media = p.images.length
+        ? `<div class="pub-media${p.images.length > 1 ? ' swap' : ''}">${images}</div>`
+        : '';
       return `<article class="pub">
-        <div class="pub-media${p.images.length > 1 ? ' swap' : ''}">${images}</div>
+        ${media}
         <div class="pub-body">
           <h3 class="pub-title">${title}</h3>
           <p class="pub-authors">${authorsHtml(p.authors)}</p>
