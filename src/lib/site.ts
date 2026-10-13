@@ -64,10 +64,10 @@ export const cv = {
   experience: [
     {
       org: 'Google XR',
-      place: 'Canada',
+      place: '',
       roles: [
         {
-          title: 'Software Developer',
+          title: 'Software Developer (Canada)',
           dates: 'Apr 2022 - present',
         },
         {

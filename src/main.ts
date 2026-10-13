@@ -109,7 +109,7 @@ function viewCv() {
         )
         .join('');
       return `<div class="cv-org">
-        <h3 class="cv-org-name">${esc(o.org)} <span class="cv-place">${esc(o.place)}</span></h3>
+        <h3 class="cv-org-name">${esc(o.org)}${o.place ? ` <span class="cv-place">${esc(o.place)}</span>` : ''}</h3>
         ${roles}
       </div>`;
     })
