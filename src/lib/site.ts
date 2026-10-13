@@ -67,7 +67,7 @@ export const cv = {
       place: 'Canada',
       roles: [
         {
-          title: 'Software Developer, Syntec',
+          title: 'Software Developer, Google XR',
           dates: 'Apr 2022 - present',
         },
         {
