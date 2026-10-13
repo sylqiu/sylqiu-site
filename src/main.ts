@@ -77,22 +77,33 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: just two links (Curriculum Vitae, Writing).
+  // Deliberately tiny: the site's sections, stacked and alphabetical.
   const links = [
     { label: 'Curriculum Vitae', href: '#/cv' },
+    { label: 'Interactive Illustrations', href: '#/illustrations' },
     { label: 'Writing', href: '#/blog' },
   ]
-    .map(
-      (l) =>
-        `<a href="${esc(l.href)}"${l.href.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>${esc(l.label)}</a>`,
-    )
-    .join('<span class="sep">·</span>');
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`)
+    .join('');
 
   app.innerHTML = `
     <section class="landing">
-      <p class="landing-links">${links}</p>
+      <nav class="landing-nav">${links}</nav>
     </section>
   `;
+}
+
+/* ----------------------------- illustrations ------------------------------ */
+
+function viewIllustrations() {
+  app.innerHTML = `<article class="page">
+    <header>
+      <a class="back" href="#/">← Home</a>
+      <h1>Interactive Illustrations</h1>
+    </header>
+    <p class="dim">Nothing here yet.</p>
+  </article>`;
 }
 
 /* ----------------------------------- cv ----------------------------------- */
@@ -574,6 +585,7 @@ function route() {
 
   if (hash.startsWith('#/exploreflow')) return void viewExploreFlow();
   if (hash.startsWith('#/cv')) return void viewCv();
+  if (hash.startsWith('#/illustrations')) return void viewIllustrations();
   if (hash.startsWith('#/blog')) return void viewBlog();
   if (hash.startsWith('#/courses')) return void viewCourses();
   if (hash.startsWith('#/research')) return void viewResearch();
