@@ -99,7 +99,6 @@ function viewHome() {
 function viewIllustrations() {
   app.innerHTML = `<article class="page">
     <header>
-      <a class="back" href="#/">← Home</a>
       <h1>Interactive Illustrations</h1>
     </header>
     <p class="dim">Nothing here yet.</p>
@@ -320,7 +319,7 @@ function viewCourse(id: string) {
 async function viewBlog() {
   const index = await fetchJson<BlogIndexEntry[]>('./data/blog.json');
   if (!index) {
-    app.innerHTML = `<article class="page"><header><a class="back" href="#/">← Home</a><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
+    app.innerHTML = `<article class="page"><header><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
     return;
   }
 
@@ -351,7 +350,6 @@ async function viewBlog() {
 
   app.innerHTML = `<article class="page">
     <header>
-      <a class="back" href="#/">← Home</a>
       <h1>Writing</h1>
       <p class="reading">${index.length} notes, grouped by topic.</p>
     </header>
