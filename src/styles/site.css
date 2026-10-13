@@ -445,24 +445,21 @@ h1, h2, h3 { line-height: 1.25; }
   border-bottom: 1px solid var(--line);
 }
 
-.cv-entry { display: flex; gap: 20px; padding: 6px 0 10px; }
-.cv-when { flex: 0 0 112px; color: var(--dim); font-size: 13px; padding-top: 3px; }
-.cv-what { flex: 1; min-width: 0; }
-.cv-what h3 { margin: 0 0 3px; font-size: 15px; font-weight: 600; }
-.cv-where { margin: 0 0 5px; font-size: 14px; color: var(--dim); }
-.cv-note { margin: 0; font-size: 14px; line-height: 1.55; }
-
-.cv-org { margin: 0 0 18px; }
-.cv-org-name { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+.cv-org { margin: 0 0 22px; }
+.cv-org:last-child { margin-bottom: 0; }
+.cv-org-name { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
 .cv-place { color: var(--dim); font-weight: 400; font-size: 13px; }
 
-.cv-list { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
-.cv-list li { margin: 0 0 6px; }
-
-.cv-skills { margin: 0; font-size: 14px; }
-.cv-skills dt { font-weight: 600; margin-top: 8px; }
-.cv-skills dt:first-child { margin-top: 0; }
-.cv-skills dd { margin: 0; color: var(--dim); }
+.cv-role {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  padding: 5px 0;
+}
+.cv-role + .cv-role { border-top: 1px solid var(--line); }
+.cv-title { font-size: 14px; }
+.cv-role .cv-when { color: var(--dim); font-size: 13px; white-space: nowrap; }
 
 /* --------------------------------- mobile --------------------------------- */
 
@@ -482,6 +479,6 @@ h1, h2, h3 { line-height: 1.25; }
   .page header h1 { font-size: 26px; }
   .lesson header h1, .post-view h1 { font-size: 26px; }
   .scene-canvas { height: auto; min-height: 300px; }
-  .cv-entry { flex-direction: column; gap: 2px; }
-  .cv-when { flex: none; padding-top: 0; }
+  .cv-role { flex-direction: column; gap: 1px; }
+  .cv-role .cv-when { white-space: normal; }
 }

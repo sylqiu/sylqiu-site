@@ -103,12 +103,9 @@ function viewCv() {
     .map((o) => {
       const roles = o.roles
         .map(
-          (r) => `<div class="cv-entry">
-          <div class="cv-when">${esc(r.dates)}</div>
-          <div class="cv-what">
-            <h3>${esc(r.title)}</h3>
-            ${r.note ? `<p class="cv-note">${esc(r.note)}</p>` : ''}
-          </div>
+          (r) => `<div class="cv-role">
+          <span class="cv-title">${esc(r.title)}</span>
+          <span class="cv-when">${esc(r.dates)}</span>
         </div>`,
         )
         .join('');

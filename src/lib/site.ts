@@ -63,11 +63,11 @@ export interface CvOrg {
 export const cv = {
   experience: [
     {
-      org: 'Google',
+      org: 'Google XR',
       place: 'Canada',
       roles: [
         {
-          title: 'Software Developer, Google XR',
+          title: 'Software Developer',
           dates: 'Apr 2022 - present',
         },
         {
