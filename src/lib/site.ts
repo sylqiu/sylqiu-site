@@ -52,14 +52,6 @@ export const exploreFlow = {
     'narrated beat by beat. No video: everything runs in the page.',
 };
 
-/** A dated one-liner (education, activity, teaching). */
-export interface CvEntry {
-  dates: string;
-  what: string;
-  where: string;
-  note?: string;
-}
-
 /** One employer, with any number of roles held there. */
 export interface CvOrg {
   org: string;
@@ -77,7 +69,7 @@ export const cv = {
         {
           title: 'Software Developer, Syntec',
           dates: 'Apr 2022 - present',
-          note: '3D reconstruction and generative AI for AR/VR. Own the end-to-end stack - from multi-view capture and data generation through to production-grade avatar rendering for Google AR.',
+          note: '3D reconstruction and generative AI for AR/VR. Own the end-to-end stack - from multi-view capture and data generation through to production-grade avatar rendering - and ship it into Google AR products.',
         },
         {
           title: 'Research Intern → Student Researcher (remote)',
@@ -98,20 +90,6 @@ export const cv = {
       ],
     },
   ] as CvOrg[],
-  education: [
-    {
-      dates: '2016 - 2021',
-      what: 'PhD in Applied Mathematics',
-      where: 'The Chinese University of Hong Kong',
-      note: 'Computational geometry and data-driven methods in low-level vision and graphics. Advisor: Prof. Lok Ming Lui.',
-    },
-    {
-      dates: '2012 - 2016',
-      what: 'BSc in Mathematics (First Class Honours)',
-      where: 'The University of Hong Kong',
-      note: '',
-    },
-  ] as CvEntry[],
 };
 
 export const publications: Publication[] = [

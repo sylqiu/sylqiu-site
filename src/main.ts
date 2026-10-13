@@ -16,7 +16,7 @@ import 'katex/dist/katex.min.css';
 import './styles/site.css';
 import { mountScene, type SceneHost } from './lib/registry.ts';
 import { Narration } from './lib/narration.ts';
-import { publications, site, exploreFlow, authorsHtml, cv, type CvEntry } from './lib/site.ts';
+import { publications, site, exploreFlow, authorsHtml, cv } from './lib/site.ts';
 import type { Block, CourseManifest, Lesson } from './lib/types.ts';
 
 const app = document.getElementById('app')!;
@@ -99,20 +99,6 @@ function viewHome() {
 /* ----------------------------------- cv ----------------------------------- */
 
 function viewCv() {
-  const entries = (items: CvEntry[]) =>
-    items
-      .map(
-        (e) => `<div class="cv-entry">
-        <div class="cv-when">${esc(e.dates)}</div>
-        <div class="cv-what">
-          <h3>${esc(e.what)}</h3>
-          ${e.where ? `<p class="cv-where">${esc(e.where)}</p>` : ''}
-          ${e.note ? `<p class="cv-note">${esc(e.note)}</p>` : ''}
-        </div>
-      </div>`,
-      )
-      .join('');
-
   const orgs = cv.experience
     .map((o) => {
       const roles = o.roles
@@ -170,10 +156,6 @@ function viewCv() {
       <div class="pubs">${pubs}</div>
     </section>
 
-    <section class="cv-section">
-      <h2>Education</h2>
-      ${entries(cv.education)}
-    </section>
   </article>`;
 }
 
