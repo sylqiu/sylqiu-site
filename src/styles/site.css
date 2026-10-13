@@ -466,6 +466,24 @@ h1, h2, h3 { line-height: 1.25; }
 .cv-title { font-size: 14px; }
 .cv-role .cv-when { color: var(--dim); font-size: 13px; white-space: nowrap; }
 
+/* --------------------------------- writing -------------------------------- */
+
+.blog-cat { margin: 0 0 30px; }
+.blog-cat > h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 0 0 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.blog-cat-count { font-size: 12px; font-weight: 400; color: var(--dim); }
+
 /* --------------------------------- mobile --------------------------------- */
 
 @media (max-width: 640px) {

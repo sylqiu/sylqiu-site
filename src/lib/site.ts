@@ -89,6 +89,20 @@ export const cv = {
   ] as CvOrg[],
 };
 
+/**
+ * Writing-page categories. A post is filed under the first category whose tag
+ * list intersects its own tags; unmatched posts fall into "Other".
+ */
+export const blogCategories: { name: string; tags: string[] }[] = [
+  { name: 'Vision & Graphics', tags: ['computer vision', 'computer graphics', 'imaging', 'machine learning'] },
+  { name: 'Numerical Methods & Optimization', tags: ['cuhk.math3310', 'teaching', 'numerical methods', 'optimization'] },
+  { name: 'Analysis', tags: ['real analysis', 'measure theory', 'functional analysis', 'harmonic analysis', 'Fourier analysis'] },
+  { name: 'PDE', tags: ['PDE', 'elliptic theory'] },
+  { name: 'Geometry & Topology', tags: ['differential geometry', 'discrete conformal geometry', 'algebraic topology', 'complex analysis'] },
+  { name: 'Algebra', tags: ['algebra', 'linear algebra'] },
+  { name: 'Probability', tags: ['probability theory', 'stochastic differential equation', 'statistical physics'] },
+];
+
 export const publications: Publication[] = [
   {
     title: 'GNM Head: A Generative aNthropometric Model of the Human Head',

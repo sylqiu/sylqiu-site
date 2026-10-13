@@ -16,7 +16,7 @@ import 'katex/dist/katex.min.css';
 import './styles/site.css';
 import { mountScene, type SceneHost } from './lib/registry.ts';
 import { Narration } from './lib/narration.ts';
-import { publications, site, exploreFlow, authorsHtml, cv } from './lib/site.ts';
+import { publications, site, exploreFlow, authorsHtml, cv, blogCategories } from './lib/site.ts';
 import type { Block, CourseManifest, Lesson } from './lib/types.ts';
 
 const app = document.getElementById('app')!;
@@ -77,7 +77,7 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: name plus two links (Curriculum Vitae, Writing).
+  // Deliberately tiny: just two links (Curriculum Vitae, Writing).
   const links = [
     { label: 'Curriculum Vitae', href: '#/cv' },
     { label: 'Writing', href: '#/blog' },
@@ -90,7 +90,6 @@ function viewHome() {
 
   app.innerHTML = `
     <section class="landing">
-      <h1>${esc(site.name)}</h1>
       <p class="landing-links">${links}</p>
     </section>
   `;
@@ -310,25 +309,42 @@ function viewCourse(id: string) {
 async function viewBlog() {
   const index = await fetchJson<BlogIndexEntry[]>('./data/blog.json');
   if (!index) {
-    app.innerHTML = `<article class="page"><header><a class="back" href="#/exploreflow">← ExploreFlow</a><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
+    app.innerHTML = `<article class="page"><header><a class="back" href="#/">← Home</a><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
     return;
   }
-  const items = index
-    .map(
-      (p) => `<li class="post">
+
+  const item = (p: BlogIndexEntry) => `<li class="post">
         <a class="post-title" href="#/blog/${esc(p.id)}">${esc(p.title)}</a>
         <span class="post-date">${esc(p.date)}</span>
-      </li>`,
+      </li>`;
+
+  // File each post under the first category whose tags it carries.
+  const groups = blogCategories.map((c) => ({ name: c.name, posts: [] as BlogIndexEntry[] }));
+  const other: BlogIndexEntry[] = [];
+  for (const p of index) {
+    const gi = blogCategories.findIndex((c) => p.tags.some((t) => c.tags.includes(t)));
+    if (gi < 0) other.push(p);
+    else groups[gi].posts.push(p);
+  }
+  if (other.length) groups.push({ name: 'Other', posts: other });
+
+  const sections = groups
+    .filter((g) => g.posts.length)
+    .map(
+      (g) => `<section class="blog-cat">
+        <h2>${esc(g.name)}<span class="blog-cat-count">${g.posts.length}</span></h2>
+        <ul class="post-list">${g.posts.map(item).join('')}</ul>
+      </section>`,
     )
     .join('');
+
   app.innerHTML = `<article class="page">
     <header>
-      <a class="back" href="#/exploreflow">← ExploreFlow</a>
+      <a class="back" href="#/">← Home</a>
       <h1>Writing</h1>
-      <p class="reading">${index.length} posts, migrated from
-        <a href="${esc(site.blogArchive)}" target="_blank" rel="noopener">the blogspot archive</a>.</p>
+      <p class="reading">${index.length} notes, grouped by topic.</p>
     </header>
-    <ul class="post-list">${items}</ul>
+    ${sections}
   </article>`;
 }
 
