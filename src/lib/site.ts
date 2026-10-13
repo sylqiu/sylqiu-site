@@ -69,12 +69,10 @@ export const cv = {
         {
           title: 'Software Developer, Syntec',
           dates: 'Apr 2022 - present',
-          note: '3D reconstruction and generative AI for AR/VR. Own the end-to-end stack - from multi-view capture and data generation through to production-grade avatar rendering - and ship it into Google AR products.',
         },
         {
           title: 'Research Intern → Student Researcher (remote)',
           dates: 'Sep 2020 - Sep 2021',
-          note: 'Data-generation team, reporting to Dr. Sergio Orts Escolano. Developed multi-view depth-estimation methods for human digitization and performance capture that fed into Google AR capture efforts.',
         },
       ],
     },
@@ -85,7 +83,6 @@ export const cv = {
         {
           title: 'Research Intern · Intern Star award',
           dates: 'Jul 2018 - Aug 2019',
-          note: 'Computational photography division, reporting to Dr. Jiahao Pang and Dr. Wenxiu Sun. Authored the ICCV 2019 Time-of-Flight RGB-D alignment and refinement work; built the synthetic data-generation pipeline adopted by the team (Intern Star award); initiated the ToF relighting project.',
         },
       ],
     },
