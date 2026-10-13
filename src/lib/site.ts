@@ -160,12 +160,12 @@ export const publications: Publication[] = [
   },
   {
     title: 'CHOSEN: Contrastive Hypothesis Selection for Multi-View Depth Refinement',
-    href: 'https://arxiv.org/abs/2404.02225',
+    href: 'https://crv.pubpub.org/pub/dl70yq4c',
     authors:
       'Di Qiu, Yinda Zhang, Thabo Beeler, Vladimir Tankovich, Christian Häne, Sean Fanello, Christoph Rhemann, Sergio Orts Escolano',
-    venue: 'arXiv preprint, 2024',
+    venue: 'CRV, 2025 · Best Paper',
     images: [],
-    links: [],
+    links: [{ label: 'arXiv', href: 'https://arxiv.org/abs/2404.02225' }],
     blurb:
       'Iteratively re-samples and selects the best depth hypotheses with contrastive learning; drops into any multi-view stereo pipeline.',
   },
