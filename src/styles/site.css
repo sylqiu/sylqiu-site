@@ -445,19 +445,24 @@ h1, h2, h3 { line-height: 1.25; }
   border-bottom: 1px solid var(--line);
 }
 
-.cv-org { margin: 0 0 22px; }
+.cv-org { margin: 0 0 24px; }
 .cv-org:last-child { margin-bottom: 0; }
-.cv-org-name { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+/* Divider between organisations. */
+.cv-org + .cv-org {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.cv-org-name { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
 .cv-place { color: var(--dim); font-weight: 400; font-size: 13px; }
 
+/* Positions hang under their org; no lines between them. */
 .cv-role {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 18px;
-  padding: 5px 0;
+  padding: 3px 0 3px 12px;
 }
-.cv-role + .cv-role { border-top: 1px solid var(--line); }
 .cv-title { font-size: 14px; }
 .cv-role .cv-when { color: var(--dim); font-size: 13px; white-space: nowrap; }
 
