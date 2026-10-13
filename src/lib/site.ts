@@ -96,8 +96,7 @@ export const cv = {
 export const blogCategories: { name: string; tags: string[] }[] = [
   { name: 'Vision & Graphics', tags: ['computer vision', 'computer graphics', 'imaging', 'machine learning'] },
   { name: 'Numerical Methods & Optimization', tags: ['cuhk.math3310', 'teaching', 'numerical methods', 'optimization'] },
-  { name: 'Analysis', tags: ['real analysis', 'measure theory', 'functional analysis', 'harmonic analysis', 'Fourier analysis'] },
-  { name: 'PDE', tags: ['PDE', 'elliptic theory'] },
+  { name: 'Analysis & PDE', tags: ['real analysis', 'measure theory', 'functional analysis', 'harmonic analysis', 'Fourier analysis', 'PDE', 'elliptic theory'] },
   { name: 'Geometry & Topology', tags: ['differential geometry', 'discrete conformal geometry', 'algebraic topology', 'complex analysis'] },
   { name: 'Algebra', tags: ['algebra', 'linear algebra'] },
   { name: 'Probability', tags: ['probability theory', 'stochastic differential equation', 'statistical physics'] },

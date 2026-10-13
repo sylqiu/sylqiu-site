@@ -137,7 +137,7 @@ function viewCv() {
 
   app.innerHTML = `<article class="page cv">
     <header>
-      <h1>Curriculum Vitae</h1>
+      <h1>${esc(site.name)}</h1>
     </header>
 
     <section class="cv-section">
