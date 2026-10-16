@@ -96,13 +96,31 @@ function viewHome() {
 
 /* ----------------------------- illustrations ------------------------------ */
 
-function viewIllustrations() {
+let illustrationHost: SceneHost | null = null;
+
+async function viewIllustrations() {
   app.innerHTML = `<article class="page">
     <header>
       <h1>Interactive Illustrations</h1>
+      <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one is meant to be played with.</p>
     </header>
-    <p class="dim">Nothing here yet.</p>
+    <section class="ill-item">
+      <h2>How a KV cache works</h2>
+      <p class="reading">Generate one token at a time and watch what the cache keeps: the keys and
+      values written once and read every step, and the bill — in multiply-accumulates and in GPU
+      memory — for keeping them versus recomputing them.</p>
+      <div class="ill-canvas" id="ill-kv-cache"></div>
+    </section>
   </article>`;
+
+  const mount = app.querySelector<HTMLElement>('#ill-kv-cache');
+  if (!mount) return;
+  const illustration = await mountScene('kv-cache', mount, []);
+  if (!document.contains(mount)) {
+    illustration?.destroy();
+    return;
+  }
+  illustrationHost = illustration;
 }
 
 /* ----------------------------------- cv ----------------------------------- */
@@ -565,6 +583,8 @@ function teardown() {
     section.replaceWith(section.cloneNode(false));
   }
   activeScenes.clear();
+  illustrationHost?.destroy();
+  illustrationHost = null;
 }
 
 function route() {

@@ -25,6 +25,7 @@ const registry: Record<string, () => Promise<{ default: SceneFactory }>> = {
   'hybrid-chain': () => import('../scenes/hybrid-chain.ts'),
   'stat-vs-comp': () => import('../scenes/stat-vs-comp.ts'),
   'prg-stretch': () => import('../scenes/prg-stretch.ts'),
+  'kv-cache': () => import('../scenes/kv-cache.ts'),
 };
 
 export function knownScenes(): string[] {
