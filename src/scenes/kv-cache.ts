@@ -573,8 +573,22 @@ const kvCache: SceneFactory = (host) => {
         art.appendChild(s("rect", { x: b.x, y: b.y, width: b.w, height: 30, rx: 7, fill: C.panel2, stroke: C.purple }));
         art.appendChild(txt(b.x + 12, b.y + 19, b.label, { size: 10 }));
       }
-      art.appendChild(s("path", { d: "M 30 440 C 30 330 690 330 690 440", fill: "none", stroke: C.ok, "stroke-width": 1.2, "stroke-dasharray": "5 4" }));
-      art.appendChild(txt(40, 462, "+ residual", { size: 10.5, fill: C.ok }));
+      /* the residual: a skip path down the left of the step, merged back in at the bottom */
+      art.appendChild(
+        s("path", {
+          d: "M 40 180 L 34 180 L 34 512 L " + (MID - 26) + " 512",
+          fill: "none",
+          stroke: C.ok,
+          "stroke-width": 1.4,
+          "stroke-dasharray": "5 4",
+          "marker-end": "url(#arw-g)",
+        }),
+      );
+      art.appendChild(txt(44, 192, "residual · the step input, unchanged", { size: 9.5, fill: C.ok }));
+      arrow(art, MID, 414, MID, 502, C.purple, "arw-d");
+      art.appendChild(s("circle", { cx: MID, cy: 512, r: 9, fill: C.panel2, stroke: C.ok, "stroke-width": 1.4 }));
+      art.appendChild(txt(MID, 516, "+", { anchor: "middle", size: 13, fill: C.ok, weight: 700 }));
+      art.appendChild(txt(MID + 18, 516, "residual", { size: 9.5, fill: C.ok }));
       sqList(art, o2, n, C.fg, "h_[t]");
     }
   }
