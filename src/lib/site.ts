@@ -266,9 +266,9 @@ export interface Illustration {
 export const illustrations: Illustration[] = [
   {
     id: 'kv-cache',
-    title: 'How a KV cache works',
+    title: 'How KV cache works in an autoregressive LLM',
     blurb:
-      'Decode a token at a time and watch what the cache keeps — keys and values written once, read every step — and exactly where the saved compute comes from.',
+      'From one transformer layer to prefill and decode: what a position computes for itself, the single step where it reads its past, and why the cache only ever keeps K and V.',
     scene: 'kv-cache',
   },
 ];

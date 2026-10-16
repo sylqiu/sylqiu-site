@@ -1,24 +1,23 @@
 /**
- * Illustration: kv-cache — from a token to a distribution, and where the cache
- * saves the compute.
+ * Illustration: How KV cache works in an autoregressive LLM.
  *
- * A stacked explainer: every section is its own figure, all visible on the page,
- * read top to bottom. Sections that move have local controls (sample a token,
- * step the decoder); the rest are static.
+ * A stacked explainer: five sections, each its own figure, read top to bottom.
+ *  1  inside one transformer layer — per-token blocks vs the one cross-token step,
+ *     with the causal mask drawn explicitly
+ *  2  the autoregressive loop — a token becomes a distribution over the next token
+ *  3  prefill, walked position by position
+ *  4  decode, the same walk with K and V read from the cache
+ *  5  how it is implemented (prose)
  *
- * One toy model runs through the whole page: 2 layers x 2 heads per layer, head
- * dimension d = 8, so one (layer, head) slice is exactly eight numbers wide and
- * every figure is the real arithmetic, small enough to count by hand. No
- * real-model statistics: the point is the shape of the work — what one step
- * computes, what the cache lets it skip, and what keeping the cache costs.
- *
- * Narrative: autoregressive loop -> inside one transformer layer -> attention ->
- * prefill -> decode -> why past rows stay valid (with and without a cache) ->
- * what it saves -> what it costs.
+ * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
+ * one (layer, head) slice is eight numbers wide. Math is typeset with KaTeX and
+ * every symbol is defined in the glossary at the top of the page.
  */
+import katex from "katex";
 import type { SceneFactory } from "../lib/registry.ts";
 
 const NS = "http://www.w3.org/2000/svg";
+const T = String.raw;
 
 const C = {
   fg: "#e6edf3",
@@ -41,12 +40,10 @@ const HEADS = 2;
 const D = 8;
 const MIN_N = 4;
 const MAX_N = 12;
-const PROMPT_N = 4;
 const TEXT = ["<s>", "a", "small", "model", "writes", "text", "one", "token", "at", "a", "time", "and"];
 
 type Vec = number[];
 
-/** FNV-ish hash over integers: the only source of randomness here. */
 function hash(...vals: number[]): number {
   let h = 0x811c9dc5;
   for (const v of vals) {
@@ -111,12 +108,12 @@ const dot = (a: Vec, b: Vec): number => {
 
 const SHARP = 3.2;
 
-/** Weights the newest query puts on the cached keys to its left (causal). */
-function attention(l: number, h: number, q: number): Vec {
-  if (q <= 0) return [];
-  const query = queryVec(l, h, q);
+/** a_{t,p}: how much position t reads position p. Causal, so p < t only. */
+function attention(l: number, h: number, t: number): Vec {
+  if (t <= 0) return [];
+  const query = queryVec(l, h, t);
   const logits: Vec = [];
-  for (let p = 0; p < q; p++) logits.push(SHARP * dot(query, keyVec(l, h, p)));
+  for (let p = 0; p < t; p++) logits.push(SHARP * dot(query, keyVec(l, h, p)));
   return softmax(logits);
 }
 
@@ -127,35 +124,8 @@ function distribution(nn: number): Vec {
   return softmax(logits);
 }
 
-/* -------------------------------- the costs ------------------------------- */
-
-function stepMacs(past: number, cached: boolean): number {
-  const proj = cached ? 2 * D * D : 2 * (past + 1) * D * D;
-  return proj + 2 * past * D;
-}
-
-function cumProj(n: number, cached: boolean): number {
-  let s = 0;
-  for (let t = 0; t < n; t++) s += cached ? 2 * D * D : 2 * (t + 1) * D * D;
-  return s;
-}
-
-function cumAttend(n: number): number {
-  let s = 0;
-  for (let t = 0; t < n; t++) s += 2 * t * D;
-  return s;
-}
-
-const cumMacs = (n: number, cached: boolean): number => cumProj(n, cached) + cumAttend(n);
-
 const NUM_PER_POS = 2 * LAYERS * HEADS * D;
 const BYTES_PER_NUM = 2;
-
-function fmt(x: number): string {
-  if (x >= 1e6) return (x / 1e6).toFixed(2) + "M";
-  if (x >= 1e3) return (x / 1e3).toFixed(1) + "k";
-  return String(Math.round(x));
-}
 
 function fmtBytes(x: number): string {
   if (x >= 1024) return (x / 1024).toFixed(x >= 10240 ? 0 : 1) + " KiB";
@@ -197,6 +167,32 @@ function txt(x: number, y: number, content: string, o: TxtOpts = {}): SVGTextEle
   return t;
 }
 
+/** KaTeX inside the figure, in SVG user units, so it scales with the drawing. */
+function tex(
+  art: SVGSVGElement,
+  x: number,
+  y: number,
+  latex: string,
+  o: { size?: number; align?: "left" | "center"; width?: number; color?: string } = {},
+): void {
+  const size = o.size ?? 12;
+  const width = o.width ?? 320;
+  const fo = s("foreignObject", {
+    x: o.align === "center" ? x - width / 2 : x,
+    y: y - size * 1.2,
+    width,
+    height: size * 2.6,
+  });
+  const div = document.createElement("div");
+  div.setAttribute(
+    "style",
+    "font-size:" + size + "px;line-height:1.2;color:" + (o.color ?? C.fg) + ";text-align:" + (o.align === "center" ? "center" : "left"),
+  );
+  div.innerHTML = katex.renderToString(latex, { throwOnError: false, displayMode: false });
+  fo.appendChild(div);
+  art.appendChild(fo);
+}
+
 function cellFill(v: number, base: string): string {
   const m = Math.min(1, Math.abs(v) / 1.5);
   return base + Math.round((0.18 + 0.72 * m) * 255).toString(16).padStart(2, "0");
@@ -220,95 +216,66 @@ function arrow(art: SVGSVGElement, x1: number, y1: number, x2: number, y2: numbe
   art.appendChild(s("line", { x1, y1, x2, y2, stroke: color, "stroke-width": width, "marker-end": "url(#" + id + ")" }));
 }
 
-/* geometry (viewBox is 720 wide; height varies per section) */
 const VB_W = 720;
-const CELL_W = 30;
-const CELL_GAP = 6;
-const CELL_PITCH = CELL_W + CELL_GAP;
-const GRID_X = 180;
-const GRID_Y = 98;
-const ROW_H = 15;
-const ROW_PITCH = 21;
-const colX = (p: number): number => GRID_X + p * CELL_PITCH;
-const rowY = (r: number): number => GRID_Y + (r - 1) * ROW_PITCH;
+
+/* ------------------------------- the model -------------------------------- */
+
+const STEP_CHIPS = 56;
+
+const MASK = { x: 380, y: 306, cell: 11, step: 13 };
 
 interface Sec {
   id: string;
   title: string;
   blurb: string;
   h: number;
+  prose?: string[];
 }
 
 const SECS: Sec[] = [
   {
-    id: "loop",
-    title: "Every token becomes a distribution over the next token",
-    blurb:
-      "An autoregressive model reads the sequence and outputs, at the last position, a probability for every token in its vocabulary. One is sampled, appended to the input, and the whole thing runs again. Sample a few and watch the loop.",
-    h: 380,
-  },
-  {
     id: "layer",
     title: "Inside one transformer layer",
     blurb:
-      "The step from h_t to the layer above, block by block. Stage it: every block works on this position alone — the norm, the three projections, the MLP — except attention, the single place where a token touches its past. That split is exactly what makes a KV cache possible.",
-    h: 440,
+      "The step from the input vector h_t of one position to the layer above it, block by block. Stage it: the norm, the three projections and the MLP all work on this position alone; attention is the single place where a token touches its past. The mask on the right says which positions a query is allowed to read.",
+    h: 530,
   },
   {
-    id: "attention",
-    title: "Attention: the newest token looks left",
+    id: "loop",
+    title: "Every token becomes a distribution over the next token",
     blurb:
-      "To produce that distribution the last position attends to every earlier position: its query q is compared with each stored key k, the scores become weights, and the weights mix the stored values v into one context vector.",
-    h: 372,
+      "The model reads the sequence and outputs, at the last position, a probability for every token in its vocabulary. One is sampled, appended, and the whole thing runs again. Sample a few and watch the loop.",
+    h: 380,
   },
   {
     id: "prefill",
-    title: "Prefill: the prompt in one parallel pass",
+    title: "Prefill: the prompt, position by position",
     blurb:
-      "The prompt has no internal dependency to wait on, so every position is projected at once — keys and values for the whole prompt are written into the cache in a single pass. This is the compute-heavy phase.",
-    h: 340,
+      "The prompt is processed in one parallel pass, but walk it one position at a time and you can see what each position does: project its own q, k and v, read the positions to its left, and leave one k row and one v row behind. Play or step it.",
+    h: 440,
   },
   {
     id: "decode",
-    title: "Decode: one new token, one pass over the cache",
+    title: "Decode: one new token, the rest read from the cache",
     blurb:
-      "The sampled token is appended. Its query, key and value are the only new things computed; attention then reads every row already in the cache. Step it to append the next token.",
-    h: 380,
+      "Same walk, one position at a time — except that the earlier rows are now read from the cache instead of being rebuilt. Only the new position is projected, and attention reads every row written before it. Play or step it.",
+    h: 440,
   },
   {
-    id: "nocache",
-    title: "Why nothing needs recomputing: the whole past would be rebuilt",
-    blurb:
-      "Without a cache, step t re-projects every earlier token to rebuild keys and values that already exist. The grid marks what each step recomputes; the darker the cell, the more often that row is done again.",
-    h: 400,
-  },
-  {
-    id: "cache",
-    title: "With a cache: write one row, read the rest",
-    blurb:
-      "One row per position is written when that position is first seen, and every later step reads it. Keys and values persist; the query does not — it is used at its own step and never again. That is why the cache is a KV cache.",
-    h: 400,
-  },
-  {
-    id: "stepcost",
-    title: "What one step costs",
-    blurb:
-      "The cache removes the re-projection term: 2(t+1)d² becomes 2d². Attention over the cached keys stays, because that read is genuinely new work.",
-    h: 380,
-  },
-  {
-    id: "runcost",
-    title: "How the saving adds up over a run",
-    blurb:
-      "Summed over a generation, the no-cache projection bill grows like n²; with the cache it is a straight line. Attention grows either way.",
-    h: 400,
-  },
-  {
-    id: "memory",
-    title: "What the cache costs: memory",
-    blurb:
-      "The price is memory: one key row and one value row per position, per layer, per KV head. It grows with context, and it never shrinks.",
-    h: 380,
+    id: "impl",
+    title: "How it is implemented",
+    blurb: "The parts an engine actually has to get right, once the arithmetic is clear.",
+    h: 300,
+    prose: [
+      "<strong>Allocation.</strong> Every layer keeps two tensors, K and V, of shape <code>[heads, capacity, d]</code> — capacity being the longest context the server will allow. Only the capacity is booked up front; rows are filled as tokens arrive, so a sequence that stops early costs only the blocks it used.",
+      "<strong>Writing.</strong> A per-sequence write pointer marks position n. Prefill writes the whole prompt in one kernel, one row per position. Each decode step writes exactly one row at n and advances the pointer.",
+      "<strong>Reading.</strong> Attention for the new token reads the rows 0…n: one dot product with each cached key, then the weighted sum of the cached values. The projections of the past never run again — that is the whole saving.",
+      "<strong>Sharing a pool.</strong> With many sequences in flight the cache is cut into fixed blocks (16 positions, say) and a block table maps logical positions to physical blocks. A sequence occupies only what it needs, finished sequences hand their blocks back at once, and a shared prompt prefix can reuse the same blocks copy-on-write — the PagedAttention idea.",
+      "<strong>Shrinking it.</strong> Grouped-query attention gives several query heads one shared K/V head (H_kv < H); multi-query attention goes to H_kv = 1. Each cuts the cache by the sharing factor. Storing K and V in fp8 or int4 cuts it again, at the price of noisier attention scores.",
+      "<strong>Why decode is bandwidth-bound.</strong> Per token the GPU reads the weights once and the entire cache (2 · L · H_kv · d · n values), but does arithmetic for one token only. Bigger batches amortize the weight reads; longer contexts do not amortize the cache read — so context length and batch size compete for the same memory.",
+      "<strong>Keeping it bounded.</strong> Sliding-window attention, attention sinks and cache eviction drop rows to cap memory; chunked prefill interleaves prompt chunks with decode steps so one long prompt does not stall the rest of the batch.",
+      "<strong>Where you meet it.</strong> vLLM, TensorRT-LLM, TGI and SGLang all keep a paged or fused KV cache; llama.cpp keeps one contiguous cache per sequence. The interface is the same everywhere: append one row per step, read everything before it.",
+    ],
   },
 ];
 
@@ -320,6 +287,10 @@ const kvCache: SceneFactory = (host) => {
   let head = 0;
   let flash = false;
   let layerStep = 0;
+  let preCursor = 7;
+  let decCursor = 7;
+  let preTimer: number | null = null;
+  let decTimer: number | null = null;
   let dead = false;
   let timer: number | null = null;
 
@@ -347,7 +318,7 @@ const kvCache: SceneFactory = (host) => {
   posRange.value = String(n);
   const posOut = document.createElement("span");
   posOut.className = "ill-step";
-  posWrap.append(document.createTextNode("sequence length "), posRange, posOut);
+  posWrap.append(document.createTextNode("positions shown "), posRange, posOut);
 
   const headsWrap = document.createElement("div");
   headsWrap.className = "ill-slice";
@@ -376,6 +347,30 @@ const kvCache: SceneFactory = (host) => {
   headsWrap.append(headsLabel, headsGrid);
   ctl.append(posWrap, headsWrap);
 
+  /* -------------------------------- symbols ------------------------------ */
+  const glossary = document.createElement("div");
+  glossary.className = "ill-glossary";
+  const symbols: Array<[string, string]> = [
+    [T`x_1 \dots x_n`, "the input tokens"],
+    [T`h_t`, "hidden state: the vector for position t entering a block"],
+    [T`W_Q,\ W_K,\ W_V`, "learned projection matrices"],
+    [T`q_t = W_Q h_t`, "query: what position t asks"],
+    [T`k_t = W_K h_t`, "key: what position t offers to be matched"],
+    [T`v_t = W_V h_t`, "value: what position t contributes once matched"],
+    [T`d`, "head dimension — how many numbers q, k, v have (8 here)"],
+    [T`a_{t,p}`, "attention weight: how much position t reads position p"],
+    [T`n`, "how many positions have been processed"],
+    [T`L,\ H`, "layers, and attention heads per layer"],
+    [T`p(x_{t+1} \mid x_{\le t})`, "the model output: probability of the next token"],
+  ];
+  glossary.innerHTML =
+    '<div class="ill-legend-head">symbols used on this page</div>' +
+    symbols
+      .map(([sym, def]) => {
+        return '<span class="ill-gloss-item"><span class="sym">' + katex.renderToString(sym, { throwOnError: false }) + '</span><span class="def">' + def + "</span></span>";
+      })
+      .join("");
+
   /* ------------------------------- contents ------------------------------ */
   const toc = document.createElement("nav");
   toc.className = "ill-toc";
@@ -387,7 +382,7 @@ const kvCache: SceneFactory = (host) => {
     toc.appendChild(a);
   });
 
-  const secEls: Array<{ svg: SVGSVGElement; cards: HTMLElement; ctl: HTMLElement }> = [];
+  const secEls: Array<{ svg: SVGSVGElement; cards: HTMLElement; ctl: HTMLElement; prose: HTMLElement | null }> = [];
   SECS.forEach((sec, secIndex) => {
     const section = document.createElement("section");
     section.className = "ill-sec";
@@ -408,38 +403,148 @@ const kvCache: SceneFactory = (host) => {
     fig.appendChild(svg);
     const cards = document.createElement("div");
     cards.className = "ill-cards";
+    let proseEl: HTMLElement | null = null;
     section.append(head, blurb, fig, cards);
+    if (sec.prose) {
+      proseEl = document.createElement("div");
+      proseEl.className = "ill-prose";
+      proseEl.innerHTML = sec.prose.map((p) => "<p>" + p + "</p>").join("");
+      section.appendChild(proseEl);
+    }
     root.appendChild(section);
-    secEls.push({ svg, cards, ctl: secCtl });
+    secEls.push({ svg, cards, ctl: secCtl, prose: proseEl });
   });
 
-  const note = document.createElement("p");
-  note.className = "ill-note";
-  note.textContent =
-    "Toy model: 2 layers × 2 heads, head dimension d = 8 — one slice is eight numbers wide. " +
-    "MACs count the K and V projections plus the attention read; the query is new at every step either way, so it is left out. " +
-    "A real model multiplies the layers, heads and d, and leaves the shape of the saving alone.";
-
-  root.append(ctl, toc, note);
+  root.append(ctl, glossary, toc);
   host.appendChild(root);
 
   /* ------------------------------ section 1 ----------------------------- */
 
+  const LAYER_STEPS = [
+    { label: "input h_t", note: "The hidden vector for this position, handed up by the layer below. One vector per position." },
+    { label: "RMSNorm", note: "Per token: it normalizes that one vector. No other position is involved." },
+    { label: "q, k, v projections", note: "Per token: three matrix-vector products on h_t alone. This is why a stored k or v never needs rebuilding." },
+    { label: "attention", note: "The one cross-token step: the query of this position meets every key it is allowed to read, and the weights mix their values." },
+    { label: "+ residual", note: "Per token: the attention output is added back onto h_t." },
+    { label: "RMSNorm + MLP", note: "Per token: a position-wise feed-forward block, the same arithmetic at every position." },
+    { label: "output h_t", note: "Sent up to the next layer. Nothing on this path needed a token to the right — which is what makes the cache legal." },
+  ];
+
+  function drawLayer(art: SVGSVGElement): void {
+    const x = 20;
+    const w = 280;
+    const blocks = [
+      { y: 40, h: 34, label: "", sub: "" },
+      { y: 90, h: 30, label: "RMSNorm", sub: "per token" },
+      { y: 136, h: 52, label: "", sub: "" },
+      { y: 204, h: 76, label: "", sub: "the only cross-token step" },
+      { y: 296, h: 30, label: "+ residual", sub: "per token" },
+      { y: 342, h: 36, label: "RMSNorm + MLP", sub: "per token" },
+      { y: 394, h: 34, label: "out · layer above", sub: "per token" },
+    ];
+    art.appendChild(
+      txt(x, 26, "stage " + (layerStep + 1) + " / " + LAYER_STEPS.length + " · " + LAYER_STEPS[layerStep].label + " · slice " + layer + "." + head, { size: 11.5, fill: C.fg, weight: 600 }),
+    );
+    art.appendChild(txt(VB_W - 20, 26, "one (layer, head) slice", { anchor: "end", size: 10 }));
+
+    blocks.forEach((blk, i) => {
+      if (i === 0 || i === 2 || i === 3) return;
+      const on = i === layerStep;
+      art.appendChild(s("rect", { x, y: blk.y, width: w, height: blk.h, rx: 8, fill: C.panel, stroke: on ? C.fg : C.line, "stroke-width": on ? 1.8 : 1 }));
+      art.appendChild(txt(x + 12, blk.y + 19, blk.label, { size: 11.5, fill: C.fg }));
+      art.appendChild(txt(x + 12, blk.y + blk.h - 5, blk.sub, { size: 9.5 }));
+    });
+
+    const b0 = blocks[0];
+    const on0 = layerStep === 0;
+    art.appendChild(s("rect", { x, y: b0.y, width: w, height: b0.h, rx: 8, fill: C.panel, stroke: on0 ? C.fg : C.line, "stroke-width": on0 ? 1.8 : 1 }));
+    tex(art, x + 12, b0.y + 22, T`h_t`, { size: 13 });
+    art.appendChild(txt(x + 46, b0.y + 22, "this layer in · one vector per position", { size: 10 }));
+
+    const p2 = blocks[2];
+    const on2 = layerStep === 2;
+    art.appendChild(s("rect", { x, y: p2.y, width: w, height: p2.h, rx: 8, fill: C.panel, stroke: on2 ? C.fg : C.line, "stroke-width": on2 ? 1.8 : 1 }));
+    tex(art, x + 12, p2.y + 20, T`q_t = W_Q h_t`, { size: 11.5, color: C.accent });
+    tex(art, x + 12, p2.y + 38, T`k_t = W_K h_t`, { size: 11.5, color: C.purple });
+    tex(art, x + 150, p2.y + 20, T`v_t = W_V h_t`, { size: 11.5, color: C.teal });
+    art.appendChild(txt(x + w - 10, p2.y + 44, "per token", { anchor: "end", size: 9.5 }));
+
+    const p3 = blocks[3];
+    const on3 = layerStep === 3;
+    art.appendChild(s("rect", { x, y: p3.y, width: w, height: p3.h, rx: 8, fill: C.accent, "fill-opacity": on3 ? 0.18 : 0.1, stroke: on3 ? C.fg : C.accent, "stroke-width": on3 ? 1.8 : 1 }));
+    tex(art, x + 12, p3.y + 22, T`a_{t,p} = \mathrm{softmax}\!\left(\frac{q_t \cdot k_p}{\sqrt{d}}\right)`, { size: 11, width: 260 });
+    tex(art, x + 12, p3.y + 52, T`\sum_{p} a_{t,p} v_p`, { size: 11.5, width: 200 });
+    art.appendChild(txt(x + 150, p3.y + 56, "· the context it gets back", { size: 10, fill: C.accent }));
+
+    arrow(art, x + w / 2, 74, x + w / 2, 84, C.dim, "arw-d");
+    arrow(art, x + w / 2, 120, x + w / 2, 130, C.dim, "arw-d");
+    arrow(art, x + w / 2, 188, x + w / 2, 198, C.dim, "arw-d");
+    arrow(art, x + w / 2, 280, x + w / 2, 290, C.dim, "arw-d");
+    arrow(art, x + w / 2, 326, x + w / 2, 336, C.dim, "arw-d");
+    arrow(art, x + w / 2, 378, x + w / 2, 388, C.dim, "arw-d");
+
+    const perToken = layerStep !== 3;
+    const coupling = layerStep === 3;
+    art.appendChild(s("rect", { x: 336, y: 40, width: 352, height: 132, rx: 9, fill: C.panel, "fill-opacity": perToken ? 1 : 0.5, stroke: perToken ? C.ok : C.line, "stroke-width": perToken ? 1.4 : 1 }));
+    art.appendChild(s("circle", { cx: 352, cy: 58, r: 4, fill: C.ok }));
+    art.appendChild(txt(364, 62, "independent · per token", { size: 10.5, fill: C.ok, weight: 600 }));
+    art.appendChild(txt(352, 84, "RMSNorm · MLP · output projection", { size: 11 }));
+    tex(art, 352, 108, T`q_t = W_Q h_t`, { size: 11.5, width: 300 });
+    tex(art, 352, 126, T`k_t = W_K h_t`, { size: 11.5, width: 300 });
+    tex(art, 352, 144, T`v_t = W_V h_t`, { size: 11.5, width: 300 });
+    art.appendChild(txt(352, 164, "no term from any other position", { size: 10.5 }));
+
+    art.appendChild(s("rect", { x: 336, y: 182, width: 352, height: 92, rx: 9, fill: C.panel, "fill-opacity": coupling ? 1 : 0.5, stroke: coupling ? C.warn : C.line, "stroke-width": coupling ? 1.4 : 1 }));
+    art.appendChild(s("circle", { cx: 352, cy: 200, r: 4, fill: C.warn }));
+    art.appendChild(txt(364, 204, "couples positions", { size: 10.5, fill: C.warn, weight: 600 }));
+    tex(art, 352, 226, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11, width: 340 });
+    art.appendChild(txt(352, 250, "over every position p this query may read", { size: 10.5 }));
+    arrow(art, 336, 240, 304, 240, C.warn, "arw-w", 1.2);
+
+    art.appendChild(txt(336, 296, "causal mask · row t reads columns p ≤ t", { size: 10.5, fill: C.fg, weight: 600 }));
+    for (let p = 0; p < n; p++) {
+      art.appendChild(txt(MASK.x + p * MASK.step + MASK.cell / 2, MASK.y - 5, String(p), { anchor: "middle", size: 8, mono: true }));
+    }
+    for (let r = 0; r < n; r++) {
+      art.appendChild(txt(MASK.x - 5, MASK.y + r * MASK.step + MASK.cell - 1, String(r), { anchor: "end", size: 8, mono: true }));
+      for (let p = 0; p < n; p++) {
+        const allowed = p <= r;
+        const newest = r === n - 1;
+        art.appendChild(
+          s("rect", {
+            x: MASK.x + p * MASK.step,
+            y: MASK.y + r * MASK.step,
+            width: MASK.cell,
+            height: MASK.cell,
+            rx: 2,
+            fill: allowed ? (newest ? C.accent : C.teal) : C.panel2,
+            opacity: allowed ? (newest ? 0.9 : 0.28) : 0.35,
+          }),
+        );
+      }
+    }
+    art.appendChild(txt(336, MASK.y + n * MASK.step + 18, "grey = the future: no query may read it.", { size: 10.5 }));
+    art.appendChild(txt(336, MASK.y + n * MASK.step + 34, "The bottom row is the query being computed now.", { size: 10.5 }));
+    art.appendChild(txt(x, 508, LAYER_STEPS[layerStep].note, { size: 11.5, fill: C.fg }));
+  }
+
+  /* ------------------------------ section 2 ----------------------------- */
+
   function drawLoop(art: SVGSVGElement): void {
     const w = 50;
-    const pitch = 56;
+    const pitch = STEP_CHIPS;
     const x0 = 20;
     const y = 34;
     const h = 30;
     for (let i = 0; i < MAX_N; i++) {
-      const x = x0 + i * pitch;
+      const bx = x0 + i * pitch;
       const has = i < n;
       if (has) {
-        art.appendChild(s("rect", { x, y, width: w, height: h, rx: 7, fill: i === n - 1 ? C.accent : C.panel, "fill-opacity": i === n - 1 ? 0.18 : 1, stroke: i === n - 1 ? C.accent : C.line }));
-        art.appendChild(txt(x + w / 2, y + 20, TEXT[i], { anchor: "middle", size: 9.5, mono: true, fill: i === n - 1 ? C.fg : C.dim }));
+        art.appendChild(s("rect", { x: bx, y, width: w, height: h, rx: 7, fill: i === n - 1 ? C.accent : C.panel, "fill-opacity": i === n - 1 ? 0.18 : 1, stroke: i === n - 1 ? C.accent : C.line }));
+        art.appendChild(txt(bx + w / 2, y + 20, TEXT[i], { anchor: "middle", size: 9.5, mono: true, fill: i === n - 1 ? C.fg : C.dim }));
       } else if (i === n) {
-        art.appendChild(s("rect", { x, y, width: w, height: h, rx: 7, fill: "none", stroke: C.accent, "stroke-width": 1.2, "stroke-dasharray": "4 3" }));
-        art.appendChild(txt(x + w / 2, y + 20, "?", { anchor: "middle", size: 13, fill: C.accent, weight: 600 }));
+        art.appendChild(s("rect", { x: bx, y, width: w, height: h, rx: 7, fill: "none", stroke: C.accent, "stroke-width": 1.2, "stroke-dasharray": "4 3" }));
+        art.appendChild(txt(bx + w / 2, y + 20, "?", { anchor: "middle", size: 13, fill: C.accent, weight: 600 }));
       }
     }
     art.appendChild(txt(x0, y - 10, "input so far · the model predicts position " + n, { size: 10 }));
@@ -448,7 +553,7 @@ const kvCache: SceneFactory = (host) => {
     const btop = 88;
     art.appendChild(s("rect", { x: 240, y: btop, width: 240, height: 44, rx: 9, fill: C.panel, stroke: C.line }));
     art.appendChild(txt(360, btop + 19, "transformer · " + LAYERS + " layers here", { anchor: "middle", size: 11, fill: C.fg }));
-    art.appendChild(txt(360, btop + 34, "self-attention + MLP at every position", { anchor: "middle", size: 9.5 }));
+    art.appendChild(txt(360, btop + 34, "attention + MLP at every position", { anchor: "middle", size: 9.5 }));
     arrow(art, cx, y + h + 6, cx, btop - 6, C.dim, "arw-d");
     arrow(art, cx, btop + h + 6, cx, 168, C.dim, "arw-d");
 
@@ -458,32 +563,34 @@ const kvCache: SceneFactory = (host) => {
     const bw = 40;
     const bpitch = 56;
     const bx0 = 20;
-    art.appendChild(txt(bx0, 190, "probability of each next token (toy vocabulary: the " + TEXT.length + " words of this sentence)", { size: 10.5, fill: C.fg }));
+    tex(art, bx0, 190, T`p(x_{n+1} \mid x_{\le n})`, { size: 12, width: 260 });
+    art.appendChild(txt(170, 190, "· one probability per vocabulary entry", { size: 10.5 }));
     let argmax = 0;
     probs.forEach((p, i) => {
       if (p > probs[argmax]) argmax = i;
     });
     probs.forEach((p, i) => {
-      const x = bx0 + i * bpitch;
+      const bx = bx0 + i * bpitch;
       const hh = Math.max(2, p * maxH);
       const top = base - hh;
       const on = i === argmax;
-      art.appendChild(s("rect", { x, y: 200, width: bw, height: maxH, rx: 3, fill: C.panel2, opacity: 0.45 }));
-      art.appendChild(s("rect", { x, y: top, width: bw, height: hh, rx: 3, fill: on ? C.accent : C.teal, opacity: on ? (flash ? 1 : 0.9) : 0.45 }));
-      art.appendChild(s("text", {
-        x: x + bw / 2,
+      art.appendChild(s("rect", { x: bx, y: 200, width: bw, height: maxH, rx: 3, fill: C.panel2, opacity: 0.45 }));
+      art.appendChild(s("rect", { x: bx, y: top, width: bw, height: hh, rx: 3, fill: on ? C.accent : C.teal, opacity: on ? (flash ? 1 : 0.9) : 0.45 }));
+      const label = s("text", {
+        x: bx + bw / 2,
         y: base + 12,
         fill: on ? C.fg : C.dim,
         "font-size": 9.5,
         "text-anchor": "end",
-        transform: "rotate(-52 " + (x + bw / 2) + " " + (base + 12) + ")",
+        transform: "rotate(-52 " + (bx + bw / 2) + " " + (base + 12) + ")",
         "font-family": "ui-monospace, SFMono-Regular, Menlo, monospace",
-      })).textContent = TEXT[i];
-      art.appendChild(txt(x + bw / 2, top - 5, p.toFixed(2), { anchor: "middle", size: 9, mono: true, fill: on ? C.accent : C.dim }));
-      if (on) art.appendChild(txt(x + bw / 2, top + 15, "sampled", { anchor: "middle", size: 9.5, fill: "#0b1220", weight: 700 }));
+      });
+      label.textContent = TEXT[i];
+      art.appendChild(label);
+      art.appendChild(txt(bx + bw / 2, top - 5, p.toFixed(2), { anchor: "middle", size: 9, mono: true, fill: on ? C.accent : C.dim }));
+      if (on) art.appendChild(txt(bx + bw / 2, top + 15, "sampled", { anchor: "middle", size: 9.5, fill: "#0b1220", weight: 700 }));
     });
     art.appendChild(s("line", { x1: bx0 - 4, y1: base, x2: bx0 + MAX_N * bpitch - 8, y2: base, stroke: C.line }));
-
     art.appendChild(s("path", {
       d: "M " + (x0 + n * pitch + w / 2) + " " + (y + h + 6) + " C " + (x0 + n * pitch + w / 2) + " 372 " + (bx0 + argmax * bpitch + bw / 2) + " 372 " + (bx0 + argmax * bpitch + bw / 2) + " " + (base + 34),
       fill: "none",
@@ -494,482 +601,199 @@ const kvCache: SceneFactory = (host) => {
     }));
     art.appendChild(txt(bx0, 372, "Greedy sample: the tallest bar is appended at the dashed slot and the loop runs again.", { size: 11, fill: C.fg }));
   }
+  /* --------------------------- sections 3 and 4 -------------------------- */
 
-  /* ------------------------------ section 2 ----------------------------- */
+  const flowCursor = (mode: "pre" | "dec"): number => Math.min(mode === "pre" ? preCursor : decCursor, n - 1);
 
-  function drawAttention(art: SVGSVGElement): void {
-    const w = 46;
-    const pitch = 52;
-    const x0 = 26;
-    const y = 70;
-    const h = 52;
-    const nx = x0 + (n - 1) * pitch;
-    const weights = attention(layer, head, n - 1);
-    const maxA = Math.max(1e-6, ...weights);
-
-    for (let i = 0; i < n - 1; i++) {
-      const tx = x0 + i * pitch + w / 2;
-      const sx = nx + w / 2;
-      const cy = 48 - (n - 1 - i) * 2;
-      art.appendChild(
-        s("path", {
-          d: "M " + sx + " " + (y - 12) + " Q " + ((sx + tx) / 2 | 0) + " " + cy + " " + tx + " " + (y - 12),
-          fill: "none",
-          stroke: C.accent,
-          "stroke-width": 1,
-          opacity: 0.3,
-          "marker-end": "url(#arw-a)",
-        }),
-      );
-    }
+  function drawFlow(art: SVGSVGElement, mode: "pre" | "dec"): void {
+    const c = flowCursor(mode);
+    const pre = mode === "pre";
+    const w = 50;
+    const pitch = STEP_CHIPS;
+    const x0 = 20;
+    const y = 34;
+    const h = 30;
 
     for (let i = 0; i < n; i++) {
-      const x = x0 + i * pitch;
-      const youngest = i === n - 1;
-      art.appendChild(s("rect", { x, y, width: w, height: h, rx: 8, fill: youngest ? C.accent : C.panel, "fill-opacity": youngest ? 0.16 : 1, stroke: youngest ? C.accent : C.line, "stroke-width": youngest ? 1.4 : 1 }));
-      art.appendChild(txt(x + w / 2, y + 21, TEXT[i], { anchor: "middle", size: 9.5, mono: true, fill: youngest ? C.fg : C.dim }));
-      art.appendChild(txt(x + w / 2, y + 38, "t" + i, { anchor: "middle", size: 9, mono: true }));
-    }
-    art.appendChild(txt(nx + w / 2, y - 30, "query q", { anchor: "middle", size: 10, fill: C.accent, weight: 600 }));
-    art.appendChild(txt(x0 - 2, y - 30, "each of these keeps a key k and a value v", { size: 10 }));
-
-    const base = 232;
-    const maxBar = 78;
-    weights.forEach((a, i) => {
-      const x = x0 + i * pitch;
-      const bh = Math.max(2, (a / maxA) * maxBar);
-      art.appendChild(s("rect", { x, y: base - bh, width: w, height: bh, rx: 4, fill: C.accent, opacity: 0.55 }));
-      art.appendChild(txt(x + w / 2, base + 14, a.toFixed(3), { anchor: "middle", size: 9.5, mono: true, fill: a > 0.25 ? C.fg : C.dim }));
-    });
-    art.appendChild(txt(x0, base - maxBar - 14, "softmax( q·kᵀ / √d ) — how much of each past position the new token pulls in", { size: 10.5, fill: C.fg }));
-
-    art.appendChild(txt(x0, 292, "Σ aᵢ·vᵢ over those positions gives one context vector: the only thing the next block sees.", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(x0, 316, "The keys and values are reused from step to step; the query is made fresh for the newest position.", { size: 11.5 }));
-    art.appendChild(txt(x0, 340, "Attention is where the cache does its work: every step reads n stored keys, never rebuilding them.", { size: 11.5 }));
-  }
-
-  /* ------------------------------ section 3 ----------------------------- */
-
-  function drawPrefill(art: SVGSVGElement): void {
-    const w = 58;
-    const pitch = 68;
-    const x0 = 20;
-    const y = 60;
-    const h = 46;
-    art.appendChild(txt(x0, y - 12, "the prompt (" + PROMPT_N + " positions)", { size: 10.5, fill: C.fg }));
-    for (let i = 0; i < PROMPT_N; i++) {
-      const x = x0 + i * pitch;
-      art.appendChild(s("rect", { x, y, width: w, height: h, rx: 8, fill: C.panel, stroke: C.accent, "stroke-width": 1.2 }));
-      art.appendChild(txt(x + w / 2, y + 20, TEXT[i], { anchor: "middle", size: 10, mono: true, fill: C.fg }));
-      art.appendChild(txt(x + w / 2, y + 36, "t" + i, { anchor: "middle", size: 9, mono: true }));
-      const k = keyVec(layer, head, i);
-      const v = valVec(layer, head, i);
-      for (let j = 0; j < D; j++) {
-        art.appendChild(s("rect", { x: x + 5 + j * 6, y: 132, width: 5, height: 14, rx: 1, fill: cellFill(k[j], C.purple) }));
-        art.appendChild(s("rect", { x: x + 5 + j * 6, y: 150, width: 5, height: 14, rx: 1, fill: cellFill(v[j], C.teal) }));
-      }
-    }
-    art.appendChild(txt(x0 + 5, 128, "k", { size: 9, fill: C.purple }));
-    art.appendChild(txt(x0 + 5, 176, "v", { size: 9, fill: C.teal }));
-    art.appendChild(s("line", { x1: x0 + 4, y1: 180, x2: x0 + 3 * pitch + w - 4, y2: 180, stroke: C.accent, "stroke-width": 1, opacity: 0.5 }));
-    art.appendChild(txt(x0 + (3 * pitch + w) / 2 - 2, 196, "one pass — every position at once", { anchor: "middle", size: 10.5, fill: C.accent }));
-
-    const mx = 340;
-    const my = 60;
-    const cell = 24;
-    art.appendChild(txt(mx, my - 12, "causal mask", { size: 10.5, fill: C.fg }));
-    for (let r = 0; r < PROMPT_N; r++) {
-      for (let c = 0; c < PROMPT_N; c++) {
-        const allowed = c <= r;
-        art.appendChild(s("rect", { x: mx + c * (cell + 4), y: my + r * (cell + 4), width: cell, height: cell, rx: 3, fill: allowed ? C.accent : C.panel2, opacity: allowed ? 0.5 : 0.35 }));
-      }
-    }
-    art.appendChild(txt(mx + PROMPT_N * (cell + 4) + 14, my + 34, "a position may read", { size: 11 }));
-    art.appendChild(txt(mx + PROMPT_N * (cell + 4) + 14, my + 54, "only its left — so all", { size: 11 }));
-    art.appendChild(txt(mx + PROMPT_N * (cell + 4) + 14, my + 74, "of it is computable", { size: 11 }));
-    art.appendChild(txt(mx + PROMPT_N * (cell + 4) + 14, my + 94, "in one go.", { size: 11 }));
-
-    art.appendChild(txt(x0, 234, "Prefill runs the whole prompt through the network in parallel: every position projects its k and v,", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(x0, 258, "and the cache is written with one row per prompt position before any token is generated.", { size: 11.5 }));
-    art.appendChild(txt(x0, 282, "This phase saturates the GPU with arithmetic; it is where the bulk of the FLOPs of a short chat go.", { size: 11.5 }));
-    art.appendChild(txt(x0, 314, "After prefill the cache holds " + PROMPT_N + " rows — the opening balance that decode then adds to.", { size: 11.5, fill: C.ok }));
-  }
-
-  /* ------------------------------ section 4 ----------------------------- */
-
-  function drawDecode(art: SVGSVGElement): void {
-    const sx = 16;
-    const sw = 96;
-    art.appendChild(txt(sx, 40, "the cache · " + n + " rows", { size: 10.5, fill: C.teal, weight: 600 }));
-    art.appendChild(txt(sx + 27, 58, "k", { anchor: "middle", size: 9, fill: C.purple }));
-    art.appendChild(txt(sx + 72, 58, "v", { anchor: "middle", size: 9, fill: C.teal }));
-    for (let r = 0; r < n; r++) {
-      const y = 62 + r * 18;
-      const fresh = r === n - 1;
-      art.appendChild(s("rect", { x: sx, y, width: sw, height: 16, rx: 3, fill: C.panel, stroke: fresh ? C.ok : C.line, "stroke-width": fresh ? 1.4 : 1 }));
-      const k = keyVec(layer, head, r);
-      const v = valVec(layer, head, r);
-      for (let j = 0; j < D; j++) {
-        art.appendChild(s("rect", { x: sx + 8 + j * 5, y: y + 3, width: 4, height: 10, rx: 1, fill: cellFill(k[j], C.purple) }));
-        art.appendChild(s("rect", { x: sx + 52 + j * 5, y: y + 3, width: 4, height: 10, rx: 1, fill: cellFill(v[j], C.teal) }));
-      }
-    }
-    art.appendChild(txt(sx + sw, 62 + (n - 1) * 18 + 12, "written once", { size: 9.5, fill: C.ok }));
-
-    const bx = 150;
-    art.appendChild(s("rect", { x: bx, y: 60, width: 150, height: 40, rx: 8, fill: C.panel, stroke: C.ok, "stroke-width": 1.4 }));
-    art.appendChild(txt(bx + 75, 78, "new token: " + TEXT[n - 1], { anchor: "middle", size: 10.5, mono: true, fill: C.fg }));
-    art.appendChild(txt(bx + 75, 93, "sampled in section 1", { anchor: "middle", size: 9 }));
-    art.appendChild(s("rect", { x: bx, y: 126, width: 150, height: 40, rx: 8, fill: C.panel, stroke: C.purple, "stroke-width": 1.2 }));
-    art.appendChild(txt(bx + 75, 144, "project q, k, v", { anchor: "middle", size: 10.5, fill: C.purple }));
-    art.appendChild(txt(bx + 75, 159, "the only new arithmetic", { anchor: "middle", size: 9 }));
-    art.appendChild(s("rect", { x: bx, y: 192, width: 150, height: 40, rx: 8, fill: C.panel, stroke: C.accent, "stroke-width": 1.2 }));
-    art.appendChild(txt(bx + 75, 210, "attend to all " + n + " rows", { anchor: "middle", size: 10.5, fill: C.accent }));
-    art.appendChild(txt(bx + 75, 225, "one pass, read only", { anchor: "middle", size: 9 }));
-    arrow(art, bx + 75, 100, bx + 75, 120, C.ok, "arw-g");
-    arrow(art, bx + 75, 166, bx + 75, 186, C.accent, "arw-a");
-    arrow(art, sx + sw + 6, 130, bx - 6, 210, C.teal, "arw-t", 1);
-
-    const ox = 350;
-    art.appendChild(s("rect", { x: ox, y: 60, width: 350, height: 172, rx: 9, fill: C.panel, stroke: C.line }));
-    art.appendChild(txt(ox + 14, 80, "output: a distribution over the next token", { size: 10.5, fill: C.fg }));
-    const probs = distribution(n);
-    const top = probs.map((p, i) => ({ p, i })).sort((a, b) => b.p - a.p).slice(0, 5);
-    const maxP = Math.max(...top.map((t) => t.p));
-    top.forEach((t, k) => {
-      const y = 94 + k * 26;
-      art.appendChild(txt(ox + 14, y + 11, TEXT[t.i], { size: 10, mono: true, fill: k === 0 ? C.fg : C.dim }));
-      art.appendChild(s("rect", { x: ox + 110, y, width: 190, height: 13, rx: 3, fill: C.panel2, opacity: 0.5 }));
-      art.appendChild(s("rect", { x: ox + 110, y, width: Math.max(2, (t.p / maxP) * 190), height: 13, rx: 3, fill: k === 0 ? C.accent : C.teal, opacity: k === 0 ? 0.9 : 0.4 }));
-      art.appendChild(txt(ox + 310, y + 11, t.p.toFixed(2), { size: 9.5, mono: true, anchor: "end", fill: k === 0 ? C.fg : C.dim }));
-    });
-    arrow(art, bx + 152, 212, ox - 6, 212, C.accent, "arw-a");
-
-    art.appendChild(s("path", { d: "M " + (ox + 60) + " 60 C " + (ox + 60) + " 22 " + (bx + 40) + " 22 " + (bx + 75) + " 54", fill: "none", stroke: C.ok, "stroke-width": 1.2, "stroke-dasharray": "4 3", "marker-end": "url(#arw-g)" }));
-    art.appendChild(txt(ox + 14, 250, "sample → append → repeat", { size: 10, fill: C.ok }));
-
-    art.appendChild(txt(sx, 296, "Past positions are untouched: their k and v depend only on themselves, so they are read from the", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(sx, 320, "cache instead of being recomputed. Every step adds exactly one row and reads every row before it.", { size: 11.5 }));
-    art.appendChild(txt(sx, 344, "One pass over the cache per layer, per head — that is the whole decode step.", { size: 11.5 }));
-  }
-
-  /* --------------------------- sections 5 and 6 -------------------------- */
-
-  function drawNoCache(art: SVGSVGElement): void {
-    art.appendChild(txt(GRID_X - 12, GRID_Y - 10, "step", { anchor: "end", size: 9 }));
-    for (let p = 0; p < n; p++) {
-      art.appendChild(txt(colX(p) + CELL_W / 2, GRID_Y - 10, "t" + p, { anchor: "middle", size: 9, mono: true }));
-    }
-    for (let r = 1; r <= n; r++) {
-      const y = rowY(r);
-      art.appendChild(txt(GRID_X - 12, y + 11, "step " + r, { anchor: "end", size: 10, mono: true }));
-      for (let p = 0; p < n; p++) {
-        if (p > r - 1) {
-          art.appendChild(s("rect", { x: colX(p), y, width: CELL_W, height: ROW_H, rx: 3, fill: C.panel2, opacity: 0.5 }));
-          continue;
-        }
-        const times = n - p;
-        art.appendChild(
-          s("rect", {
-            x: colX(p),
-            y,
-            width: CELL_W,
-            height: ROW_H,
-            rx: 3,
-            fill: times === 1 ? C.accent : C.bad,
-            opacity: times === 1 ? 0.85 : 0.16 + 0.6 * ((times - 1) / Math.max(1, n - 1)),
-          }),
-        );
-      }
-      art.appendChild(txt(GRID_X + n * CELL_PITCH + 4, y + 11, r + " rows", { size: 10, mono: true }));
-    }
-    const fy = rowY(n) + ROW_H + 24;
-    art.appendChild(txt(GRID_X, fy, ((n * (n + 1)) / 2) + " projections written, but only " + n + " distinct rows exist.", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(GRID_X, fy + 20, "Darker = rebuilt more often; t0 is rebuilt at every single step.", { size: 11.5 }));
-  }
-
-  function drawCache(art: SVGSVGElement): void {
-    const sx = 16;
-    const sw = 96;
-    art.appendChild(txt(sx, GRID_Y - 26, "the cache", { size: 10, fill: C.teal, weight: 600 }));
-    art.appendChild(txt(sx + 27, GRID_Y - 10, "k", { anchor: "middle", size: 9, fill: C.purple }));
-    art.appendChild(txt(sx + 72, GRID_Y - 10, "v", { anchor: "middle", size: 9, fill: C.teal }));
-    for (let r = 1; r <= n; r++) {
-      const y = rowY(r);
-      art.appendChild(s("rect", { x: sx, y: y - 2, width: sw, height: ROW_H + 4, rx: 4, fill: C.panel, stroke: C.line }));
-      const k = keyVec(layer, head, r - 1);
-      const v = valVec(layer, head, r - 1);
-      for (let j = 0; j < D; j++) {
-        art.appendChild(s("rect", { x: sx + 8 + j * 5, y, width: 4, height: ROW_H, rx: 1, fill: cellFill(k[j], C.purple) }));
-        art.appendChild(s("rect", { x: sx + 52 + j * 5, y, width: 4, height: ROW_H, rx: 1, fill: cellFill(v[j], C.teal) }));
-      }
-    }
-    for (let p = 0; p < n; p++) {
-      art.appendChild(txt(colX(p) + CELL_W / 2, GRID_Y - 10, "t" + p, { anchor: "middle", size: 9, mono: true }));
-    }
-    for (let r = 1; r <= n; r++) {
-      const y = rowY(r);
-      art.appendChild(txt(GRID_X - 12, y + 11, "step " + r, { anchor: "end", size: 10, mono: true }));
-      for (let p = 0; p < n; p++) {
-        const read = p < r - 1;
-        const write = p === r - 1;
-        if (!read && !write) {
-          art.appendChild(s("rect", { x: colX(p), y, width: CELL_W, height: ROW_H, rx: 3, fill: C.panel2, opacity: 0.5 }));
-          continue;
-        }
-        art.appendChild(
-          s("rect", {
-            x: colX(p),
-            y,
-            width: CELL_W,
-            height: ROW_H,
-            rx: 3,
-            fill: write ? C.teal : "none",
-            "fill-opacity": write ? 0.85 : 0,
-            stroke: C.teal,
-            "stroke-width": write ? 0 : 1,
-            opacity: write ? 1 : 0.5,
-          }),
-        );
-      }
-      art.appendChild(txt(GRID_X + n * CELL_PITCH + 4, y + 11, "1 write · " + (r - 1) + " read", { size: 9.5, mono: true }));
-    }
-    const fy = rowY(n) + ROW_H + 24;
-    art.appendChild(txt(20, fy, "Every row is written once and read by every later step: " + ((n * (n - 1)) / 2) + " reads, " + n + " writes.", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(20, fy + 20, "Q is not kept: a query is used at its own step and never again. Only K and V persist.", { size: 11.5 }));
-  }
-
-  /* ------------------------------ section 7 ----------------------------- */
-
-  function costBar(art: SVGSVGElement, x: number, y: number, w: number, h: number, label: string, proj: number, attend: number, scale: number): void {
-    const total = proj + attend;
-    const pw = Math.max(2, (proj / scale) * w);
-    const aw = Math.max(0, (attend / scale) * w);
-    art.appendChild(txt(x - 12, y + h / 2 + 4, label, { anchor: "end", size: 11, mono: true, fill: C.fg }));
-    art.appendChild(s("rect", { x, y, width: w, height: h, rx: 4, fill: C.panel2, stroke: C.line }));
-    art.appendChild(s("rect", { x, y, width: pw, height: h, rx: 4, fill: C.purple, opacity: 0.85 }));
-    art.appendChild(txt(x, y - 7, fmt(proj) + " project + " + fmt(attend) + " attend = " + fmt(total) + " MACs", { size: 10.5, mono: true }));
-    art.appendChild(txt(x + pw, y - 25, "projection", { size: 9.5, fill: C.purple }));
-    art.appendChild(txt(x + pw + aw + 6, y + h / 2 + 4, "attention", { size: 9.5, fill: C.teal }));
-  }
-
-  function drawStepCost(art: SVGSVGElement): void {
-    const past = n - 1;
-    const cProj = 2 * D * D;
-    const cAttn = 2 * past * D;
-    const nProj = 2 * (past + 1) * D * D;
-    const nAttn = 2 * past * D;
-    const nTotal = nProj + nAttn;
-    const bx = 180;
-    const bw = 470;
-    const bh = 22;
-    costBar(art, bx, 86, bw, bh, "with cache", cProj, cAttn, nTotal);
-    costBar(art, bx, 148, bw, bh, "no cache", nProj, nAttn, nTotal);
-
-    const cy = 216;
-    const ch = 108;
-    const maxMacs = Math.max(1, stepMacs(past, false));
-    const px = (t: number) => bx + (past === 0 ? bw : (t / past) * bw);
-    const py = (v: number) => cy + ch - (v / maxMacs) * ch;
-    art.appendChild(s("line", { x1: bx, y1: cy + ch, x2: bx + bw, y2: cy + ch, stroke: C.line }));
-    art.appendChild(s("line", { x1: bx, y1: cy, x2: bx, y2: cy + ch, stroke: C.line }));
-    art.appendChild(txt(bx - 12, cy + 6, fmt(maxMacs), { anchor: "end", size: 9.5, mono: true }));
-    art.appendChild(txt(bx - 12, cy + ch + 4, "0", { anchor: "end", size: 9.5, mono: true }));
-    art.appendChild(txt(bx, cy - 12, "MACs per step, per slice", { size: 10.5, fill: C.fg }));
-    art.appendChild(txt(bx + bw, cy + ch + 18, "steps 1 … " + n, { anchor: "end", size: 9.5, mono: true }));
-    let dA = "";
-    let dB = "";
-    for (let t = 0; t <= past; t++) {
-      dA += (t === 0 ? "M " : " L ") + px(t) + " " + py(stepMacs(t, true));
-      dB += (t === 0 ? "M " : " L ") + px(t) + " " + py(stepMacs(t, false));
-    }
-    art.appendChild(s("path", { d: dB, fill: "none", stroke: C.bad, "stroke-width": 1.6 }));
-    art.appendChild(s("path", { d: dA, fill: "none", stroke: C.accent, "stroke-width": 1.6 }));
-    art.appendChild(txt(bx + bw - 4, py(stepMacs(past, false)) - 8, "no cache", { anchor: "end", size: 10, fill: C.bad }));
-    art.appendChild(txt(bx + bw - 4, py(stepMacs(past, true)) - 8, "with cache", { anchor: "end", size: 10, fill: C.accent }));
-    art.appendChild(txt(bx, 356, "The gap between the lines is the projection work the cache removes; the attention term is in both.", { size: 11.5 }));
-  }
-
-  function drawRunCost(art: SVGSVGElement): void {
-    const cProj = cumProj(n, true);
-    const cAttn = cumAttend(n);
-    const nProj = cumProj(n, false);
-    const nAttn = cumAttend(n);
-    const nTotal = nProj + nAttn;
-    const bx = 180;
-    const bw = 470;
-    const bh = 24;
-    costBar(art, bx, 82, bw, bh, "with cache", cProj, cAttn, nTotal);
-    costBar(art, bx, 152, bw, bh, "no cache", nProj, nAttn, nTotal);
-    art.appendChild(txt(20, 232, "with cache:  Σ (2d² + 2td) = " + fmt(cProj + cAttn) + " MACs — the projection term is a straight line.", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(20, 256, "no cache:    Σ (2(t+1)d² + 2td) = " + fmt(nTotal) + " MACs — the projection term grows like n².", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(20, 292, "Re-projection is " + Math.round((100 * (nProj - cProj)) / nTotal) + "% of the no-cache bill, and it is the part the cache removes.", { size: 11.5 }));
-    art.appendChild(txt(20, 316, "The read over cached keys stays in both bills: a cache never makes attention itself cheaper.", { size: 11.5 }));
-    art.appendChild(txt(20, 348, "That is the whole of the saving: identical outputs, one straight line instead of a quadratic rise.", { size: 11.5, fill: C.ok }));
-  }
-
-  /* ------------------------------ section 9 ----------------------------- */
-
-  function drawMemory(art: SVGSVGElement): void {
-    const sx = 40;
-    const pitch = 20;
-    for (let r = 0; r < n; r++) {
-      const y = 56 + r * pitch;
-      art.appendChild(s("rect", { x: sx, y, width: 240, height: 15, rx: 3, fill: C.panel, stroke: C.line }));
-      const k = keyVec(layer, head, r);
-      const v = valVec(layer, head, r);
-      for (let j = 0; j < D; j++) {
-        art.appendChild(s("rect", { x: sx + 8 + j * 13, y: y + 2, width: 10, height: 11, rx: 1, fill: cellFill(k[j], C.purple) }));
-        art.appendChild(s("rect", { x: sx + 126 + j * 13, y: y + 2, width: 10, height: 11, rx: 1, fill: cellFill(v[j], C.teal) }));
-      }
-    }
-    art.appendChild(txt(sx + 8, 50, "key rows", { size: 9.5, fill: C.purple }));
-    art.appendChild(txt(sx + 126, 50, "value rows", { size: 9.5, fill: C.teal }));
-    const cx = 320;
-    const lines: Array<[number, string]> = [
-      [70, "per position, per layer, per head:"],
-      [90, "2 rows × " + D + " numbers."],
-      [122, LAYERS + " layers × " + HEADS + " heads = " + LAYERS * HEADS + " slices,"],
-      [142, "so " + NUM_PER_POS + " numbers per position."],
-      [174, "at " + BYTES_PER_NUM + " bytes a number: " + fmtBytes(NUM_PER_POS * BYTES_PER_NUM) + " per position,"],
-      [194, fmtBytes(NUM_PER_POS * BYTES_PER_NUM * n) + " at " + n + " positions — one row per step."],
-      [232, "linear in context, while the compute saving"],
-      [252, "per step is roughly flat once d is large."],
-    ];
-    for (const [ly, text] of lines) art.appendChild(txt(cx, ly, text, { size: 11 }));
-    art.appendChild(txt(40, 330, "The cache trades compute for memory. Attention over n keys still costs 2nd per step either way.", { size: 11.5 }));
-  }
-
-  const LAYER_STEPS = [
-    { label: "input h_t", note: "The vector for this position, handed up by the layer below. One vector per position." },
-    { label: "RMSNorm", note: "Per token: it normalizes that one vector. No other position is involved." },
-    { label: "q, k, v projections", note: "Per token: three matrix-vector products on h_t alone. This is why a stored k or v never needs rebuilding." },
-    { label: "attention", note: "The one cross-token step: q_t is dotted with every cached k, and the weights mix every cached v." },
-    { label: "+ residual", note: "Per token: the attention output is added back onto h_t." },
-    { label: "RMSNorm + MLP", note: "Per token: a position-wise feed-forward block, the same arithmetic at every position." },
-    { label: "output h_t", note: "Sent up to the next layer. Nothing on this path needed a token to the right — which is what makes the cache legal." },
-  ];
-
-  function drawLayer(art: SVGSVGElement): void {
-    const x = 20;
-    const w = 280;
-    const blocks = [
-      { y: 40, h: 34, label: "h_t · this layer in", sub: "one vector per position" },
-      { y: 90, h: 30, label: "RMSNorm", sub: "per token" },
-      { y: 136, h: 46, label: "", sub: "" },
-      { y: 198, h: 58, label: "softmax(q·kᵀ/√d) · v", sub: "the only cross-token step" },
-      { y: 272, h: 30, label: "+ residual", sub: "per token" },
-      { y: 318, h: 36, label: "RMSNorm + MLP", sub: "per token" },
-      { y: 370, h: 34, label: "h_t out · layer above", sub: "per token" },
-    ];
-    art.appendChild(
-      txt(x, 26, "stage " + (layerStep + 1) + " / " + LAYER_STEPS.length + " · " + LAYER_STEPS[layerStep].label, { size: 11.5, fill: C.fg, weight: 600 }),
-    );
-
-    blocks.forEach((blk, i) => {
-      if (i === 2) return;
-      const attn = i === 3;
-      const on = i === layerStep;
+      const bx = x0 + i * pitch;
+      const done = i < c;
+      const now = i === c;
       art.appendChild(
         s("rect", {
-          x,
-          y: blk.y,
+          x: bx,
+          y,
           width: w,
-          height: blk.h,
-          rx: 8,
-          fill: attn ? C.accent : C.panel,
-          "fill-opacity": attn ? 0.1 : 1,
-          stroke: on ? C.fg : attn ? C.accent : C.line,
-          "stroke-width": on ? 1.8 : 1,
+          height: h,
+          rx: 7,
+          fill: now ? C.accent : C.panel,
+          "fill-opacity": now ? 0.2 : 1,
+          stroke: now ? C.accent : C.line,
+          "stroke-width": now ? 1.6 : 1,
+          opacity: done ? 0.75 : 1,
         }),
       );
-      art.appendChild(txt(x + 12, blk.y + 18, blk.label, { size: 11.5, mono: attn, fill: C.fg }));
-      art.appendChild(txt(x + 12, blk.y + (attn ? 44 : 32), blk.sub, { size: 9.5, fill: attn ? C.accent : C.dim }));
+      art.appendChild(txt(bx + w / 2, y + 20, TEXT[i], { anchor: "middle", size: 9.5, mono: true, fill: now ? C.fg : C.dim }));
+    }
+    art.appendChild(txt(x0, y - 10, "position being processed · t = " + c + (pre ? " (prompt, left to right)" : " (the new token)"), { size: 10 }));
+
+    const bx0 = 20;
+    const bw0 = 320;
+    const rows: Array<{ y: number; h: number; label: string }> = [
+      { y: 92, h: 40, label: "" },
+      { y: 148, h: 48, label: "" },
+      { y: 212, h: 60, label: "" },
+    ];
+    rows.forEach((r) => {
+      art.appendChild(s("rect", { x: bx0, y: r.y, width: bw0, height: r.h, rx: 8, fill: C.panel, stroke: C.line }));
     });
+    art.appendChild(txt(bx0 + 12, 110, "the token at position " + c + " · " + TEXT[c], { size: 11, mono: true, fill: C.fg }));
+    tex(art, bx0 + 12, 128, T`h_t`, { size: 11.5, width: 120 });
+    art.appendChild(txt(bx0 + 52, 128, "· its hidden vector, one per position", { size: 10 }));
 
-    const py = 136;
-    const ph = 46;
-    const names = ["q = W_Q h", "k = W_K h", "v = W_V h"];
-    const cols = [C.accent, C.purple, C.teal];
-    for (let j = 0; j < 3; j++) {
-      const bx = x + j * 94;
-      const on = layerStep === 2;
-      art.appendChild(s("rect", { x: bx, y: py, width: 88, height: ph, rx: 7, fill: C.panel, stroke: on ? C.fg : cols[j], "stroke-width": on ? 1.6 : 1 }));
-      art.appendChild(txt(bx + 44, py + 20, names[j], { anchor: "middle", size: 10.5, mono: true, fill: cols[j] }));
-      art.appendChild(txt(bx + 44, py + 35, "per token", { anchor: "middle", size: 9 }));
-    }
-    for (let j = 0; j < 3; j++) {
-      const bx = x + j * 94 + 44;
-      art.appendChild(s("line", { x1: bx, y1: py + ph, x2: bx, y2: 186, stroke: C.dim, "stroke-width": 1, opacity: 0.7 }));
-    }
-    art.appendChild(s("line", { x1: 64, y1: 186, x2: 252, y2: 186, stroke: C.dim, "stroke-width": 1, opacity: 0.7 }));
-    arrow(art, 160, 186, 160, 194, C.dim, "arw-d");
-    arrow(art, x + w / 2, 74, x + w / 2, 84, C.dim, "arw-d");
-    arrow(art, x + w / 2, 120, x + w / 2, 130, C.dim, "arw-d");
-    arrow(art, x + w / 2, 256, x + w / 2, 266, C.dim, "arw-d");
-    arrow(art, x + w / 2, 302, x + w / 2, 312, C.dim, "arw-d");
-    arrow(art, x + w / 2, 354, x + w / 2, 364, C.dim, "arw-d");
-
-    const perToken = layerStep !== 3;
-    const coupling = layerStep === 3;
-    art.appendChild(txt(336, 46, "per token or cross-token", { size: 10.5, fill: C.fg, weight: 600 }));
+    tex(art, bx0 + 12, 168, T`q_t = W_Q h_t`, { size: 11.5, width: 150, color: C.accent });
+    tex(art, bx0 + 160, 168, T`k_t = W_K h_t`, { size: 11.5, width: 150, color: C.purple });
+    tex(art, bx0 + 12, 188, T`v_t = W_V h_t`, { size: 11.5, width: 150, color: C.teal });
     art.appendChild(
-      s("rect", { x: 336, y: 56, width: 352, height: 128, rx: 9, fill: C.panel, "fill-opacity": perToken ? 1 : 0.5, stroke: perToken ? C.ok : C.line, "stroke-width": perToken ? 1.4 : 1 }),
+      txt(bx0 + 160, 188, pre ? "computed for this position" : "the only new arithmetic", { size: 10, fill: C.ok }),
     );
-    art.appendChild(s("circle", { cx: 352, cy: 74, r: 4, fill: C.ok }));
-    art.appendChild(txt(364, 78, "independent · per token", { size: 10.5, fill: C.ok, weight: 600 }));
-    art.appendChild(txt(352, 102, "RMSNorm", { size: 11 }));
-    art.appendChild(txt(352, 124, "q, k, v projections", { size: 11 }));
-    art.appendChild(txt(352, 146, "MLP, output projection", { size: 11 }));
-    art.appendChild(txt(352, 172, "no term from any other position", { size: 10.5, fill: C.dim }));
 
+    tex(art, bx0 + 12, 236, T`a_{t,p} = \mathrm{softmax}\!\left(\frac{q_t \cdot k_p}{\sqrt{d}}\right)`, { size: 11, width: 280 });
     art.appendChild(
-      s("rect", { x: 336, y: 198, width: 352, height: 78, rx: 9, fill: C.panel, "fill-opacity": coupling ? 1 : 0.5, stroke: coupling ? C.warn : C.line, "stroke-width": coupling ? 1.4 : 1 }),
+      txt(bx0 + 12, 262, pre ? "over p ≤ t — the positions to its left" : "over p ≤ t — every row already in the cache", { size: 10.5 }),
     );
-    art.appendChild(s("circle", { cx: 352, cy: 216, r: 4, fill: C.warn }));
-    art.appendChild(txt(364, 220, "couples positions", { size: 10.5, fill: C.warn, weight: 600 }));
-    art.appendChild(txt(352, 244, "q_t · every cached k", { size: 11 }));
-    art.appendChild(txt(352, 266, "weights · every cached v", { size: 11 }));
-    arrow(art, 336, 237, 304, 237, C.warn, "arw-w", 1.2);
 
-    const demoOn = layerStep === 2 || layerStep === 3;
-    const boxes = [336, 520];
-    const labels = ["position t−2", "position t−1"];
-    for (let j = 0; j < 2; j++) {
+    const sx = 380;
+    art.appendChild(txt(sx, 86, "the cache · one k row and one v row per position", { size: 10.5, fill: C.teal, weight: 600 }));
+    art.appendChild(txt(sx + 24, 104, "k", { anchor: "middle", size: 9, fill: C.purple }));
+    art.appendChild(txt(sx + 124, 104, "v", { anchor: "middle", size: 9, fill: C.teal }));
+    for (let r = 0; r < n; r++) {
+      const ry = 112 + r * 17;
+      const read = !pre && r < c;
+      const written = r < c || r === c;
+      const fresh = r === c;
       art.appendChild(
-        s("rect", { x: boxes[j], y: 292, width: 168, height: 32, rx: 7, fill: C.panel, stroke: demoOn ? C.ok : C.line, "stroke-width": demoOn ? 1.3 : 1 }),
+        s("rect", {
+          x: sx,
+          y: ry,
+          width: 300,
+          height: 15,
+          rx: 3,
+          fill: C.panel,
+          stroke: fresh ? C.ok : read ? C.teal : C.line,
+          "stroke-width": fresh || read ? 1.3 : 1,
+          "stroke-dasharray": written ? "" : "3 3",
+          opacity: written ? 1 : 0.45,
+        }),
       );
-      art.appendChild(txt(boxes[j] + 84, 306, labels[j], { anchor: "middle", size: 10.5, mono: true, fill: C.fg }));
-      art.appendChild(txt(boxes[j] + 84, 319, "its own k, v", { anchor: "middle", size: 9 }));
-      arrow(art, boxes[j] + 84, 324, boxes[j] + 84, 354, demoOn ? C.warn : C.line, "arw-w", 1);
+      const k = keyVec(layer, head, r);
+      const v = valVec(layer, head, r);
+      for (let j = 0; j < D; j++) {
+        art.appendChild(s("rect", { x: sx + 18 + j * 6, y: ry + 3, width: 5, height: 9, rx: 1, fill: written ? cellFill(k[j], C.purple) : C.panel2, opacity: written ? 1 : 0.5 }));
+        art.appendChild(s("rect", { x: sx + 118 + j * 6, y: ry + 3, width: 5, height: 9, rx: 1, fill: written ? cellFill(v[j], C.teal) : C.panel2, opacity: written ? 1 : 0.5 }));
+      }
+      art.appendChild(txt(sx + 292, ry + 11, String(r), { anchor: "end", size: 8.5, mono: true, opacity: 0.8 }));
     }
-    art.appendChild(txt(512, 313, "∥", { anchor: "middle", size: 14, fill: C.ok, weight: 700 }));
-    art.appendChild(txt(336, 342, "computed side by side — no arrows between them", { size: 10.5, fill: demoOn ? C.ok : C.dim }));
-    art.appendChild(
-      s("rect", { x: 336, y: 358, width: 352, height: 36, rx: 9, fill: C.warn, "fill-opacity": 0.08, stroke: C.warn, "stroke-width": 1, "stroke-dasharray": "4 3" }),
-    );
-    art.appendChild(txt(352, 380, "attention: reads every row written so far", { size: 10.5, fill: C.warn }));
+    const cacheNote = pre
+      ? "written so far: " + (c + 1) + " rows"
+      : "read: " + c + " rows · written this step: 1 row";
+    art.appendChild(txt(sx, 112 + n * 17 + 14, cacheNote, { size: 10.5, fill: pre ? C.ok : C.teal }));
 
-    art.appendChild(txt(x, 428, LAYER_STEPS[layerStep].note, { size: 11.5, fill: C.fg }));
+    art.appendChild(txt(x0, 308, "positions this query may read · grey is blocked by the causal mask", { size: 10.5, fill: C.fg }));
+    for (let p = 0; p < n; p++) {
+      const px = x0 + p * 16;
+      const allowed = p <= c;
+      art.appendChild(
+        s("rect", {
+          x: px,
+          y: 318,
+          width: 14,
+          height: 14,
+          rx: 2,
+          fill: p === c ? C.ok : allowed ? C.accent : C.panel2,
+          opacity: allowed ? 0.8 : 0.35,
+        }),
+      );
+    }
+
+    const note1 = pre
+      ? "In hardware the prompt is processed in one parallel pass; walking it one position at a time shows what each contributes."
+      : "Only the new position is projected. Every earlier row is read from the cache — none of it is recomputed.";
+    const note2 = pre
+      ? "Each position projects its own k and v, reads the positions to its left, and leaves exactly one row behind."
+      : "That read is the part that grows: one dot product per cached key, per layer, per head, at every step.";
+    art.appendChild(txt(x0, 366, note1, { size: 11.5, fill: C.fg }));
+    art.appendChild(txt(x0, 390, note2, { size: 11.5 }));
+    art.appendChild(
+      txt(x0, 416, pre ? "This is the phase that fills the cache." : "This is the phase that pays for it, one row at a time.", { size: 11.5, fill: C.ok }),
+    );
   }
 
-  const draws = [drawLoop, drawLayer, drawAttention, drawPrefill, drawDecode, drawNoCache, drawCache, drawStepCost, drawRunCost, drawMemory];
+  /* ------------------------------ section 5 ----------------------------- */
+
+  function drawImpl(art: SVGSVGElement): void {
+    const sx = 90;
+    const cellW = 24;
+    const pitchX = 26;
+    for (let l = 0; l < LAYERS; l++) {
+      for (let kind = 0; kind < 2; kind++) {
+        const y = 50 + (l * 2 + kind) * 22;
+        const isK = kind === 0;
+        art.appendChild(
+          txt(sx - 8, y + 12, "layer " + l + " · " + (isK ? "K" : "V"), { anchor: "end", size: 10, mono: true, fill: isK ? C.purple : C.teal }),
+        );
+        art.appendChild(s("rect", { x: sx - 4, y: y - 2, width: n * pitchX + 4, height: 19, rx: 3, fill: C.panel, stroke: C.line }));
+        for (let p = 0; p < n; p++) {
+          const vec = isK ? keyVec(layer, head, p) : valVec(layer, head, p);
+          let fill = "";
+          for (let j = 0; j < 3; j++) fill += cellFill(vec[j], isK ? C.purple : C.teal).slice(7, 9);
+          art.appendChild(s("rect", { x: sx + p * pitchX, y, width: cellW, height: 15, rx: 2, fill: (isK ? "#a371f7" : "#39c5cf") + fill.slice(0, 2), opacity: 0.75 }));
+        }
+      }
+    }
+    art.appendChild(txt(sx, 28, "one sequence · two tensors per layer, per KV head", { size: 10.5, fill: C.fg }));
+    arrow(art, sx + (n - 1) * pitchX + cellW / 2, 32, sx + (n - 1) * pitchX + cellW / 2, 46, C.ok, "arw-g");
+    art.appendChild(txt(sx + (n - 1) * pitchX + cellW / 2 + 8, 40, "write pointer", { size: 10, fill: C.ok }));
+    art.appendChild(s("line", { x1: sx - 2, y1: 140, x2: sx + n * pitchX - 2, y2: 140, stroke: C.teal }));
+    art.appendChild(txt(sx - 2, 154, "read window: rows 0 … n−1, contiguous", { size: 10, fill: C.teal }));
+
+    const px = 440;
+    art.appendChild(txt(px, 28, "many sequences · one pool of blocks", { size: 10.5, fill: C.fg }));
+    const palette = [C.accent, C.accent, C.teal, C.teal, C.accent, C.line];
+    for (let i = 0; i < 6; i++) {
+      const col = palette[i];
+      art.appendChild(s("rect", { x: px + i * 44, y: 52, width: 40, height: 40, rx: 6, fill: col, "fill-opacity": i === 5 ? 0.15 : 0.25, stroke: col }));
+      art.appendChild(txt(px + i * 44 + 20, 77, String(i), { anchor: "middle", size: 11, mono: true, fill: C.fg }));
+    }
+    art.appendChild(txt(px, 110, "seq A → blocks 0, 1, 4   ·   seq B → blocks 2, 3   ·   free: 5", { size: 10.5 }));
+    art.appendChild(txt(px, 132, "each block holds 16 positions (say);", { size: 10.5 }));
+    art.appendChild(txt(px, 150, "a block table maps logical to physical ones.", { size: 10.5 }));
+    art.appendChild(txt(px, 176, "a finished sequence returns its blocks at once,", { size: 10.5 }));
+    art.appendChild(txt(px, 194, "and a shared prompt prefix is reused copy-on-write.", { size: 10.5 }));
+
+    art.appendChild(txt(20, 232, "The cache is a 4-D tensor: [layer][KV head][position][d]. Only the position axis grows with context.", { size: 11.5, fill: C.fg }));
+    art.appendChild(txt(20, 256, "Prefill fills a prompt in one kernel; decode appends one row per step and reads everything before it.", { size: 11.5 }));
+    art.appendChild(txt(20, 280, "Its size is the budget: it competes with the weights, and caps how long a context or how large a batch you serve.", { size: 11.5 }));
+  }
+
+  const draws = [
+    drawLayer,
+    drawLoop,
+    (art: SVGSVGElement) => drawFlow(art, "pre"),
+    (art: SVGSVGElement) => drawFlow(art, "dec"),
+    drawImpl,
+  ];
 
   /* -------------------------------- cards -------------------------------- */
 
   function cardsFor(i: number): Array<{ k: string; v: string; hint?: string }> {
-    const past = n - 1;
     const sec = SECS[i].id;
+    const c = flowCursor(sec === "decode" ? "dec" : "pre");
     if (sec === "layer") {
       const step = LAYER_STEPS[layerStep];
       return [
         { k: "stage", v: layerStep + 1 + " / " + LAYER_STEPS.length },
         { k: "block", v: step.label },
-        {
-          k: "cross-token",
-          v: layerStep === 3 ? "yes" : "no",
-          hint: layerStep === 3 ? "reads every cached row" : "this position alone",
-        },
+        { k: "cross-token", v: layerStep === 3 ? "yes" : "no", hint: layerStep === 3 ? "reads the positions it may read" : "this position alone" },
       ];
     }
     if (sec === "loop") {
@@ -982,67 +806,21 @@ const kvCache: SceneFactory = (host) => {
         { k: "vocabulary", v: TEXT.length + " words", hint: "a real one is ~100k" },
         { k: "sampled token", v: n < TEXT.length ? TEXT[n] : "—" },
         { k: "top probability", v: probs[best].toFixed(2) },
-        { k: "sequence length", v: String(n) },
-      ];
-    }
-    if (sec === "attention") {
-      const a = attention(layer, head, past);
-      const maxA = a.length ? Math.max(...a) : 0;
-      const sum = a.reduce((x, y) => x + y, 0);
-      return [
-        { k: "keys read", v: String(a.length) },
-        { k: "largest weight", v: maxA.toFixed(3) },
-        { k: "weights sum", v: sum.toFixed(3) },
-        { k: "slice", v: layer + "." + head },
+        { k: "positions so far", v: String(n) },
       ];
     }
     if (sec === "prefill") {
       return [
-        { k: "prompt positions", v: String(PROMPT_N) },
-        { k: "rows written", v: String(PROMPT_N) },
-        { k: "passes", v: "1", hint: "parallel over positions" },
+        { k: "at position", v: "t = " + c },
+        { k: "rows in the cache", v: c + 1 + " of " + n },
+        { k: "reads", v: "p ≤ " + c },
       ];
     }
     if (sec === "decode") {
       return [
-        { k: "rows read", v: String(past) },
-        { k: "rows written", v: "1" },
-        { k: "projection MACs", v: fmt(2 * D * D) },
-        { k: "attention MACs", v: fmt(2 * past * D) },
-      ];
-    }
-    if (sec === "nocache") {
-      return [
-        { k: "rows rebuilt", v: String((n * (n + 1)) / 2), hint: "only " + n + " rows exist" },
-        { k: "projection MACs", v: fmt(cumProj(n, false)) },
-        { k: "t0 rebuilt", v: n + "×" },
-      ];
-    }
-    if (sec === "cache") {
-      return [
-        { k: "rows written", v: String(n) },
-        { k: "rows read", v: String((n * (n - 1)) / 2) },
-        { k: "projection MACs", v: fmt(cumProj(n, true)) },
-      ];
-    }
-    if (sec === "stepcost") {
-      const c = stepMacs(past, true);
-      const nc = stepMacs(past, false);
-      return [
-        { k: "this step, with cache", v: fmt(c) },
-        { k: "this step, no cache", v: fmt(nc) },
-        { k: "ratio", v: "×" + (nc / c).toFixed(1) },
-        { k: "re-projection dropped", v: fmt(nc - c) + " MACs" },
-      ];
-    }
-    if (sec === "runcost") {
-      const withC = cumMacs(n, true);
-      const noC = cumMacs(n, false);
-      return [
-        { k: "whole run, with cache", v: fmt(withC) },
-        { k: "whole run, no cache", v: fmt(noC) },
-        { k: "ratio", v: "×" + (noC / withC).toFixed(2) },
-        { k: "attention share", v: Math.round((100 * cumAttend(n)) / noC) + "%", hint: "of the no-cache bill" },
+        { k: "at position", v: "t = " + c },
+        { k: "rows read from cache", v: String(c) },
+        { k: "rows written this step", v: "1" },
       ];
     }
     return [
@@ -1058,15 +836,16 @@ const kvCache: SceneFactory = (host) => {
   const loopReset = mkBtn("Reset");
   const layerNext = mkBtn("▶ Stage the layer", true);
   const layerBack = mkBtn("◀ Back");
-  const stepBtn = mkBtn("▶ Step decode", true);
+  const prePlay = mkBtn("▶ Play", true);
+  const preStep = mkBtn("Step ▸");
+  const preReset = mkBtn("Reset");
+  const decPlay = mkBtn("▶ Play", true);
+  const decStep = mkBtn("Step ▸");
+  const decReset = mkBtn("Reset");
 
   function appendToken(): void {
     if (dead) return;
-    if (n >= MAX_N) {
-      n = MIN_N;
-    } else {
-      n += 1;
-    }
+    n = n >= MAX_N ? MIN_N : n + 1;
     posRange.value = String(n);
     flash = false;
     render();
@@ -1086,19 +865,44 @@ const kvCache: SceneFactory = (host) => {
     }, 620);
   }
 
+  function stopFlow(which: "pre" | "dec"): void {
+    if (which === "pre" && preTimer !== null) {
+      window.clearInterval(preTimer);
+      preTimer = null;
+    }
+    if (which === "dec" && decTimer !== null) {
+      window.clearInterval(decTimer);
+      decTimer = null;
+    }
+    render();
+  }
+
+  function startFlow(which: "pre" | "dec"): void {
+    stopFlow(which);
+    if (which === "pre") preCursor = 0;
+    else decCursor = 0;
+    render();
+    const tick = (): void => {
+      const cur = which === "pre" ? preCursor : decCursor;
+      if (cur >= n - 1) {
+        stopFlow(which);
+        return;
+      }
+      if (which === "pre") preCursor = cur + 1;
+      else decCursor = cur + 1;
+      render();
+    };
+    if (which === "pre") preTimer = window.setInterval(tick, 900);
+    else decTimer = window.setInterval(tick, 900);
+  }
+
   sampleBtn.addEventListener("click", animateAppend);
-  stepBtn.addEventListener("click", animateAppend);
   loopReset.addEventListener("click", () => {
     n = MIN_N;
     posRange.value = String(n);
     flash = false;
     render();
   });
-  posRange.addEventListener("input", () => {
-    n = Number(posRange.value);
-    render();
-  });
-
   layerNext.addEventListener("click", () => {
     layerStep = layerStep >= LAYER_STEPS.length - 1 ? 0 : layerStep + 1;
     render();
@@ -1107,50 +911,93 @@ const kvCache: SceneFactory = (host) => {
     layerStep = Math.max(0, layerStep - 1);
     render();
   });
+  prePlay.addEventListener("click", () => {
+    if (preTimer !== null) stopFlow("pre");
+    else startFlow("pre");
+  });
+  decPlay.addEventListener("click", () => {
+    if (decTimer !== null) stopFlow("dec");
+    else startFlow("dec");
+  });
+  preStep.addEventListener("click", () => {
+    if (preTimer !== null) stopFlow("pre");
+    preCursor = Math.min(n - 1, flowCursor("pre") + 1);
+    render();
+  });
+  decStep.addEventListener("click", () => {
+    if (decTimer !== null) stopFlow("dec");
+    decCursor = Math.min(n - 1, flowCursor("dec") + 1);
+    render();
+  });
+  preReset.addEventListener("click", () => {
+    if (preTimer !== null) stopFlow("pre");
+    preCursor = n - 1;
+    render();
+  });
+  decReset.addEventListener("click", () => {
+    if (decTimer !== null) stopFlow("dec");
+    decCursor = n - 1;
+    render();
+  });
+  posRange.addEventListener("input", () => {
+    n = Number(posRange.value);
+    render();
+  });
 
-  secEls[0].ctl.append(sampleBtn, loopReset);
-  secEls[1].ctl.append(layerNext, layerBack);
-  secEls[4].ctl.append(stepBtn);
+  secEls[0].ctl.append(layerNext, layerBack);
+  secEls[1].ctl.append(sampleBtn, loopReset);
+  secEls[2].ctl.append(prePlay, preStep, preReset);
+  secEls[3].ctl.append(decPlay, decStep, decReset);
 
   /* -------------------------------- render ------------------------------- */
 
   function render(): void {
     if (dead) return;
+    preCursor = Math.min(preCursor, n - 1);
+    decCursor = Math.min(decCursor, n - 1);
     posOut.textContent = String(n);
     headBtns.forEach((b, i) => {
       b.classList.toggle("on", Math.floor(i / HEADS) === layer && i % HEADS === head);
     });
+    sampleBtn.textContent = flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token";
     layerNext.textContent = layerStep >= LAYER_STEPS.length - 1 ? "↺ From the input" : "▶ Stage the layer";
     layerBack.disabled = layerStep === 0;
-    sampleBtn.disabled = false;
-    sampleBtn.textContent = flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token";
-    stepBtn.textContent = flash ? "decoding…" : n >= MAX_N ? "↺ Restart" : "▶ Step decode";
+    prePlay.textContent = preTimer !== null ? "❚❚ Pause" : "▶ Play";
+    decPlay.textContent = decTimer !== null ? "❚❚ Pause" : "▶ Play";
+    preStep.disabled = flowCursor("pre") >= n - 1;
+    decStep.disabled = flowCursor("dec") >= n - 1;
 
     secEls.forEach((el, i) => {
       el.svg.textContent = "";
       const defs = s("defs");
-      defs.append(marker("arw-a", C.accent), marker("arw-t", C.teal), marker("arw-d", C.dim), marker("arw-g", C.ok), marker("arw-w", C.warn));
+      defs.append(
+        marker("arw-a", C.accent),
+        marker("arw-t", C.teal),
+        marker("arw-d", C.dim),
+        marker("arw-g", C.ok),
+        marker("arw-w", C.warn),
+      );
       el.svg.appendChild(defs);
       draws[i](el.svg);
       el.cards.textContent = "";
       const specs = cardsFor(i);
       for (const spec of specs) {
-        const c = document.createElement("div");
-        c.className = "ill-card";
-        const k = document.createElement("div");
-        k.className = "k";
-        k.textContent = spec.k;
-        const v = document.createElement("div");
-        v.className = "v";
-        v.textContent = spec.v;
-        c.append(k, v);
+        const card = document.createElement("div");
+        card.className = "ill-card";
+        const key = document.createElement("div");
+        key.className = "k";
+        key.textContent = spec.k;
+        const val = document.createElement("div");
+        val.className = "v";
+        val.textContent = spec.v;
+        card.append(key, val);
         if (spec.hint) {
-          const h = document.createElement("div");
-          h.className = "ill-card-hint";
-          h.textContent = spec.hint;
-          c.appendChild(h);
+          const hint = document.createElement("div");
+          hint.className = "ill-card-hint";
+          hint.textContent = spec.hint;
+          card.appendChild(hint);
         }
-        el.cards.appendChild(c);
+        el.cards.appendChild(card);
       }
     });
   }
@@ -1166,7 +1013,8 @@ const kvCache: SceneFactory = (host) => {
     destroy() {
       dead = true;
       if (timer !== null) window.clearTimeout(timer);
-      root.remove();
+      if (preTimer !== null) window.clearInterval(preTimer);
+      if (decTimer !== null) window.clearInterval(decTimer);
     },
   };
 };
