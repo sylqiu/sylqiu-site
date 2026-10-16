@@ -7,7 +7,6 @@
  *  2  the autoregressive loop — a token becomes a distribution over the next token
  *  3  prefill, walked position by position
  *  4  decode, the same walk with K and V read from the cache
- *  5  how it is implemented (prose)
  *
  * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
  * one (layer, head) slice is eight numbers wide. Formulas are plain SVG text with
@@ -281,48 +280,33 @@ interface Sec {
 const SECS: Sec[] = [
   {
     id: "layer",
-    title: "Inside one transformer layer",
+    title: "The Transformer Architecture",
     blurb:
-      "The step from the input vector h_t of one position to the layer above it, block by block. Stage it: the norm, the three projections and the MLP all work on this position alone; attention is the single place where a token touches its past. The mask on the right says which positions a query is allowed to read.",
+      "Let [t] denote the sequence [0, ..., T] of indices and t be an element. The input vectors h_[t] go through (1) the normalization layer and the MLP layer that projects to QKV features, (2) causal self-attention across [t], (3) normalization, MLP bottleneck and residual connection",
     h: 530,
   },
   {
-    id: "loop",
-    title: "Every token becomes a distribution over the next token",
+    id: "next-token-prediction",
+    title: "Next token prediction",
     blurb:
-      "The model reads the sequence and outputs, at the last position, a probability for every token in its vocabulary. One is sampled, appended, and the whole thing runs again. Sample a few and watch the loop.",
+      "A token is an element of the vocabulary. Every token is mapped to a probability distribution of the next token.",
     h: 380,
   },
   {
     id: "prefill",
-    title: "Prefill: the prompt, position by position",
+    title: "Prefill: processing the prompt sequence all at once",
     blurb:
-      "The prompt is processed in one parallel pass, but walk it one position at a time and you can see what each position does: project its own q, k and v, read the positions to its left, and leave one k row and one v row behind. Play or step it.",
+      "This is the standard forward pass of the transformer on an input sequence with causal attention.",
     h: 440,
   },
   {
     id: "decode",
-    title: "Decode: one new token, the rest read from the cache",
+    title: "Decode: sample the next token, then repeat the forward pass with the updated token sequence",
     blurb:
-      "Same walk, one position at a time — except that the earlier rows are now read from the cache instead of being rebuilt. Only the new position is projected, and attention reads every row written before it. Play or step it.",
+      "",
     h: 440,
   },
-  {
-    id: "impl",
-    title: "How it is implemented",
-    blurb: "The parts an engine actually has to get right, once the arithmetic is clear.",
-    h: 300,
-    prose: [
-      "<strong>Allocation.</strong> Every layer keeps two tensors, K and V, of shape <code>[heads, capacity, d]</code> — capacity being the longest context the server will allow. Only the capacity is booked up front; rows are filled as tokens arrive, so a sequence that stops early costs only the blocks it used.",
-      "<strong>Writing.</strong> A per-sequence write pointer marks position n. Prefill writes the whole prompt in one kernel, one row per position. Each decode step writes exactly one row at n and advances the pointer.",
-      "<strong>Reading.</strong> Attention for the new token reads the rows 0…n: one dot product with each cached key, then the weighted sum of the cached values. The projections of the past never run again — that is the whole saving.",
-      "<strong>Sharing a pool.</strong> With many sequences in flight the cache is cut into fixed blocks (16 positions, say) and a block table maps logical positions to physical blocks. A sequence occupies only what it needs, finished sequences hand their blocks back at once, and a shared prompt prefix can reuse the same blocks copy-on-write — the PagedAttention idea.",
-      "<strong>Shrinking it.</strong> Grouped-query attention gives several query heads one shared K/V head (H_kv < H); multi-query attention goes to H_kv = 1. Each cuts the cache by the sharing factor. Storing K and V in fp8 or int4 cuts it again, at the price of noisier attention scores.",
-      "<strong>Why decode is bandwidth-bound.</strong> Per token the GPU reads the weights once and the entire cache (2 · L · H_kv · d · n values), but does arithmetic for one token only. Bigger batches amortize the weight reads; longer contexts do not amortize the cache read — so context length and batch size compete for the same memory.",
-      "<strong>Keeping it bounded.</strong> Sliding-window attention, attention sinks and cache eviction drop rows to cap memory; chunked prefill interleaves prompt chunks with decode steps so one long prompt does not stall the rest of the batch.",
-      "<strong>Where you meet it.</strong> vLLM, TensorRT-LLM, TGI and SGLang all keep a paged or fused KV cache; llama.cpp keeps one contiguous cache per sequence. The interface is the same everywhere: append one row per step, read everything before it.",
-    ],
-  },
+
 ];
 
 /* --------------------------------- scene ---------------------------------- */
@@ -332,7 +316,10 @@ const kvCache: SceneFactory = (host) => {
   let layer = 0;
   let head = 0;
   let flash = false;
-  let layerStep = 0;
+  let step = 0;
+  let qkToken = 2;
+  let attnPhase = 0;
+  let attnTimer: number | null = null;
   let preCursor = 7;
   let decCursor = 7;
   let preTimer: number | null = null;
@@ -466,112 +453,262 @@ const kvCache: SceneFactory = (host) => {
 
   /* ------------------------------ section 1 ----------------------------- */
 
-  const LAYER_STEPS = [
-    { label: "input h_t", note: "The hidden vector for this position, handed up by the layer below. One vector per position." },
-    { label: "RMSNorm", note: "Per token: it normalizes that one vector. No other position is involved." },
-    { label: "q, k, v projections", note: "Per token: three matrix-vector products on h_t alone. This is why a stored k or v never needs rebuilding." },
-    { label: "attention", note: "The one cross-token step: the query of this position meets every key it is allowed to read, and the weights mix their values." },
-    { label: "+ residual", note: "Per token: the attention output is added back onto h_t." },
-    { label: "RMSNorm + MLP", note: "Per token: a position-wise feed-forward block, the same arithmetic at every position." },
-    { label: "output h_t", note: "Sent up to the next layer. Nothing on this path needed a token to the right — which is what makes the cache legal." },
+  const STEPS = [
+    {
+      chip: "1 · normalize, project q, k, v",
+      note: "Each position is normalized and projected on its own: h_t goes in, q_t, k_t and v_t come out. Nothing in this step looks at another position.",
+    },
+    {
+      chip: "2 · causal self-attention",
+      note: "The one step that reads the rest of the sequence: the query of the current token is dotted with every key it may read, and those weights mix the values.",
+    },
+    {
+      chip: "3 · normalize, MLP, residual",
+      note: "Still per position: normalize, push through the MLP bottleneck, add the residual, and hand the vector up to the next layer.",
+    },
   ];
 
-  function drawLayer(art: SVGSVGElement): void {
-    const x = 20;
-    const w = 280;
-    const blocks = [
-      { y: 40, h: 34, label: "", sub: "" },
-      { y: 90, h: 30, label: "RMSNorm", sub: "per token" },
-      { y: 136, h: 52, label: "", sub: "" },
-      { y: 204, h: 76, label: "", sub: "the only cross-token step" },
-      { y: 296, h: 30, label: "+ residual", sub: "per token" },
-      { y: 342, h: 36, label: "RMSNorm + MLP", sub: "per token" },
-      { y: 394, h: 34, label: "out · layer above", sub: "per token" },
-    ];
-    art.appendChild(
-      txt(x, 26, "stage " + (layerStep + 1) + " / " + LAYER_STEPS.length + " · " + LAYER_STEPS[layerStep].label + " · slice " + layer + "." + head, { size: 11.5, fill: C.fg, weight: 600 }),
-    );
-    art.appendChild(txt(VB_W - 20, 26, "one (layer, head) slice", { anchor: "end", size: 10 }));
+  const PANEL = { top: 60, bottom: 470, inX: 20, inW: 148, opX: 180, opW: 392, outX: 584, outW: 116 };
+  const IN_STRIP = PANEL.inX + 26;
+  const OUT_STRIP = PANEL.outX + 10;
 
-    blocks.forEach((blk, i) => {
-      if (i === 0 || i === 2 || i === 3) return;
-      const on = i === layerStep;
-      art.appendChild(s("rect", { x, y: blk.y, width: w, height: blk.h, rx: 8, fill: C.panel, stroke: on ? C.fg : C.line, "stroke-width": on ? 1.8 : 1 }));
-      art.appendChild(txt(x + 12, blk.y + 19, blk.label, { size: 11.5, fill: C.fg }));
-      art.appendChild(txt(x + 12, blk.y + blk.h - 5, blk.sub, { size: 9.5 }));
+  function wrapNote(text: string, size: number, maxW: number): string[] {
+    const maxChars = Math.max(24, Math.floor(maxW / (size * 0.52)));
+    const lines: string[] = [];
+    let cur = "";
+    for (const word of text.split(" ")) {
+      const next = cur.length === 0 ? word : cur + " " + word;
+      if (next.length > maxChars && cur.length > 0) {
+        lines.push(cur);
+        cur = word;
+      } else {
+        cur = next;
+      }
+    }
+    if (cur.length > 0) lines.push(cur);
+    return lines;
+  }
+
+  function strip(art: SVGSVGElement, x: number, y: number, vec: Vec, color: string, label: string, opacity = 1): void {
+    art.appendChild(txt(x, y - 6, label, { size: 9.5, fill: color, opacity }));
+    for (let i = 0; i < vec.length; i++) {
+      art.appendChild(s("rect", { x: x + i * 12, y, width: 11, height: 14, rx: 1, fill: cellFill(vec[i], color), opacity }));
+    }
+  }
+
+  const hVec = (p: number): Vec => cachedVec("h:" + p, () => unit((i) => gauss(p, i, 44)));
+  const outVec = (p: number): Vec => cachedVec("o:" + p, () => unit((i) => gauss(p, i, 88)));
+  const attnVec = (l: number, h: number, p: number): Vec => cachedVec("a:" + l + ":" + h + ":" + p, () => unit((i) => gauss(l, h, p, i, 99)));
+
+  function drawLayer(art: SVGSVGElement): void {
+    const t = Math.min(qkToken, n - 1);
+    const weights = attention(layer, head, t);
+    const wMax = weights.length > 0 ? Math.max.apply(null, weights) : 1;
+    const rel = (w: number): number => Math.min(1, w / wMax);
+    const valuesPhase = attnPhase === 1;
+
+    STEPS.forEach((st, i) => {
+      const x = 20 + i * 236;
+      const on = i === step;
+      art.appendChild(
+        s("rect", {
+          x,
+          y: 16,
+          width: 224,
+          height: 30,
+          rx: 8,
+          fill: on ? C.accent : C.panel,
+          "fill-opacity": on ? 0.16 : 1,
+          stroke: on ? C.accent : C.line,
+          "stroke-width": on ? 1.4 : 1,
+        }),
+      );
+      art.appendChild(txt(x + 12, 35, st.chip, { size: 10.5, fill: on ? C.fg : C.dim, weight: on ? 600 : 400 }));
     });
 
-    const b0 = blocks[0];
-    const on0 = layerStep === 0;
-    art.appendChild(s("rect", { x, y: b0.y, width: w, height: b0.h, rx: 8, fill: C.panel, stroke: on0 ? C.fg : C.line, "stroke-width": on0 ? 1.8 : 1 }));
-    tex(art, x + 12, b0.y + 22, T`h_t`, { size: 13 });
-    art.appendChild(txt(x + 46, b0.y + 22, "this layer in · one vector per position", { size: 10 }));
+    const panel = (x: number, w: number, label: string, color: string): void => {
+      art.appendChild(s("rect", { x, y: PANEL.top, width: w, height: PANEL.bottom - PANEL.top, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+      art.appendChild(txt(x + 10, PANEL.top + 17, label, { size: 9.5, weight: 600, fill: color }));
+    };
+    panel(PANEL.inX, PANEL.inW, "input", C.dim);
+    panel(PANEL.opX, PANEL.opW, "step " + (step + 1) + " of 3", C.accent);
+    panel(PANEL.outX, PANEL.outW, "output", C.dim);
+    art.appendChild(txt(PANEL.outX + PANEL.outW - 10, PANEL.top + 17, "slice " + layer + "." + head, { anchor: "end", size: 9 }));
 
-    const p2 = blocks[2];
-    const on2 = layerStep === 2;
-    art.appendChild(s("rect", { x, y: p2.y, width: w, height: p2.h, rx: 8, fill: C.panel, stroke: on2 ? C.fg : C.line, "stroke-width": on2 ? 1.8 : 1 }));
-    tex(art, x + 12, p2.y + 20, T`q_t = W_Q h_t`, { size: 11.5, color: C.accent });
-    tex(art, x + 12, p2.y + 38, T`k_t = W_K h_t`, { size: 11.5, color: C.purple });
-    tex(art, x + 150, p2.y + 20, T`v_t = W_V h_t`, { size: 11.5, color: C.teal });
-    art.appendChild(txt(x + w - 10, p2.y + 44, "per token", { anchor: "end", size: 9.5 }));
-
-    const p3 = blocks[3];
-    const on3 = layerStep === 3;
-    art.appendChild(s("rect", { x, y: p3.y, width: w, height: p3.h, rx: 8, fill: C.accent, "fill-opacity": on3 ? 0.18 : 0.1, stroke: on3 ? C.fg : C.accent, "stroke-width": on3 ? 1.8 : 1 }));
-    tex(art, x + 12, p3.y + 22, T`a_{t,p} = softmax(q_t · k_p / √d)`, { size: 11 });
-    tex(art, x + 12, p3.y + 52, T`Σ_{p} a_{t,p} v_p`, { size: 11.5 });
-    art.appendChild(txt(x + 150, p3.y + 56, "· the context it gets back", { size: 10, fill: C.accent }));
-
-    arrow(art, x + w / 2, 74, x + w / 2, 84, C.dim, "arw-d");
-    arrow(art, x + w / 2, 120, x + w / 2, 130, C.dim, "arw-d");
-    arrow(art, x + w / 2, 188, x + w / 2, 198, C.dim, "arw-d");
-    arrow(art, x + w / 2, 280, x + w / 2, 290, C.dim, "arw-d");
-    arrow(art, x + w / 2, 326, x + w / 2, 336, C.dim, "arw-d");
-    arrow(art, x + w / 2, 378, x + w / 2, 388, C.dim, "arw-d");
-
-    const perToken = layerStep !== 3;
-    const coupling = layerStep === 3;
-    art.appendChild(s("rect", { x: 336, y: 40, width: 352, height: 132, rx: 9, fill: C.panel, "fill-opacity": perToken ? 1 : 0.5, stroke: perToken ? C.ok : C.line, "stroke-width": perToken ? 1.4 : 1 }));
-    art.appendChild(s("circle", { cx: 352, cy: 58, r: 4, fill: C.ok }));
-    art.appendChild(txt(364, 62, "independent · per token", { size: 10.5, fill: C.ok, weight: 600 }));
-    art.appendChild(txt(352, 84, "RMSNorm · MLP · output projection", { size: 11 }));
-    tex(art, 352, 108, T`q_t = W_Q h_t`, { size: 11.5, width: 300 });
-    tex(art, 352, 126, T`k_t = W_K h_t`, { size: 11.5, width: 300 });
-    tex(art, 352, 144, T`v_t = W_V h_t`, { size: 11.5, width: 300 });
-    art.appendChild(txt(352, 164, "no term from any other position", { size: 10.5 }));
-
-    art.appendChild(s("rect", { x: 336, y: 182, width: 352, height: 92, rx: 9, fill: C.panel, "fill-opacity": coupling ? 1 : 0.5, stroke: coupling ? C.warn : C.line, "stroke-width": coupling ? 1.4 : 1 }));
-    art.appendChild(s("circle", { cx: 352, cy: 200, r: 4, fill: C.warn }));
-    art.appendChild(txt(364, 204, "couples positions", { size: 10.5, fill: C.warn, weight: 600 }));
-    tex(art, 352, 226, T`a_{t,p} = softmax(q_t · k_p / √d)`, { size: 11 });
-    art.appendChild(txt(352, 250, "over every position p this query may read", { size: 10.5 }));
-    arrow(art, 336, 240, 304, 240, C.warn, "arw-w", 1.2);
-
-    art.appendChild(txt(336, 296, "causal mask · row t reads columns p ≤ t", { size: 10.5, fill: C.fg, weight: 600 }));
-    for (let p = 0; p < n; p++) {
-      art.appendChild(txt(MASK.x + p * MASK.step + MASK.cell / 2, MASK.y - 5, String(p), { anchor: "middle", size: 8, mono: true }));
+    if (step === 0) {
+      strip(art, IN_STRIP, 150, hVec(t), C.fg, "h_t · one vector per position");
+      art.appendChild(s("rect", { x: PANEL.opX + 20, y: 96, width: PANEL.opW - 40, height: 30, rx: 7, fill: C.panel2, stroke: C.line }));
+      art.appendChild(txt(PANEL.opX + 32, 116, "RMSNorm", { size: 11, fill: C.fg }));
+      art.appendChild(txt(PANEL.opX + 112, 116, "scale this one vector by its own root-mean-square", { size: 9.5 }));
+      const projs = [
+        { label: T`q_t = W_Q h_t`, color: C.accent },
+        { label: T`k_t = W_K h_t`, color: C.purple },
+        { label: T`v_t = W_V h_t`, color: C.teal },
+      ];
+      projs.forEach((p, i) => {
+        const px = PANEL.opX + 20 + i * 136;
+        art.appendChild(s("rect", { x: px, y: 190, width: 120, height: 62, rx: 8, fill: C.panel2, stroke: p.color }));
+        tex(art, px + 12, 216, p.label, { size: 11, color: p.color });
+        art.appendChild(txt(px + 12, 240, "per position", { size: 9.5 }));
+        arrow(art, px + 60, 126, px + 60, 186, C.dim, "arw-d");
+      });
+      art.appendChild(txt(PANEL.opX + 20, 300, "h_t goes into three separate matrix-vector products.", { size: 10.5, fill: C.fg }));
+      art.appendChild(txt(PANEL.opX + 20, 322, "No other position is involved, so q_t, k_t and v_t depend only on this token.", { size: 10.5 }));
+      art.appendChild(txt(PANEL.opX + 20, 352, "These three vectors are the output of this step, and the input of the next.", { size: 10.5, fill: C.ok }));
+      strip(art, OUT_STRIP, 150, queryVec(layer, head, t), C.accent, "q_t");
+      strip(art, OUT_STRIP, 210, keyVec(layer, head, t), C.purple, "k_t");
+      strip(art, OUT_STRIP, 270, valVec(layer, head, t), C.teal, "v_t");
     }
-    for (let r = 0; r < n; r++) {
-      art.appendChild(txt(MASK.x - 5, MASK.y + r * MASK.step + MASK.cell - 1, String(r), { anchor: "end", size: 8, mono: true }));
+
+    if (step === 1) {
+      strip(art, IN_STRIP, 150, queryVec(layer, head, t), C.accent, "q_t");
+      strip(art, IN_STRIP, 210, keyVec(layer, head, t), C.purple, "k_t");
+      strip(art, IN_STRIP, 270, valVec(layer, head, t), C.teal, "v_t");
+
+      const chipW = 30;
+      const cpitch = 34;
+      const rowW = n * cpitch - 4;
+      const x0 = PANEL.opX + 20 + Math.max(0, (PANEL.opW - 40 - rowW) / 2);
+      const cx = (p: number): number => x0 + p * cpitch + chipW / 2;
+
+      if (t < n - 1) {
+        art.appendChild(s("rect", { x: cx(t + 1) - 8, y: 92, width: (n - t - 1) * cpitch + 8, height: 116, rx: 6, fill: C.panel2, "fill-opacity": 0.3, stroke: C.warn, "stroke-dasharray": "4 3" }));
+      }
+
+      art.appendChild(
+        txt(
+          PANEL.opX + 20,
+          88,
+          t === 0
+            ? "token 0 has nothing to its left: it reads only itself"
+            : valuesPhase
+              ? "then the weights are combined with V"
+              : "first: dot the query of token " + t + " with each key",
+          { size: 10, fill: valuesPhase ? C.teal : C.accent, weight: 600 },
+        ),
+      );
+      art.appendChild(txt(PANEL.opX + PANEL.opW - 20, 88, "line = attention dot product", { anchor: "end", size: 9.5, fill: C.dim }));
       for (let p = 0; p < n; p++) {
-        const allowed = p <= r;
-        const newest = r === n - 1;
+        const allowed = p <= t;
+        const isQuery = p === t;
         art.appendChild(
           s("rect", {
-            x: MASK.x + p * MASK.step,
-            y: MASK.y + r * MASK.step,
-            width: MASK.cell,
-            height: MASK.cell,
-            rx: 2,
-            fill: allowed ? (newest ? C.accent : C.teal) : C.panel2,
-            opacity: allowed ? (newest ? 0.9 : 0.28) : 0.35,
+            x: x0 + p * cpitch,
+            y: 100,
+            width: chipW,
+            height: 24,
+            rx: 6,
+            fill: isQuery ? C.accent : C.panel,
+            "fill-opacity": isQuery ? 0.2 : 1,
+            stroke: isQuery ? C.accent : C.line,
+            opacity: allowed ? 1 : 0.45,
+          }),
+        );
+        art.appendChild(txt(cx(p), 116, TEXT[p], { anchor: "middle", size: 8.5, mono: true, fill: allowed ? C.fg : C.dim }));
+        art.appendChild(txt(cx(p), 136, String(p), { anchor: "middle", size: 8, mono: true, opacity: allowed ? 0.9 : 0.5 }));
+        art.appendChild(s("rect", { x: cx(p) - 7, y: 144, width: 14, height: 14, rx: 3, fill: C.purple, "fill-opacity": allowed ? 0.35 : 0.12, stroke: C.purple, opacity: allowed ? 1 : 0.4 }));
+        art.appendChild(txt(cx(p), 172, "k" + p, { anchor: "middle", size: 8.5, mono: true, fill: allowed ? C.purple : C.dim, opacity: allowed ? 1 : 0.5 }));
+      }
+
+      if (t < n - 1) {
+        art.appendChild(txt(x0 + rowW - 6, 200, "blocked · p > t", { anchor: "end", size: 9.5, fill: C.warn }));
+      }
+
+      for (let p = 0; p <= t; p++) {
+        const r = t > 0 ? rel(weights[p]) : 1;
+        art.appendChild(
+          s("line", {
+            x1: cx(t),
+            y1: 182,
+            x2: cx(p),
+            y2: 158,
+            stroke: C.accent,
+            "stroke-width": valuesPhase ? 0.8 : 0.8 + 4.5 * r,
+            opacity: valuesPhase ? 0.3 : 0.45 + 0.55 * r,
           }),
         );
       }
+      art.appendChild(s("rect", { x: cx(t) - 9, y: 182, width: 18, height: 18, rx: 4, fill: C.accent, "fill-opacity": 0.5, stroke: C.fg }));
+      art.appendChild(txt(cx(t), 214, "q_t", { anchor: "middle", size: 9.5, mono: true, fill: C.accent }));
+      art.appendChild(txt(PANEL.opX + 20, 232, t === 0 ? "output = its own value" : "the dashed keys are the ones the mask blocks", { size: 9.5, fill: C.dim }));
+
+      for (let p = 0; p < n; p++) {
+        const allowed = p <= t;
+        const r = allowed && t > 0 ? rel(weights[p]) : 0;
+        art.appendChild(s("rect", { x: cx(p) - 7, y: 244, width: 14, height: 14, rx: 3, fill: C.teal, "fill-opacity": allowed ? (valuesPhase ? 0.25 + 0.75 * r : 0.22) : 0.12, stroke: C.teal, opacity: allowed ? 1 : 0.35 }));
+        art.appendChild(txt(cx(p), 272, "v" + p, { anchor: "middle", size: 8.5, mono: true, fill: C.teal, opacity: allowed ? 1 : 0.45 }));
+      }
+      if (valuesPhase) {
+        for (let p = 0; p <= t; p++) {
+          const r = t > 0 ? rel(weights[p]) : 1;
+          art.appendChild(s("line", { x1: cx(p), y1: 240, x2: PANEL.opX + PANEL.opW / 2, y2: 304, stroke: C.teal, "stroke-width": 0.8 + 3 * r, opacity: 0.5 }));
+        }
+        art.appendChild(s("circle", { cx: PANEL.opX + PANEL.opW / 2, cy: 312, r: 7, fill: C.teal, "fill-opacity": 0.55, stroke: C.teal }));
+        tex(art, PANEL.opX + PANEL.opW / 2 + 14, 318, T`o_t = Σ a_{t,p} v_p`, { size: 10.5, color: C.teal });
+      } else {
+        art.appendChild(txt(PANEL.opX + 20, 318, "those scores become weights by a softmax over the p that are not masked.", { size: 10.5 }));
+      }
+      art.appendChild(txt(PANEL.opX + 20, 352, "Causal: token " + t + " reads positions 0 … " + t + ", never anything to its right.", { size: 10.5, fill: C.fg }));
+      art.appendChild(txt(PANEL.opX + 20, 374, "Every position does the same thing, so one matmul covers the whole sequence.", { size: 10.5 }));
+      art.appendChild(txt(PANEL.opX + 20, 402, "The output here is one vector per position, carrying what that position read.", { size: 10.5, fill: C.ok }));
+      strip(art, OUT_STRIP, 210, attnVec(layer, head, t), C.ok, "o_t", valuesPhase ? 1 : 0.4);
     }
-    art.appendChild(txt(336, MASK.y + n * MASK.step + 18, "grey = the future: no query may read it.", { size: 10.5 }));
-    art.appendChild(txt(336, MASK.y + n * MASK.step + 34, "The bottom row is the query being computed now.", { size: 10.5 }));
-    art.appendChild(txt(x, 508, LAYER_STEPS[layerStep].note, { size: 11.5, fill: C.fg }));
+
+    if (step === 2) {
+      strip(art, IN_STRIP, 210, attnVec(layer, head, t), C.ok, "o_t · attention output");
+      art.appendChild(s("rect", { x: PANEL.opX + 20, y: 96, width: PANEL.opW - 40, height: 28, rx: 7, fill: C.panel2, stroke: C.line }));
+      art.appendChild(txt(PANEL.opX + 32, 115, "RMSNorm", { size: 11, fill: C.fg }));
+      const bars = [
+        { y: 156, x: PANEL.opX + 20, w: PANEL.opW - 40, label: "up-projection · expand to a wider layer" },
+        { y: 200, x: PANEL.opX + 120, w: PANEL.opW - 240, label: "bottleneck" },
+        { y: 244, x: PANEL.opX + 20, w: PANEL.opW - 40, label: "down-projection · back to d" },
+      ];
+      for (const b of bars) {
+        art.appendChild(s("rect", { x: b.x, y: b.y, width: b.w, height: 28, rx: 7, fill: C.panel2, stroke: C.purple }));
+        art.appendChild(txt(b.x + 12, b.y + 18, b.label, { size: 10 }));
+      }
+      arrow(art, PANEL.opX + 60, 124, PANEL.opX + 60, 152, C.dim, "arw-d");
+      arrow(art, PANEL.opX + 60, 184, PANEL.opX + 60, 196, C.dim, "arw-d");
+      arrow(art, PANEL.opX + 60, 228, PANEL.opX + 60, 240, C.dim, "arw-d");
+      art.appendChild(
+        s("path", {
+          d: "M " + (PANEL.opX + 14) + " 300 C " + (PANEL.opX + 14) + " 200 " + (PANEL.opX + PANEL.opW - 14) + " 200 " + (PANEL.opX + PANEL.opW - 14) + " 300",
+          fill: "none",
+          stroke: C.ok,
+          "stroke-width": 1.2,
+          "stroke-dasharray": "5 4",
+        }),
+      );
+      art.appendChild(txt(PANEL.opX + 20, 322, "+ residual · the vector that entered this step is added back", { size: 10.5, fill: C.ok }));
+      art.appendChild(txt(PANEL.opX + 20, 352, "Still per position: nothing here touches another token.", { size: 10.5, fill: C.fg }));
+      art.appendChild(txt(PANEL.opX + 20, 374, "The result is this layer output for that position, ready for the layer above.", { size: 10.5, fill: C.ok }));
+      strip(art, OUT_STRIP, 210, outVec(t), C.fg, "h_t · up to the next layer");
+    }
+
+    const handY = 424;
+    art.appendChild(
+      s("path", {
+        d: "M " + (PANEL.outX + PANEL.outW / 2) + " " + handY + " L " + PANEL.outX + " " + handY + " L " + PANEL.outX + " " + (handY + 16) + " L " + (PANEL.inX + PANEL.inW) + " " + (handY + 16) + " L " + (PANEL.inX + PANEL.inW) + " " + handY + " L " + (PANEL.inX + PANEL.inW / 2) + " " + handY,
+        fill: "none",
+        stroke: step < 2 ? C.accent : C.dim,
+        "stroke-width": 1.2,
+        "stroke-dasharray": "6 4",
+        "marker-end": "url(#arw-a)",
+      }),
+    );
+    art.appendChild(
+      txt(PANEL.inX + PANEL.inW / 2 + 8, handY + 32, step < 2 ? "this output becomes the input of step " + (step + 2) : "this output goes up to the next layer", { size: 10.5, fill: step < 2 ? C.accent : C.dim }),
+    );
+
+    const note =
+      step === 1
+        ? STEPS[step].note + " Now: token " + t + ", " + (valuesPhase ? "mixing values" : "reading keys") + "."
+        : STEPS[step].note;
+    wrapNote(note, 11.5, 680)
+      .slice(0, 3)
+      .forEach((line, i) => {
+        art.appendChild(txt(20, 486 + i * 16, line, { size: 11.5, fill: i === 0 ? C.fg : C.dim }));
+      });
   }
 
   /* ------------------------------ section 2 ----------------------------- */
@@ -774,59 +911,12 @@ const kvCache: SceneFactory = (host) => {
     );
   }
 
-  /* ------------------------------ section 5 ----------------------------- */
-
-  function drawImpl(art: SVGSVGElement): void {
-    const sx = 90;
-    const cellW = 24;
-    const pitchX = 26;
-    for (let l = 0; l < LAYERS; l++) {
-      for (let kind = 0; kind < 2; kind++) {
-        const y = 50 + (l * 2 + kind) * 22;
-        const isK = kind === 0;
-        art.appendChild(
-          txt(sx - 8, y + 12, "layer " + l + " · " + (isK ? "K" : "V"), { anchor: "end", size: 10, mono: true, fill: isK ? C.purple : C.teal }),
-        );
-        art.appendChild(s("rect", { x: sx - 4, y: y - 2, width: n * pitchX + 4, height: 19, rx: 3, fill: C.panel, stroke: C.line }));
-        for (let p = 0; p < n; p++) {
-          const vec = isK ? keyVec(layer, head, p) : valVec(layer, head, p);
-          let fill = "";
-          for (let j = 0; j < 3; j++) fill += cellFill(vec[j], isK ? C.purple : C.teal).slice(7, 9);
-          art.appendChild(s("rect", { x: sx + p * pitchX, y, width: cellW, height: 15, rx: 2, fill: (isK ? "#a371f7" : "#39c5cf") + fill.slice(0, 2), opacity: 0.75 }));
-        }
-      }
-    }
-    art.appendChild(txt(sx, 28, "one sequence · two tensors per layer, per KV head", { size: 10.5, fill: C.fg }));
-    arrow(art, sx + (n - 1) * pitchX + cellW / 2, 32, sx + (n - 1) * pitchX + cellW / 2, 46, C.ok, "arw-g");
-    art.appendChild(txt(sx + (n - 1) * pitchX + cellW / 2 + 8, 40, "write pointer", { size: 10, fill: C.ok }));
-    art.appendChild(s("line", { x1: sx - 2, y1: 140, x2: sx + n * pitchX - 2, y2: 140, stroke: C.teal }));
-    art.appendChild(txt(sx - 2, 154, "read window: rows 0 … n−1, contiguous", { size: 10, fill: C.teal }));
-
-    const px = 440;
-    art.appendChild(txt(px, 28, "many sequences · one pool of blocks", { size: 10.5, fill: C.fg }));
-    const palette = [C.accent, C.accent, C.teal, C.teal, C.accent, C.line];
-    for (let i = 0; i < 6; i++) {
-      const col = palette[i];
-      art.appendChild(s("rect", { x: px + i * 44, y: 52, width: 40, height: 40, rx: 6, fill: col, "fill-opacity": i === 5 ? 0.15 : 0.25, stroke: col }));
-      art.appendChild(txt(px + i * 44 + 20, 77, String(i), { anchor: "middle", size: 11, mono: true, fill: C.fg }));
-    }
-    art.appendChild(txt(px, 110, "seq A → blocks 0, 1, 4   ·   seq B → blocks 2, 3   ·   free: 5", { size: 10.5 }));
-    art.appendChild(txt(px, 132, "each block holds 16 positions (say);", { size: 10.5 }));
-    art.appendChild(txt(px, 150, "a block table maps logical to physical ones.", { size: 10.5 }));
-    art.appendChild(txt(px, 176, "a finished sequence returns its blocks at once,", { size: 10.5 }));
-    art.appendChild(txt(px, 194, "and a shared prompt prefix is reused copy-on-write.", { size: 10.5 }));
-
-    art.appendChild(txt(20, 232, "The cache is a 4-D tensor: [layer][KV head][position][d]. Only the position axis grows with context.", { size: 11.5, fill: C.fg }));
-    art.appendChild(txt(20, 256, "Prefill fills a prompt in one kernel; decode appends one row per step and reads everything before it.", { size: 11.5 }));
-    art.appendChild(txt(20, 280, "Its size is the budget: it competes with the weights, and caps how long a context or how large a batch you serve.", { size: 11.5 }));
-  }
 
   const draws = [
     drawLayer,
     drawLoop,
     (art: SVGSVGElement) => drawFlow(art, "pre"),
     (art: SVGSVGElement) => drawFlow(art, "dec"),
-    drawImpl,
   ];
 
   /* -------------------------------- cards -------------------------------- */
@@ -835,14 +925,24 @@ const kvCache: SceneFactory = (host) => {
     const sec = SECS[i].id;
     const c = flowCursor(sec === "decode" ? "dec" : "pre");
     if (sec === "layer") {
-      const step = LAYER_STEPS[layerStep];
-      return [
-        { k: "stage", v: layerStep + 1 + " / " + LAYER_STEPS.length },
-        { k: "block", v: step.label },
-        { k: "cross-token", v: layerStep === 3 ? "yes" : "no", hint: layerStep === 3 ? "reads the positions it may read" : "this position alone" },
+      const qt = Math.min(qkToken, n - 1);
+      const weights = attention(layer, head, qt);
+      let top = 0;
+      weights.forEach((w, j) => {
+        if (w > (weights[top] === undefined ? 0 : weights[top])) top = j;
+      });
+      const base: Array<{ k: string; v: string; hint?: string }> = [
+        { k: "step", v: step + 1 + " / 3", hint: STEPS[step].chip },
+        { k: "cross-token", v: step === 1 ? "yes" : "no", hint: step === 1 ? "attention is the one step that reads other positions" : "this position alone" },
       ];
+      if (step !== 1) return base;
+      return base.concat([
+        { k: "query token", v: "t = " + qt },
+        { k: "keys it may read", v: "p ≤ " + qt },
+        { k: "top weight", v: weights.length > 0 ? weights[top].toFixed(2) + " → token " + top : "—" },
+      ]);
     }
-    if (sec === "loop") {
+    if (sec === "next-token-prediction") {
       const probs = distribution(n);
       let best = 0;
       probs.forEach((p, j) => {
@@ -869,19 +969,16 @@ const kvCache: SceneFactory = (host) => {
         { k: "rows written this step", v: "1" },
       ];
     }
-    return [
-      { k: "numbers per position", v: String(NUM_PER_POS) },
-      { k: "bytes per position", v: fmtBytes(NUM_PER_POS * BYTES_PER_NUM) },
-      { k: "bytes at " + n + " positions", v: fmtBytes(NUM_PER_POS * BYTES_PER_NUM * n) },
-    ];
+    return [{ k: "positions", v: String(n) }];
   }
 
   /* ------------------------------- controls ------------------------------ */
 
   const sampleBtn = mkBtn("▶ Sample next token", true);
   const loopReset = mkBtn("Reset");
-  const layerNext = mkBtn("▶ Stage the layer", true);
+  const layerNext = mkBtn("▶ Next step", true);
   const layerBack = mkBtn("◀ Back");
+  const attnPlay = mkBtn("▶ Animate attention");
   const prePlay = mkBtn("▶ Play", true);
   const preStep = mkBtn("Step ▸");
   const preReset = mkBtn("Reset");
@@ -950,12 +1047,42 @@ const kvCache: SceneFactory = (host) => {
     render();
   });
   layerNext.addEventListener("click", () => {
-    layerStep = layerStep >= LAYER_STEPS.length - 1 ? 0 : layerStep + 1;
+    step = step >= 2 ? 0 : step + 1;
+    qkToken = 0;
+    attnPhase = 0;
     render();
   });
   layerBack.addEventListener("click", () => {
-    layerStep = Math.max(0, layerStep - 1);
+    step = Math.max(0, step - 1);
+    qkToken = 0;
+    attnPhase = 0;
     render();
+  });
+  attnPlay.addEventListener("click", () => {
+    if (attnTimer !== null) {
+      window.clearInterval(attnTimer);
+      attnTimer = null;
+      render();
+      return;
+    }
+    step = 1;
+    qkToken = 0;
+    attnPhase = 0;
+    render();
+    attnTimer = window.setInterval(() => {
+      if (attnPhase === 0) {
+        attnPhase = 1;
+      } else {
+        attnPhase = 0;
+        qkToken += 1;
+        if (qkToken >= n) {
+          qkToken = n - 1;
+          if (attnTimer !== null) window.clearInterval(attnTimer);
+          attnTimer = null;
+        }
+      }
+      render();
+    }, 850);
   });
   prePlay.addEventListener("click", () => {
     if (preTimer !== null) stopFlow("pre");
@@ -990,7 +1117,7 @@ const kvCache: SceneFactory = (host) => {
     render();
   });
 
-  secEls[0].ctl.append(layerNext, layerBack);
+  secEls[0].ctl.append(layerNext, layerBack, attnPlay);
   secEls[1].ctl.append(sampleBtn, loopReset);
   secEls[2].ctl.append(prePlay, preStep, preReset);
   secEls[3].ctl.append(decPlay, decStep, decReset);
@@ -1000,14 +1127,16 @@ const kvCache: SceneFactory = (host) => {
   function render(): void {
     if (dead) return;
     preCursor = Math.min(preCursor, n - 1);
+    qkToken = Math.min(qkToken, n - 1);
     decCursor = Math.min(decCursor, n - 1);
     posOut.textContent = String(n);
     headBtns.forEach((b, i) => {
       b.classList.toggle("on", Math.floor(i / HEADS) === layer && i % HEADS === head);
     });
     sampleBtn.textContent = flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token";
-    layerNext.textContent = layerStep >= LAYER_STEPS.length - 1 ? "↺ From the input" : "▶ Stage the layer";
-    layerBack.disabled = layerStep === 0;
+    layerNext.textContent = step >= 2 ? "↺ Back to step 1" : "▶ Next step";
+    layerBack.disabled = step === 0;
+    attnPlay.textContent = attnTimer !== null ? "❚❚ Pause" : "▶ Animate attention";
     prePlay.textContent = preTimer !== null ? "❚❚ Pause" : "▶ Play";
     decPlay.textContent = decTimer !== null ? "❚❚ Pause" : "▶ Play";
     preStep.disabled = flowCursor("pre") >= n - 1;
@@ -1059,6 +1188,7 @@ const kvCache: SceneFactory = (host) => {
     destroy() {
       dead = true;
       if (timer !== null) window.clearTimeout(timer);
+      if (attnTimer !== null) window.clearInterval(attnTimer);
       if (preTimer !== null) window.clearInterval(preTimer);
       if (decTimer !== null) window.clearInterval(decTimer);
     },
