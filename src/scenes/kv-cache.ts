@@ -318,9 +318,9 @@ const kvCache: SceneFactory = (host) => {
   let flash = false;
   let step = 0;
   let attnToken = Math.min(2, 7);
-  let attnSlot = 7;
   let attnTimer: number | null = null;
 
+  /* one token per step: a step produces the whole output vector of that token */
   function toggleAttn(): void {
     if (attnTimer !== null) {
       window.clearInterval(attnTimer);
@@ -330,21 +330,18 @@ const kvCache: SceneFactory = (host) => {
     }
     step = 1;
     attnToken = 0;
-    attnSlot = -1;
     render();
     attnTimer = window.setInterval(() => {
-      if (attnSlot < D - 1) {
-        attnSlot += 1;
-      } else if (attnToken < n - 1) {
+      if (attnToken < n - 1) {
         attnToken += 1;
-        attnSlot = 0;
       } else {
         if (attnTimer !== null) window.clearInterval(attnTimer);
         attnTimer = null;
       }
       render();
-    }, 360);
+    }, 700);
   }
+
   let preCursor = 7;
   let decCursor = 7;
   let preTimer: number | null = null;
@@ -504,7 +501,7 @@ const kvCache: SceneFactory = (host) => {
     const weights = attention(layer, head, t);
     const wMax = weights.length > 0 ? Math.max.apply(null, weights) : 1;
     const rel = (w: number): number => Math.min(1, w / wMax);
-    const started = attnSlot >= 0;
+    const started = attnTimer !== null;
 
     STEPS.forEach((st, i) => {
       const x = 20 + i * 236;
@@ -513,7 +510,6 @@ const kvCache: SceneFactory = (host) => {
       g.addEventListener("click", () => {
         step = i;
         attnToken = Math.min(2, n - 1);
-        attnSlot = D - 1;
         render();
       });
       g.appendChild(
@@ -570,13 +566,13 @@ const kvCache: SceneFactory = (host) => {
       const kY = 286;
       const qY = 328;
 
-      art.appendChild(txt(32, 222, "each step fills the next slot of o_t", { size: 10, fill: C.teal, weight: 600 }));
+      art.appendChild(txt(32, 222, "one step: dot the keys, then mix the values", { size: 10, fill: C.teal, weight: 600 }));
       const playBtn = s("g", { cursor: "pointer", class: "ill-svg-btn" });
       playBtn.appendChild(s("rect", { x: 500, y: 206, width: 184, height: 26, rx: 13, fill: C.accent, "fill-opacity": 0.12, stroke: C.accent }));
-      playBtn.appendChild(txt(592, 223, attnTimer !== null ? "❚❚ Pause" : "▶ Animate slots", { anchor: "middle", size: 10.5, fill: C.accent, weight: 600 }));
+      playBtn.appendChild(txt(592, 223, attnTimer !== null ? "❚❚ Pause" : "▶ Animate", { anchor: "middle", size: 10.5, fill: C.accent, weight: 600 }));
       playBtn.addEventListener("click", () => toggleAttn());
       art.appendChild(playBtn);
-      art.appendChild(txt(688, 223, "click a token to pick it", { anchor: "end", size: 9, fill: C.dim }));
+      art.appendChild(txt(688, 223, "click a token to jump", { anchor: "end", size: 9, fill: C.dim }));
 
       if (t < n - 1) {
         art.appendChild(s("rect", { x: cx(t + 1) - 8, y: 244, width: (n - t - 1) * cpitch + 8, height: 116, rx: 6, fill: C.panel2, "fill-opacity": 0.3, stroke: C.warn, "stroke-dasharray": "4 3" }));
@@ -590,7 +586,6 @@ const kvCache: SceneFactory = (host) => {
         chip.addEventListener("click", () => {
           if (!allowed) return;
           attnToken = p;
-          attnSlot = D - 1;
           if (attnTimer !== null) {
             window.clearInterval(attnTimer);
             attnTimer = null;
@@ -624,75 +619,38 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(txt(cx(t), qY + 32, "q_t", { anchor: "middle", size: 9.5, mono: true, fill: C.accent }));
       art.appendChild(txt(32, qY + 32, "Causal: token " + t + " reads 0 … " + t + ".", { size: 10.5, fill: C.fg }));
 
-      /* the V matrix: rows are the positions it may read, columns are the slots of d */
       const mx = 300;
       const my = 396;
       const mPitch = 16;
       const colPitch = 18;
       art.appendChild(txt(196, my - 8, "a_{t,p}", { size: 9.5, fill: C.warn }));
-      art.appendChild(txt(mx, my - 8, "V · one column per slot of d", { size: 9.5, fill: C.teal }));
-      const activeSlot = started ? attnSlot : -1;
+      art.appendChild(txt(mx, my - 8, "V · row p is the v vector of position p, 8 numbers wide", { size: 9.5, fill: C.teal }));
       for (let p = 0; p < n; p++) {
         const allowed = p <= t;
         const r = allowed && t > 0 ? rel(weights[p]) : allowed ? 1 : 0;
         art.appendChild(s("rect", { x: 196, y: my + p * mPitch, width: allowed ? 6 + 34 * r : 2, height: 12, rx: 2, fill: C.warn, "fill-opacity": allowed ? 0.75 : 0.15 }));
         for (let j = 0; j < D; j++) {
-          const on = j === activeSlot;
           art.appendChild(
-            s("rect", {
-              x: mx + j * colPitch,
-              y: my + p * mPitch,
-              width: 16,
-              height: 12,
-              rx: 2,
-              fill: cellFill(valVec(layer, head, p)[j], C.teal),
-              opacity: allowed ? (activeSlot < 0 ? 0.28 : on ? 1 : j < activeSlot ? 0.5 : 0.16) : 0.07,
-            }),
+            s("rect", { x: mx + j * colPitch, y: my + p * mPitch, width: 16, height: 12, rx: 2, fill: cellFill(valVec(layer, head, p)[j], C.teal), opacity: allowed ? 0.25 + 0.75 * r : 0.06 }),
           );
         }
-      }
-      if (activeSlot >= 0) {
-        art.appendChild(s("rect", { x: mx + activeSlot * colPitch - 3, y: my - 3, width: 22, height: n * mPitch + 6, rx: 4, fill: "none", stroke: C.teal, "stroke-width": 1.6 }));
-      }
-      for (let p = 0; p < n; p++) {
         art.appendChild(txt(188, my + p * mPitch + 10, String(p), { anchor: "end", size: 8, mono: true, fill: C.dim }));
       }
-      tex(art, 470, my + 60, T`o_t[j] = Σ_{p} a_{t,p} v_{p,j}`, { size: 11, color: C.teal });
-      art.appendChild(
-        txt(
-          470,
-          my + 82,
-          activeSlot < 0
-            ? "one slot of o_t per step"
-            : "slot " + (attnSlot + 1) + " of " + D + " · step " + (attnToken * D + attnSlot + 1) + " of " + n * D,
-          { size: 10, fill: C.dim },
-        ),
-      );
+      tex(art, 470, my + 44, T`o_t = Σ_p a_{t,p} v_p`, { size: 11, color: C.teal });
+      art.appendChild(txt(470, my + 66, "step " + (t + 1) + " of " + n, { size: 10, fill: C.dim }));
+      art.appendChild(txt(470, my + 88, "= a weighted sum of whole v rows", { size: 10, fill: C.dim }));
 
-      /* o_t: exactly one more slot per step, so the growth is visible */
-      const ox = MID - 48;
-      const oy = BLOCK.outY + 52;
-      const ovec = attnVec(layer, head, t);
-      art.appendChild(
-        txt(ox, oy - 7, activeSlot < 0 ? "o_t · no slot computed yet" : "o_t · slots 1 … " + (activeSlot + 1) + " of " + D, {
-          size: 9.5,
-          fill: C.ok,
-        }),
-      );
-      for (let j = 0; j < D; j++) {
-        const filled = activeSlot >= 0 && j <= activeSlot;
-        art.appendChild(
-          s("rect", {
-            x: ox + j * 12,
-            y: oy,
-            width: 11,
-            height: 14,
-            rx: 1,
-            fill: filled ? cellFill(ovec[j], C.ok) : "none",
-            stroke: j === activeSlot ? C.ok : C.line,
-            "stroke-width": j === activeSlot ? 1.8 : 1,
-          }),
-        );
+      const ostep = Math.min(D * 10 + 3, Math.floor(643 / n));
+      const ocw = Math.max(3, Math.floor((ostep - 3) / D) - 1);
+      const ox0 = MID - (n * ostep - 3) / 2;
+      art.appendChild(txt(ox0, BLOCK.outY + 30, "o_0 … o_" + t + " · one vector per step", { size: 9.5, fill: C.ok }));
+      for (let p = 0; p <= t; p++) {
+        const vec = attnVec(layer, head, p);
+        for (let j = 0; j < D; j++) {
+          art.appendChild(
+            s("rect", { x: ox0 + p * ostep + j * (ocw + 1), y: BLOCK.outY + 40, width: ocw, height: 14, rx: 1, fill: cellFill(vec[j], C.ok), opacity: p === t ? 1 : 0.72 }),
+          );
+        }
       }
     }
 
