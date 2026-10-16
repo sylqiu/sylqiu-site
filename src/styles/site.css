@@ -721,3 +721,13 @@ h1, h2, h3 { line-height: 1.25; }
 .ill-sec-head h2 { margin: 0; font-size: 18px; }
 .ill-sec-blurb { margin: 6px 0 12px; font-size: 13.5px; color: var(--dim); }
 .ill-sec-ctl { display: flex; gap: 8px; }
+
+/* KaTeX inside figures: measured off-screen, then cut to size */
+.ill-tex-measure {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}

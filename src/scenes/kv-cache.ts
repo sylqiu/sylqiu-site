@@ -167,26 +167,54 @@ function txt(x: number, y: number, content: string, o: TxtOpts = {}): SVGTextEle
   return t;
 }
 
-/** KaTeX inside the figure, in SVG user units, so it scales with the drawing. */
+/**
+ * Measuring host for KaTeX: the formula is laid out once off-screen so its real
+ * box is known, and the foreignObject is then cut to exactly that size. Sizing by
+ * guess leaves invisible boxes that collide with neighbouring text, and clips
+ * anything taller than the guess (a fraction, a square root).
+ */
+let measureHost: HTMLElement | null = null;
+
+function katexBox(latex: string, size: number): { w: number; h: number } {
+  if (measureHost === null) {
+    const host = document.createElement("div");
+    host.className = "ill-tex-measure";
+    document.body.appendChild(host);
+    measureHost = host;
+  }
+  measureHost.style.fontSize = size + "px";
+  measureHost.innerHTML = katex.renderToString(latex, { throwOnError: false, displayMode: false });
+  const node = measureHost.firstElementChild;
+  const rect = node ? node.getBoundingClientRect() : null;
+  const w = rect && rect.width > 0 ? rect.width : latex.length * size * 0.5;
+  const h = rect && rect.height > 0 ? rect.height : size * 1.3;
+  return { w: Math.ceil(w) + 2, h: Math.ceil(h) + 2 };
+}
+
+/**
+ * KaTeX inside the figure, in SVG user units, so it scales with the drawing.
+ * x/y is the baseline of the formula: the box is laid out to sit on it.
+ */
 function tex(
   art: SVGSVGElement,
   x: number,
   y: number,
   latex: string,
-  o: { size?: number; align?: "left" | "center"; width?: number; color?: string } = {},
+  o: { size?: number; align?: "left" | "center"; color?: string } = {},
 ): void {
   const size = o.size ?? 12;
-  const width = o.width ?? 320;
+  const { w, h } = katexBox(latex, size);
   const fo = s("foreignObject", {
-    x: o.align === "center" ? x - width / 2 : x,
-    y: y - size * 1.2,
-    width,
-    height: size * 2.6,
+    x: Math.round(o.align === "center" ? x - w / 2 : x),
+    y: Math.round(y - h),
+    width: w,
+    height: h,
+    overflow: "visible",
   });
   const div = document.createElement("div");
   div.setAttribute(
     "style",
-    "font-size:" + size + "px;line-height:1.2;color:" + (o.color ?? C.fg) + ";text-align:" + (o.align === "center" ? "center" : "left"),
+    "font-size:" + size + "px;line-height:" + h + "px;white-space:nowrap;color:" + (o.color ?? C.fg),
   );
   div.innerHTML = katex.renderToString(latex, { throwOnError: false, displayMode: false });
   fo.appendChild(div);
@@ -418,6 +446,13 @@ const kvCache: SceneFactory = (host) => {
   root.append(ctl, glossary, toc);
   host.appendChild(root);
 
+  /* measurements are only exact once the KaTeX fonts have loaded */
+  if (document.fonts && typeof document.fonts.ready === "object") {
+    document.fonts.ready.then(() => {
+      if (!dead) render();
+    });
+  }
+
   /* ------------------------------ section 1 ----------------------------- */
 
   const LAYER_STEPS = [
@@ -472,7 +507,7 @@ const kvCache: SceneFactory = (host) => {
     const p3 = blocks[3];
     const on3 = layerStep === 3;
     art.appendChild(s("rect", { x, y: p3.y, width: w, height: p3.h, rx: 8, fill: C.accent, "fill-opacity": on3 ? 0.18 : 0.1, stroke: on3 ? C.fg : C.accent, "stroke-width": on3 ? 1.8 : 1 }));
-    tex(art, x + 12, p3.y + 22, T`a_{t,p} = \mathrm{softmax}\!\left(\frac{q_t \cdot k_p}{\sqrt{d}}\right)`, { size: 11, width: 260 });
+    tex(art, x + 12, p3.y + 22, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11 });
     tex(art, x + 12, p3.y + 52, T`\sum_{p} a_{t,p} v_p`, { size: 11.5, width: 200 });
     art.appendChild(txt(x + 150, p3.y + 56, "· the context it gets back", { size: 10, fill: C.accent }));
 
@@ -657,7 +692,7 @@ const kvCache: SceneFactory = (host) => {
       txt(bx0 + 160, 188, pre ? "computed for this position" : "the only new arithmetic", { size: 10, fill: C.ok }),
     );
 
-    tex(art, bx0 + 12, 236, T`a_{t,p} = \mathrm{softmax}\!\left(\frac{q_t \cdot k_p}{\sqrt{d}}\right)`, { size: 11, width: 280 });
+    tex(art, bx0 + 12, 236, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11 });
     art.appendChild(
       txt(bx0 + 12, 262, pre ? "over p ≤ t — the positions to its left" : "over p ≤ t — every row already in the cache", { size: 10.5 }),
     );
@@ -1012,6 +1047,10 @@ const kvCache: SceneFactory = (host) => {
     },
     destroy() {
       dead = true;
+      if (measureHost !== null) {
+        measureHost.remove();
+        measureHost = null;
+      }
       if (timer !== null) window.clearTimeout(timer);
       if (preTimer !== null) window.clearInterval(preTimer);
       if (decTimer !== null) window.clearInterval(decTimer);
