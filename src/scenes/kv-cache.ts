@@ -12,8 +12,9 @@
  * real-model statistics: the point is the shape of the work — what one step
  * computes, what the cache lets it skip, and what keeping the cache costs.
  *
- * Narrative: autoregressive loop -> attention -> prefill -> decode -> why past
- * rows stay valid (with and without a cache) -> what it saves -> what it costs.
+ * Narrative: autoregressive loop -> inside one transformer layer -> attention ->
+ * prefill -> decode -> why past rows stay valid (with and without a cache) ->
+ * what it saves -> what it costs.
  */
 import type { SceneFactory } from "../lib/registry.ts";
 
@@ -241,63 +242,70 @@ interface Sec {
 const SECS: Sec[] = [
   {
     id: "loop",
-    title: "1 · Every token becomes a distribution over the next token",
+    title: "Every token becomes a distribution over the next token",
     blurb:
       "An autoregressive model reads the sequence and outputs, at the last position, a probability for every token in its vocabulary. One is sampled, appended to the input, and the whole thing runs again. Sample a few and watch the loop.",
     h: 380,
   },
   {
+    id: "layer",
+    title: "Inside one transformer layer",
+    blurb:
+      "The step from h_t to the layer above, block by block. Stage it: every block works on this position alone — the norm, the three projections, the MLP — except attention, the single place where a token touches its past. That split is exactly what makes a KV cache possible.",
+    h: 440,
+  },
+  {
     id: "attention",
-    title: "2 · Attention: the newest token looks left",
+    title: "Attention: the newest token looks left",
     blurb:
       "To produce that distribution the last position attends to every earlier position: its query q is compared with each stored key k, the scores become weights, and the weights mix the stored values v into one context vector.",
     h: 372,
   },
   {
     id: "prefill",
-    title: "3 · Prefill: the prompt in one parallel pass",
+    title: "Prefill: the prompt in one parallel pass",
     blurb:
       "The prompt has no internal dependency to wait on, so every position is projected at once — keys and values for the whole prompt are written into the cache in a single pass. This is the compute-heavy phase.",
     h: 340,
   },
   {
     id: "decode",
-    title: "4 · Decode: one new token, one pass over the cache",
+    title: "Decode: one new token, one pass over the cache",
     blurb:
       "The sampled token is appended. Its query, key and value are the only new things computed; attention then reads every row already in the cache. Step it to append the next token.",
     h: 380,
   },
   {
     id: "nocache",
-    title: "5 · Why nothing needs recomputing: the whole past would be rebuilt",
+    title: "Why nothing needs recomputing: the whole past would be rebuilt",
     blurb:
       "Without a cache, step t re-projects every earlier token to rebuild keys and values that already exist. The grid marks what each step recomputes; the darker the cell, the more often that row is done again.",
     h: 400,
   },
   {
     id: "cache",
-    title: "6 · With a cache: write one row, read the rest",
+    title: "With a cache: write one row, read the rest",
     blurb:
       "One row per position is written when that position is first seen, and every later step reads it. Keys and values persist; the query does not — it is used at its own step and never again. That is why the cache is a KV cache.",
     h: 400,
   },
   {
     id: "stepcost",
-    title: "7 · What one step costs",
+    title: "What one step costs",
     blurb:
       "The cache removes the re-projection term: 2(t+1)d² becomes 2d². Attention over the cached keys stays, because that read is genuinely new work.",
     h: 380,
   },
   {
     id: "runcost",
-    title: "8 · How the saving adds up over a run",
+    title: "How the saving adds up over a run",
     blurb:
       "Summed over a generation, the no-cache projection bill grows like n²; with the cache it is a straight line. Attention grows either way.",
     h: 400,
   },
   {
     id: "memory",
-    title: "9 · What the cache costs: memory",
+    title: "What the cache costs: memory",
     blurb:
       "The price is memory: one key row and one value row per position, per layer, per KV head. It grows with context, and it never shrinks.",
     h: 380,
@@ -311,6 +319,7 @@ const kvCache: SceneFactory = (host) => {
   let layer = 0;
   let head = 0;
   let flash = false;
+  let layerStep = 0;
   let dead = false;
   let timer: number | null = null;
 
@@ -379,14 +388,14 @@ const kvCache: SceneFactory = (host) => {
   });
 
   const secEls: Array<{ svg: SVGSVGElement; cards: HTMLElement; ctl: HTMLElement }> = [];
-  for (const sec of SECS) {
+  SECS.forEach((sec, secIndex) => {
     const section = document.createElement("section");
     section.className = "ill-sec";
     section.id = "ill-" + sec.id;
     const head = document.createElement("div");
     head.className = "ill-sec-head";
     const h2 = document.createElement("h2");
-    h2.textContent = sec.title;
+    h2.textContent = secIndex + 1 + " · " + sec.title;
     const secCtl = document.createElement("div");
     secCtl.className = "ill-sec-ctl";
     head.append(h2, secCtl);
@@ -402,7 +411,7 @@ const kvCache: SceneFactory = (host) => {
     section.append(head, blurb, fig, cards);
     root.appendChild(section);
     secEls.push({ svg, cards, ctl: secCtl });
-  }
+  });
 
   const note = document.createElement("p");
   note.className = "ill-note";
@@ -831,13 +840,138 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(40, 330, "The cache trades compute for memory. Attention over n keys still costs 2nd per step either way.", { size: 11.5 }));
   }
 
-  const draws = [drawLoop, drawAttention, drawPrefill, drawDecode, drawNoCache, drawCache, drawStepCost, drawRunCost, drawMemory];
+  const LAYER_STEPS = [
+    { label: "input h_t", note: "The vector for this position, handed up by the layer below. One vector per position." },
+    { label: "RMSNorm", note: "Per token: it normalizes that one vector. No other position is involved." },
+    { label: "q, k, v projections", note: "Per token: three matrix-vector products on h_t alone. This is why a stored k or v never needs rebuilding." },
+    { label: "attention", note: "The one cross-token step: q_t is dotted with every cached k, and the weights mix every cached v." },
+    { label: "+ residual", note: "Per token: the attention output is added back onto h_t." },
+    { label: "RMSNorm + MLP", note: "Per token: a position-wise feed-forward block, the same arithmetic at every position." },
+    { label: "output h_t", note: "Sent up to the next layer. Nothing on this path needed a token to the right — which is what makes the cache legal." },
+  ];
+
+  function drawLayer(art: SVGSVGElement): void {
+    const x = 20;
+    const w = 280;
+    const blocks = [
+      { y: 40, h: 34, label: "h_t · this layer in", sub: "one vector per position" },
+      { y: 90, h: 30, label: "RMSNorm", sub: "per token" },
+      { y: 136, h: 46, label: "", sub: "" },
+      { y: 198, h: 58, label: "softmax(q·kᵀ/√d) · v", sub: "the only cross-token step" },
+      { y: 272, h: 30, label: "+ residual", sub: "per token" },
+      { y: 318, h: 36, label: "RMSNorm + MLP", sub: "per token" },
+      { y: 370, h: 34, label: "h_t out · layer above", sub: "per token" },
+    ];
+    art.appendChild(
+      txt(x, 26, "stage " + (layerStep + 1) + " / " + LAYER_STEPS.length + " · " + LAYER_STEPS[layerStep].label, { size: 11.5, fill: C.fg, weight: 600 }),
+    );
+
+    blocks.forEach((blk, i) => {
+      if (i === 2) return;
+      const attn = i === 3;
+      const on = i === layerStep;
+      art.appendChild(
+        s("rect", {
+          x,
+          y: blk.y,
+          width: w,
+          height: blk.h,
+          rx: 8,
+          fill: attn ? C.accent : C.panel,
+          "fill-opacity": attn ? 0.1 : 1,
+          stroke: on ? C.fg : attn ? C.accent : C.line,
+          "stroke-width": on ? 1.8 : 1,
+        }),
+      );
+      art.appendChild(txt(x + 12, blk.y + 18, blk.label, { size: 11.5, mono: attn, fill: C.fg }));
+      art.appendChild(txt(x + 12, blk.y + (attn ? 44 : 32), blk.sub, { size: 9.5, fill: attn ? C.accent : C.dim }));
+    });
+
+    const py = 136;
+    const ph = 46;
+    const names = ["q = W_Q h", "k = W_K h", "v = W_V h"];
+    const cols = [C.accent, C.purple, C.teal];
+    for (let j = 0; j < 3; j++) {
+      const bx = x + j * 94;
+      const on = layerStep === 2;
+      art.appendChild(s("rect", { x: bx, y: py, width: 88, height: ph, rx: 7, fill: C.panel, stroke: on ? C.fg : cols[j], "stroke-width": on ? 1.6 : 1 }));
+      art.appendChild(txt(bx + 44, py + 20, names[j], { anchor: "middle", size: 10.5, mono: true, fill: cols[j] }));
+      art.appendChild(txt(bx + 44, py + 35, "per token", { anchor: "middle", size: 9 }));
+    }
+    for (let j = 0; j < 3; j++) {
+      const bx = x + j * 94 + 44;
+      art.appendChild(s("line", { x1: bx, y1: py + ph, x2: bx, y2: 186, stroke: C.dim, "stroke-width": 1, opacity: 0.7 }));
+    }
+    art.appendChild(s("line", { x1: 64, y1: 186, x2: 252, y2: 186, stroke: C.dim, "stroke-width": 1, opacity: 0.7 }));
+    arrow(art, 160, 186, 160, 194, C.dim, "arw-d");
+    arrow(art, x + w / 2, 74, x + w / 2, 84, C.dim, "arw-d");
+    arrow(art, x + w / 2, 120, x + w / 2, 130, C.dim, "arw-d");
+    arrow(art, x + w / 2, 256, x + w / 2, 266, C.dim, "arw-d");
+    arrow(art, x + w / 2, 302, x + w / 2, 312, C.dim, "arw-d");
+    arrow(art, x + w / 2, 354, x + w / 2, 364, C.dim, "arw-d");
+
+    const perToken = layerStep !== 3;
+    const coupling = layerStep === 3;
+    art.appendChild(txt(336, 46, "per token or cross-token", { size: 10.5, fill: C.fg, weight: 600 }));
+    art.appendChild(
+      s("rect", { x: 336, y: 56, width: 352, height: 128, rx: 9, fill: C.panel, "fill-opacity": perToken ? 1 : 0.5, stroke: perToken ? C.ok : C.line, "stroke-width": perToken ? 1.4 : 1 }),
+    );
+    art.appendChild(s("circle", { cx: 352, cy: 74, r: 4, fill: C.ok }));
+    art.appendChild(txt(364, 78, "independent · per token", { size: 10.5, fill: C.ok, weight: 600 }));
+    art.appendChild(txt(352, 102, "RMSNorm", { size: 11 }));
+    art.appendChild(txt(352, 124, "q, k, v projections", { size: 11 }));
+    art.appendChild(txt(352, 146, "MLP, output projection", { size: 11 }));
+    art.appendChild(txt(352, 172, "no term from any other position", { size: 10.5, fill: C.dim }));
+
+    art.appendChild(
+      s("rect", { x: 336, y: 198, width: 352, height: 78, rx: 9, fill: C.panel, "fill-opacity": coupling ? 1 : 0.5, stroke: coupling ? C.warn : C.line, "stroke-width": coupling ? 1.4 : 1 }),
+    );
+    art.appendChild(s("circle", { cx: 352, cy: 216, r: 4, fill: C.warn }));
+    art.appendChild(txt(364, 220, "couples positions", { size: 10.5, fill: C.warn, weight: 600 }));
+    art.appendChild(txt(352, 244, "q_t · every cached k", { size: 11 }));
+    art.appendChild(txt(352, 266, "weights · every cached v", { size: 11 }));
+    arrow(art, 336, 237, 304, 237, C.warn, "arw-w", 1.2);
+
+    const demoOn = layerStep === 2 || layerStep === 3;
+    const boxes = [336, 520];
+    const labels = ["position t−2", "position t−1"];
+    for (let j = 0; j < 2; j++) {
+      art.appendChild(
+        s("rect", { x: boxes[j], y: 292, width: 168, height: 32, rx: 7, fill: C.panel, stroke: demoOn ? C.ok : C.line, "stroke-width": demoOn ? 1.3 : 1 }),
+      );
+      art.appendChild(txt(boxes[j] + 84, 306, labels[j], { anchor: "middle", size: 10.5, mono: true, fill: C.fg }));
+      art.appendChild(txt(boxes[j] + 84, 319, "its own k, v", { anchor: "middle", size: 9 }));
+      arrow(art, boxes[j] + 84, 324, boxes[j] + 84, 354, demoOn ? C.warn : C.line, "arw-w", 1);
+    }
+    art.appendChild(txt(512, 313, "∥", { anchor: "middle", size: 14, fill: C.ok, weight: 700 }));
+    art.appendChild(txt(336, 342, "computed side by side — no arrows between them", { size: 10.5, fill: demoOn ? C.ok : C.dim }));
+    art.appendChild(
+      s("rect", { x: 336, y: 358, width: 352, height: 36, rx: 9, fill: C.warn, "fill-opacity": 0.08, stroke: C.warn, "stroke-width": 1, "stroke-dasharray": "4 3" }),
+    );
+    art.appendChild(txt(352, 380, "attention: reads every row written so far", { size: 10.5, fill: C.warn }));
+
+    art.appendChild(txt(x, 428, LAYER_STEPS[layerStep].note, { size: 11.5, fill: C.fg }));
+  }
+
+  const draws = [drawLoop, drawLayer, drawAttention, drawPrefill, drawDecode, drawNoCache, drawCache, drawStepCost, drawRunCost, drawMemory];
 
   /* -------------------------------- cards -------------------------------- */
 
   function cardsFor(i: number): Array<{ k: string; v: string; hint?: string }> {
     const past = n - 1;
     const sec = SECS[i].id;
+    if (sec === "layer") {
+      const step = LAYER_STEPS[layerStep];
+      return [
+        { k: "stage", v: layerStep + 1 + " / " + LAYER_STEPS.length },
+        { k: "block", v: step.label },
+        {
+          k: "cross-token",
+          v: layerStep === 3 ? "yes" : "no",
+          hint: layerStep === 3 ? "reads every cached row" : "this position alone",
+        },
+      ];
+    }
     if (sec === "loop") {
       const probs = distribution(n);
       let best = 0;
@@ -922,6 +1056,8 @@ const kvCache: SceneFactory = (host) => {
 
   const sampleBtn = mkBtn("▶ Sample next token", true);
   const loopReset = mkBtn("Reset");
+  const layerNext = mkBtn("▶ Stage the layer", true);
+  const layerBack = mkBtn("◀ Back");
   const stepBtn = mkBtn("▶ Step decode", true);
 
   function appendToken(): void {
@@ -963,8 +1099,18 @@ const kvCache: SceneFactory = (host) => {
     render();
   });
 
+  layerNext.addEventListener("click", () => {
+    layerStep = layerStep >= LAYER_STEPS.length - 1 ? 0 : layerStep + 1;
+    render();
+  });
+  layerBack.addEventListener("click", () => {
+    layerStep = Math.max(0, layerStep - 1);
+    render();
+  });
+
   secEls[0].ctl.append(sampleBtn, loopReset);
-  secEls[3].ctl.append(stepBtn);
+  secEls[1].ctl.append(layerNext, layerBack);
+  secEls[4].ctl.append(stepBtn);
 
   /* -------------------------------- render ------------------------------- */
 
@@ -974,6 +1120,8 @@ const kvCache: SceneFactory = (host) => {
     headBtns.forEach((b, i) => {
       b.classList.toggle("on", Math.floor(i / HEADS) === layer && i % HEADS === head);
     });
+    layerNext.textContent = layerStep >= LAYER_STEPS.length - 1 ? "↺ From the input" : "▶ Stage the layer";
+    layerBack.disabled = layerStep === 0;
     sampleBtn.disabled = false;
     sampleBtn.textContent = flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token";
     stepBtn.textContent = flash ? "decoding…" : n >= MAX_N ? "↺ Restart" : "▶ Step decode";
@@ -981,7 +1129,7 @@ const kvCache: SceneFactory = (host) => {
     secEls.forEach((el, i) => {
       el.svg.textContent = "";
       const defs = s("defs");
-      defs.append(marker("arw-a", C.accent), marker("arw-t", C.teal), marker("arw-d", C.dim), marker("arw-g", C.ok));
+      defs.append(marker("arw-a", C.accent), marker("arw-t", C.teal), marker("arw-d", C.dim), marker("arw-g", C.ok), marker("arw-w", C.warn));
       el.svg.appendChild(defs);
       draws[i](el.svg);
       el.cards.textContent = "";
