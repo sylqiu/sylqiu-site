@@ -865,24 +865,7 @@ const kvCache: SceneFactory = (host) => {
   function cardsFor(i: number): Array<{ k: string; v: string; hint?: string }> {
     const sec = SECS[i].id;
     const c = flowCursor(sec === "decode" ? "dec" : "pre");
-    if (sec === "layer") {
-      const qt = Math.min(attnToken, n - 1);
-      const weights = attention(layer, head, qt);
-      let top = 0;
-      weights.forEach((w, j) => {
-        if (w > (weights[top] === undefined ? 0 : weights[top])) top = j;
-      });
-      const base: Array<{ k: string; v: string; hint?: string }> = [
-        { k: "step", v: step + 1 + " / 3", hint: STEPS[step].chip },
-        { k: "cross-token", v: step === 1 ? "yes" : "no", hint: step === 1 ? "attention is the one step that reads other positions" : "this position alone" },
-      ];
-      if (step !== 1) return base;
-      return base.concat([
-        { k: "query token", v: "t = " + qt },
-        { k: "keys it may read", v: "p ≤ " + qt },
-        { k: "top weight", v: weights.length > 0 ? weights[top].toFixed(2) + " → token " + top : "—" },
-      ]);
-    }
+    if (sec === "layer") return [];
     if (sec === "next-token-prediction") {
       const probs = distribution(n);
       let best = 0;
