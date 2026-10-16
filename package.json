@@ -8,6 +8,7 @@
     "lessons": "node scripts/build-lessons.ts",
     "dev": "npm run build:lessons && vite",
     "build": "npm run build:lessons && vite build",
+    "deploy": "bash scripts/publish.sh",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
