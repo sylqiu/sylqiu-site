@@ -270,6 +270,7 @@ const STEP_CHIPS = 56;
 const MASK = { x: 380, y: 306, cell: 11, step: 13 };
 
 interface Sec {
+  top?: number;
   id: string;
   title: string;
   blurb: string;
@@ -284,6 +285,7 @@ const SECS: Sec[] = [
     blurb:
       "Let [t] denote the sequence [0, ..., T] of indices and t be an element. The input vectors h_[t] go through (1) the normalization layer and the MLP layer that projects to QKV features, (2) causal self-attention across [t], (3) normalization, MLP bottleneck and residual connection",
     h: 710,
+    top: 44,
   },
   {
     id: "next-token-prediction",
@@ -291,6 +293,7 @@ const SECS: Sec[] = [
     blurb:
       "A token is an element of the vocabulary. Every token is mapped to a probability distribution of the next token.",
     h: 380,
+    top: 44,
   },
   {
     id: "prefill",
@@ -298,6 +301,7 @@ const SECS: Sec[] = [
     blurb:
       "This is the standard forward pass of the transformer on an input sequence with causal attention.",
     h: 440,
+    top: 44,
   },
   {
     id: "decode",
@@ -305,6 +309,7 @@ const SECS: Sec[] = [
     blurb:
       "",
     h: 440,
+    top: 44,
   },
 
 ];
@@ -454,7 +459,7 @@ const kvCache: SceneFactory = (host) => {
     blurb.textContent = sec.blurb;
     const fig = document.createElement("div");
     fig.className = "ill-fig";
-    const svg = s("svg", { viewBox: "0 0 " + VB_W + " " + sec.h, role: "img", "aria-label": sec.title });
+    const svg = s("svg", { viewBox: "0 -" + (sec.top || 0) + " " + VB_W + " " + (sec.h + (sec.top || 0)), role: "img", "aria-label": sec.title });
     fig.appendChild(svg);
     const cards = document.createElement("div");
     cards.className = "ill-cards";
@@ -470,8 +475,7 @@ const kvCache: SceneFactory = (host) => {
     secEls.push({ svg, cards, ctl: secCtl, prose: proseEl });
   });
 
-  root.prepend(ctl);
-  root.append(glossary, toc);
+  root.append(ctl, glossary, toc);
   host.appendChild(root);
 
   /* ------------------------------ section 1 ----------------------------- */
@@ -592,11 +596,7 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(txt(216, kY + 15, "k_[t]", { anchor: "end", size: 9.5, fill: C.purple }));
 
       art.appendChild(txt(32, 222, "one step per token: dot the keys, mix the values", { size: 10, fill: C.teal, weight: 600 }));
-      const playBtn = s("g", { cursor: "pointer", class: "ill-svg-btn" });
-      playBtn.appendChild(s("rect", { x: 520, y: 206, width: 164, height: 26, rx: 13, fill: C.accent, "fill-opacity": 0.12, stroke: C.accent }));
-      playBtn.appendChild(txt(602, 223, attnTimer !== null ? "❚❚ Pause" : "▶ Animate", { anchor: "middle", size: 10.5, fill: C.accent, weight: 600 }));
-      playBtn.addEventListener("click", () => toggleAttn());
-      art.appendChild(playBtn);
+      svgBtn(art, 500, -36, 190, attnTimer !== null ? "❚❚ Pause" : "▶ Animate attention", toggleAttn);
 
       if (t < n - 1) {
         art.appendChild(s("rect", { x: cx(t + 1) - 8, y: 244, width: (n - t - 1) * cpitch + 8, height: 122, rx: 6, fill: C.panel2, "fill-opacity": 0.3, stroke: C.warn, "stroke-dasharray": "4 3" }));
@@ -735,8 +735,8 @@ const kvCache: SceneFactory = (host) => {
       "marker-end": "url(#arw-g)",
     }));
     art.appendChild(txt(bx0, 372, "Greedy sample: the tallest bar is appended at the dashed slot and the loop runs again.", { size: 11, fill: C.fg }));
-    svgBtn(art, 20, 146, 190, flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token", animateAppend);
-    svgBtn(art, 222, 146, 96, "↺ Reset", () => {
+    svgBtn(art, 20, -36, 190, flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token", animateAppend);
+    svgBtn(art, 232, -36, 96, "↺ Reset", () => {
       n = MIN_N;
       posRange.value = String(n);
       flash = false;
@@ -860,17 +860,17 @@ const kvCache: SceneFactory = (host) => {
     }
 
     const running = (pre ? preTimer : decTimer) !== null;
-    svgBtn(art, 380, 342, 96, running ? "❚❚ Pause" : "▶ Play", () => {
+    svgBtn(art, 20, -36, 96, running ? "❚❚ Pause" : "▶ Play", () => {
       if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
       else startFlow(mode);
     });
-    svgBtn(art, 486, 342, 96, "Step ▸", () => {
+    svgBtn(art, 126, -36, 96, "Step ▸", () => {
       if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
       if (pre) preCursor = Math.min(n - 1, flowCursor("pre") + 1);
       else decCursor = Math.min(n - 1, flowCursor("dec") + 1);
       render();
     }, c < n - 1);
-    svgBtn(art, 592, 342, 96, "↺ Reset", () => {
+    svgBtn(art, 232, -36, 96, "↺ Reset", () => {
       if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
       if (pre) preCursor = n - 1;
       else decCursor = n - 1;
