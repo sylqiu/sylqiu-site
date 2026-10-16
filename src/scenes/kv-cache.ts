@@ -546,7 +546,6 @@ const kvCache: SceneFactory = (host) => {
     /* ------------------------------ step 1 ------------------------------ */
     if (step === 0) {
       sqList(art, r2, n, C.fg, "h_[t]");
-      art.appendChild(txt(MID, r2 + SQ + 16, "one square per position", { anchor: "middle", size: 9.5, fill: C.dim }));
       art.appendChild(s("rect", { x: 210, y: 230, width: 300, height: 32, rx: 7, fill: C.panel2, stroke: C.line }));
       art.appendChild(txt(224, 251, "RMSNorm", { size: 11, fill: C.fg }));
       arrow(art, MID, 266, MID, 300, C.dim, "arw-d");
@@ -579,6 +578,7 @@ const kvCache: SceneFactory = (host) => {
       const cx = (p: number): number => x0 + p * cpitch + chipW / 2;
       const kY = 280;
       const qY = 336;
+      art.appendChild(txt(216, kY + 15, "k_[t]", { anchor: "end", size: 9.5, fill: C.purple }));
 
       art.appendChild(txt(32, 222, "one step per token: dot the keys, mix the values", { size: 10, fill: C.teal, weight: 600 }));
       const playBtn = s("g", { cursor: "pointer", class: "ill-svg-btn" });
@@ -600,7 +600,7 @@ const kvCache: SceneFactory = (host) => {
         );
         art.appendChild(txt(cx(p), 260, TEXT[p], { anchor: "middle", size: 8.5, mono: true, fill: allowed ? C.fg : C.dim }));
         art.appendChild(s("rect", { x: cx(p) - 11, y: kY, width: 22, height: 22, rx: 5, fill: C.purple, "fill-opacity": allowed ? 0.28 : 0.08, stroke: C.purple, opacity: allowed ? 1 : 0.4 }));
-        art.appendChild(txt(cx(p), kY + 15, "k", { anchor: "middle", size: 8.5, mono: true, fill: C.fg, opacity: allowed ? 1 : 0.45 }));
+        art.appendChild(txt(cx(p), kY + 15, String(p), { anchor: "middle", size: 8, mono: true, fill: C.fg, opacity: allowed ? 1 : 0.45 }));
       }
 
       for (let p = 0; p <= t; p++) {
@@ -608,7 +608,8 @@ const kvCache: SceneFactory = (host) => {
         art.appendChild(s("line", { x1: cx(t), y1: qY, x2: cx(p), y2: kY + 22, stroke: C.accent, "stroke-width": 0.8 + 4.5 * r, opacity: 0.45 + 0.55 * r }));
       }
       art.appendChild(s("rect", { x: cx(t) - 13, y: qY, width: 26, height: 26, rx: 6, fill: C.accent, "fill-opacity": 0.3, stroke: C.fg }));
-      art.appendChild(txt(cx(t), qY + 17, "q", { anchor: "middle", size: 9, mono: true, fill: C.fg }));
+      art.appendChild(txt(cx(t), qY + 17, String(t), { anchor: "middle", size: 8, mono: true, fill: C.fg }));
+      art.appendChild(txt(cx(t), qY + 42, "q_t", { anchor: "middle", size: 9.5, fill: C.accent }));
       art.appendChild(txt(32, qY + 40, "Causal: token " + t + " reads 0 … " + t + ".", { size: 10.5, fill: C.fg }));
 
       const barX = 250;
@@ -625,7 +626,7 @@ const kvCache: SceneFactory = (host) => {
         art.appendChild(txt(vX + 8, ry + p * rowPitch + 11, String(p), { anchor: "middle", size: 7.5, mono: true, fill: C.fg, opacity: allowed ? 1 : 0.4 }));
       }
       tex(art, 384, ry + 34, T`o_t = Σ_p a_{t,p} v_p`, { size: 11.5, color: C.teal });
-      art.appendChild(txt(384, ry + 56, "step " + (t + 1) + " of " + n + " · one whole vector per step", { size: 10, fill: C.dim }));
+      art.appendChild(txt(384, ry + 56, "step " + (t + 1) + " of " + n, { size: 10, fill: C.dim }));
 
       sqList(art, o2, n, C.ok, "o_[t]", t + 1);
     }
@@ -648,7 +649,6 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(s("path", { d: "M 30 440 C 30 330 690 330 690 440", fill: "none", stroke: C.ok, "stroke-width": 1.2, "stroke-dasharray": "5 4" }));
       art.appendChild(txt(40, 462, "+ residual", { size: 10.5, fill: C.ok }));
       sqList(art, o2, n, C.fg, "h_[t]");
-      art.appendChild(txt(MID, o2 + SQ + 16, "up to the next layer", { anchor: "middle", size: 9.5, fill: C.dim }));
     }
   }
 
