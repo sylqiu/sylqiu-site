@@ -16,7 +16,7 @@ import 'katex/dist/katex.min.css';
 import './styles/site.css';
 import { mountScene, type SceneHost } from './lib/registry.ts';
 import { Narration } from './lib/narration.ts';
-import { publications, site, exploreFlow, authorsHtml, cv, blogCategories } from './lib/site.ts';
+import { publications, site, exploreFlow, authorsHtml, cv, blogCategories, illustrations } from './lib/site.ts';
 import type { Block, CourseManifest, Lesson } from './lib/types.ts';
 
 const app = document.getElementById('app')!;
@@ -98,24 +98,50 @@ function viewHome() {
 
 let illustrationHost: SceneHost | null = null;
 
-async function viewIllustrations() {
+function viewIllustrations() {
+  // Index page: one row per illustration, each linking to its own page.
+  const items = illustrations
+    .map(
+      (ill) => `<a class="ill-card-link" href="#/illustrations/${esc(ill.id)}">
+        <h2>${esc(ill.title)}</h2>
+        <p>${esc(ill.blurb)}</p>
+        <span class="ill-open">Open →</span>
+      </a>`,
+    )
+    .join('');
+
   app.innerHTML = `<article class="page">
     <header>
       <h1>Interactive Illustrations</h1>
-      <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one is meant to be played with.</p>
+      <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one has
+      its own page and is meant to be played with.</p>
     </header>
-    <section class="ill-item">
-      <h2>How a KV cache works</h2>
-      <p class="reading">Generate one token at a time and watch what the cache keeps: the keys and
-      values written once and read every step, and the bill — in multiply-accumulates and in GPU
-      memory — for keeping them versus recomputing them.</p>
-      <div class="ill-canvas" id="ill-kv-cache"></div>
-    </section>
+    <nav class="ill-index">${items || '<p class="dim">Nothing here yet.</p>'}</nav>
+  </article>`;
+}
+
+async function viewIllustration(id: string) {
+  const ill = illustrations.find((x) => x.id === id);
+  if (!ill) {
+    app.innerHTML = `<article class="page">
+      <header><h1>Not here</h1></header>
+      <p>No illustration <code>${esc(id)}</code>.</p>
+      <p><a href="#/illustrations">← All illustrations</a></p>
+    </article>`;
+    return;
+  }
+
+  app.innerHTML = `<article class="page">
+    <header>
+      <a class="back" href="#/illustrations">← All illustrations</a>
+      <h1>${esc(ill.title)}</h1>
+    </header>
+    <div class="ill-canvas" id="ill-stage"></div>
   </article>`;
 
-  const mount = app.querySelector<HTMLElement>('#ill-kv-cache');
+  const mount = app.querySelector<HTMLElement>('#ill-stage');
   if (!mount) return;
-  const illustration = await mountScene('kv-cache', mount, []);
+  const illustration = await mountScene(ill.scene, mount, []);
   if (!document.contains(mount)) {
     illustration?.destroy();
     return;
@@ -603,6 +629,8 @@ function route() {
 
   if (hash.startsWith('#/exploreflow')) return void viewExploreFlow();
   if (hash.startsWith('#/cv')) return void viewCv();
+  const illustration = hash.match(/^#\/illustrations\/(.+)$/);
+  if (illustration) return void viewIllustration(illustration[1]);
   if (hash.startsWith('#/illustrations')) return void viewIllustrations();
   if (hash.startsWith('#/blog')) return void viewBlog();
   if (hash.startsWith('#/courses')) return void viewCourses();

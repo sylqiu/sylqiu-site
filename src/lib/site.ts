@@ -249,3 +249,27 @@ export function authorsHtml(authors: string): string {
     .map((a) => (a.trim() === name ? `<strong>${a.trim()}</strong>` : a.trim()))
     .join(', ');
 }
+
+/**
+ * Interactive illustrations. One entry = one page at `#/illustrations/<id>`,
+ * plus a row on the index page. `scene` names a factory in
+ * `src/lib/registry.ts`; `blurb` is the one-line pitch. Syl names each
+ * illustration he wants — never add a placeholder entry.
+ */
+export interface Illustration {
+  id: string;
+  title: string;
+  blurb: string;
+  scene: string;
+}
+
+export const illustrations: Illustration[] = [
+  {
+    id: 'kv-cache',
+    title: 'How a KV cache works',
+    blurb:
+      'Decode a token at a time and watch what the cache keeps — keys and values written once, read every step — and exactly where the saved compute comes from.',
+    scene: 'kv-cache',
+  },
+];
+

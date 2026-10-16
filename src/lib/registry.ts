@@ -16,6 +16,8 @@
 export interface SceneHost {
   /** Called by the narration engine when the active beat changes. */
   play?(beat: number): void;
+  /** Return the scene to its opening state (the Reset button). */
+  reset?(): void;
   destroy(): void;
 }
 
