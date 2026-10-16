@@ -677,11 +677,14 @@ const kvCache: SceneFactory = (host) => {
     arrow(art, MID, 130, MID, 150, C.dim, "arw-d");
     arrow(art, MID, 474, MID, 494, C.dim, "arw-d");
 
+    svgBtn(art, 20, -36, 150, preTimer !== null ? "❚❚ Pause" : "▶ Prefill", togglePrefill);
+    svgBtn(art, 180, -36, 96, "↺ Reset", resetPrefill);
+
     sqList(art, 36, n, C.accent, "q_[t]", hasDots ? n : 0);
     sqList(art, 68, n, C.purple, "k_[t]", hasKV ? n : 0);
     sqList(art, 100, n, C.teal, "v_[t]", hasKV ? n : 0);
 
-    art.appendChild(txt(32, 176, "the whole prompt at once", { size: 10, fill: C.accent, weight: 600 }));
+    art.appendChild(txt(210, 173, "the whole prompt at once", { size: 10, fill: C.accent, weight: 600 }));
 
     const chipW = 30;
     const cpitch = 34;
@@ -738,13 +741,17 @@ const kvCache: SceneFactory = (host) => {
     arrow(art, MID, 130, MID, 150, C.dim, "arw-d");
     arrow(art, MID, 474, MID, 494, C.dim, "arw-d");
 
+    svgBtn(art, 20, -36, 150, decTimer !== null ? "❚❚ Pause" : "▶ Decode", toggleDecode);
+    svgBtn(art, 180, -36, 96, "Step ▸", stepDecode, c < n - 1);
+    svgBtn(art, 286, -36, 96, "↺ Reset", resetDecode);
+
     sqList(art, 36, n, C.purple, "k_[t] in the cache", c + 1);
     sqList(art, 68, n, C.teal, "v_[t] in the cache", c + 1);
     art.appendChild(s("rect", { x: MID - 11, y: 96, width: 22, height: 22, rx: 5, fill: C.accent, "fill-opacity": 0.3, stroke: C.accent }));
     art.appendChild(txt(MID, 111, String(c), { anchor: "middle", size: 8.5, mono: true, fill: C.fg }));
     art.appendChild(txt(40, 111, "q_" + c + " · the only new vector", { size: 10, fill: C.accent }));
 
-    art.appendChild(txt(32, 176, "one step: the new query reads the frozen cache", { size: 10, fill: C.teal, weight: 600 }));
+    art.appendChild(txt(210, 173, "one step: the new query reads the frozen cache", { size: 10, fill: C.teal, weight: 600 }));
 
     const chipW = 30;
     const cpitch = 34;
@@ -758,7 +765,6 @@ const kvCache: SceneFactory = (host) => {
 
     if (c < n - 1) {
       art.appendChild(s("rect", { x: cx(c + 1) - 8, y: chipY - 6, width: (n - c - 1) * cpitch + 8, height: vY + 26 - chipY + 6, rx: 6, fill: C.panel2, "fill-opacity": 0.3, stroke: C.warn, "stroke-dasharray": "4 3" }));
-      art.appendChild(txt(x0 + rowW, chipY - 10, "not in the cache yet", { anchor: "end", size: 9.5, fill: C.warn }));
     }
 
     for (let p = 0; p < n; p++) {
