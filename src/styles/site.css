@@ -698,3 +698,26 @@ h1, h2, h3 { line-height: 1.25; }
 .ill-legend-item.dim { flex-basis: 100%; }
 .ill-sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 .ill-sw.outline { background: transparent; border: 1px solid var(--teal); }
+
+/* stacked explainer sections */
+.ill-toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.ill-toc a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--dim);
+  font: 11px/1 var(--mono);
+  text-decoration: none;
+}
+.ill-toc a:hover { color: var(--fg); border-color: var(--accent); }
+.ill-sec { margin: 26px 0 0; padding-top: 20px; border-top: 1px solid var(--line); }
+.ill-sec:first-of-type { border-top: none; padding-top: 0; }
+.ill-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ill-sec-head h2 { margin: 0; font-size: 18px; }
+.ill-sec-blurb { margin: 6px 0 12px; font-size: 13.5px; color: var(--dim); }
+.ill-sec-ctl { display: flex; gap: 8px; }
