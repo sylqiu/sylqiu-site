@@ -504,6 +504,16 @@ const kvCache: SceneFactory = (host) => {
   const outVec = (p: number): Vec => cachedVec("o:" + p, () => unit((i) => gauss(p, i, 88)));
   const attnVec = (l: number, h: number, p: number): Vec => cachedVec("a:" + l + ":" + h + ":" + p, () => unit((i) => gauss(l, h, p, i, 99)));
 
+  /* a button drawn inside the figure it controls */
+  function svgBtn(art: SVGSVGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
+    const color = on ? C.accent : C.dim;
+    const g = s("g", { cursor: on ? "pointer" : "default", class: "ill-svg-btn" });
+    g.appendChild(s("rect", { x, y, width: w, height: 26, rx: 13, fill: color, "fill-opacity": on ? 0.12 : 0.06, stroke: color }));
+    g.appendChild(txt(x + w / 2, y + 17, label, { anchor: "middle", size: 10.5, fill: color, weight: 600 }));
+    if (on) g.addEventListener("click", onClick);
+    art.appendChild(g);
+  }
+
   function drawLayer(art: SVGSVGElement): void {
     const t = Math.min(attnToken, n - 1);
     const weights = attention(layer, head, t);
@@ -724,6 +734,15 @@ const kvCache: SceneFactory = (host) => {
       "marker-end": "url(#arw-g)",
     }));
     art.appendChild(txt(bx0, 372, "Greedy sample: the tallest bar is appended at the dashed slot and the loop runs again.", { size: 11, fill: C.fg }));
+    svgBtn(art, 20, 146, 190, flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token", animateAppend);
+    svgBtn(art, 222, 146, 96, "↺ Reset", () => {
+      n = MIN_N;
+      posRange.value = String(n);
+      flash = false;
+      render();
+    });
+
+
   }
   /* --------------------------- sections 3 and 4 -------------------------- */
 
@@ -839,6 +858,24 @@ const kvCache: SceneFactory = (host) => {
       );
     }
 
+    const running = (pre ? preTimer : decTimer) !== null;
+    svgBtn(art, 380, 342, 96, running ? "❚❚ Pause" : "▶ Play", () => {
+      if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
+      else startFlow(mode);
+    });
+    svgBtn(art, 486, 342, 96, "Step ▸", () => {
+      if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
+      if (pre) preCursor = Math.min(n - 1, flowCursor("pre") + 1);
+      else decCursor = Math.min(n - 1, flowCursor("dec") + 1);
+      render();
+    }, c < n - 1);
+    svgBtn(art, 592, 342, 96, "↺ Reset", () => {
+      if ((pre ? preTimer : decTimer) !== null) stopFlow(mode);
+      if (pre) preCursor = n - 1;
+      else decCursor = n - 1;
+      render();
+    });
+
     const note1 = pre
       ? "In hardware the prompt is processed in one parallel pass; walking it one position at a time shows what each contributes."
       : "Only the new position is projected. Every earlier row is read from the cache — none of it is recomputed.";
@@ -898,15 +935,6 @@ const kvCache: SceneFactory = (host) => {
 
   /* ------------------------------- controls ------------------------------ */
 
-  const sampleBtn = mkBtn("▶ Sample next token", true);
-  const loopReset = mkBtn("Reset");
-  const prePlay = mkBtn("▶ Play", true);
-  const preStep = mkBtn("Step ▸");
-  const preReset = mkBtn("Reset");
-  const decPlay = mkBtn("▶ Play", true);
-  const decStep = mkBtn("Step ▸");
-  const decReset = mkBtn("Reset");
-
   function appendToken(): void {
     if (dead) return;
     n = n >= MAX_N ? MIN_N : n + 1;
@@ -960,49 +988,10 @@ const kvCache: SceneFactory = (host) => {
     else decTimer = window.setInterval(tick, 900);
   }
 
-  sampleBtn.addEventListener("click", animateAppend);
-  loopReset.addEventListener("click", () => {
-    n = MIN_N;
-    posRange.value = String(n);
-    flash = false;
-    render();
-  });
-  prePlay.addEventListener("click", () => {
-    if (preTimer !== null) stopFlow("pre");
-    else startFlow("pre");
-  });
-  decPlay.addEventListener("click", () => {
-    if (decTimer !== null) stopFlow("dec");
-    else startFlow("dec");
-  });
-  preStep.addEventListener("click", () => {
-    if (preTimer !== null) stopFlow("pre");
-    preCursor = Math.min(n - 1, flowCursor("pre") + 1);
-    render();
-  });
-  decStep.addEventListener("click", () => {
-    if (decTimer !== null) stopFlow("dec");
-    decCursor = Math.min(n - 1, flowCursor("dec") + 1);
-    render();
-  });
-  preReset.addEventListener("click", () => {
-    if (preTimer !== null) stopFlow("pre");
-    preCursor = n - 1;
-    render();
-  });
-  decReset.addEventListener("click", () => {
-    if (decTimer !== null) stopFlow("dec");
-    decCursor = n - 1;
-    render();
-  });
   posRange.addEventListener("input", () => {
     n = Number(posRange.value);
     render();
   });
-
-  secEls[1].ctl.append(sampleBtn, loopReset);
-  secEls[2].ctl.append(prePlay, preStep, preReset);
-  secEls[3].ctl.append(decPlay, decStep, decReset);
 
   /* -------------------------------- render ------------------------------- */
 
@@ -1015,11 +1004,6 @@ const kvCache: SceneFactory = (host) => {
     headBtns.forEach((b, i) => {
       b.classList.toggle("on", Math.floor(i / HEADS) === layer && i % HEADS === head);
     });
-    sampleBtn.textContent = flash ? "sampling…" : n >= MAX_N ? "↺ Restart the loop" : "▶ Sample next token";
-    prePlay.textContent = preTimer !== null ? "❚❚ Pause" : "▶ Play";
-    decPlay.textContent = decTimer !== null ? "❚❚ Pause" : "▶ Play";
-    preStep.disabled = flowCursor("pre") >= n - 1;
-    decStep.disabled = flowCursor("dec") >= n - 1;
 
     secEls.forEach((el, i) => {
       el.svg.textContent = "";
