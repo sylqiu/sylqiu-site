@@ -470,7 +470,8 @@ const kvCache: SceneFactory = (host) => {
     secEls.push({ svg, cards, ctl: secCtl, prose: proseEl });
   });
 
-  root.append(ctl, glossary, toc);
+  root.prepend(ctl);
+  root.append(glossary, toc);
   host.appendChild(root);
 
   /* ------------------------------ section 1 ----------------------------- */
