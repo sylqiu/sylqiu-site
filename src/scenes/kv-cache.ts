@@ -10,10 +10,9 @@
  *  5  how it is implemented (prose)
  *
  * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
- * one (layer, head) slice is eight numbers wide. Math is typeset with KaTeX and
- * every symbol is defined in the glossary at the top of the page.
+ * one (layer, head) slice is eight numbers wide. Formulas are plain SVG text with
+ * real sub/superscripts, and every symbol is defined in the glossary above.
  */
-import katex from "katex";
 import type { SceneFactory } from "../lib/registry.ts";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -167,58 +166,77 @@ function txt(x: number, y: number, content: string, o: TxtOpts = {}): SVGTextEle
   return t;
 }
 
-/**
- * Measuring host for KaTeX: the formula is laid out once off-screen so its real
- * box is known, and the foreignObject is then cut to exactly that size. Sizing by
- * guess leaves invisible boxes that collide with neighbouring text, and clips
- * anything taller than the guess (a fraction, a square root).
- */
-let measureHost: HTMLElement | null = null;
+/* Math is plain SVG text with real tspans. No foreignObject, no web fonts, no
+ * second layout engine: it cannot reflow, clip or lose its baseline. */
+type MathToken = { text: string; kind: "base" | "sub" | "sup" };
 
-function katexBox(latex: string, size: number): { w: number; h: number } {
-  if (measureHost === null) {
-    const host = document.createElement("div");
-    host.className = "ill-tex-measure";
-    document.body.appendChild(host);
-    measureHost = host;
+function parseMath(input: string): MathToken[] {
+  const out: MathToken[] = [];
+  let i = 0;
+  while (i < input.length) {
+    const c = input[i];
+    if ((c === "_" || c === "^") && i + 1 < input.length) {
+      const kind: MathToken["kind"] = c === "_" ? "sub" : "sup";
+      i += 1;
+      if (input[i] === "{") {
+        const end = input.indexOf("}", i);
+        const body = input.slice(i + 1, end < 0 ? input.length : end);
+        out.push({ text: body, kind });
+        i = end < 0 ? input.length : end + 1;
+      } else {
+        out.push({ text: input[i], kind });
+        i += 1;
+      }
+    } else {
+      let j = i;
+      while (j < input.length && input[j] !== "_" && input[j] !== "^") j += 1;
+      out.push({ text: input.slice(i, j), kind: "base" });
+      i = j;
+    }
   }
-  measureHost.style.fontSize = size + "px";
-  measureHost.innerHTML = katex.renderToString(latex, { throwOnError: false, displayMode: false });
-  const node = measureHost.firstElementChild;
-  const rect = node ? node.getBoundingClientRect() : null;
-  const w = rect && rect.width > 0 ? rect.width : latex.length * size * 0.5;
-  const h = rect && rect.height > 0 ? rect.height : size * 1.3;
-  return { w: Math.ceil(w) + 2, h: Math.ceil(h) + 2 };
+  return out;
+}
+
+const MATH_FONT = "ui-monospace, SFMono-Regular, Menlo, monospace";
+
+function mathWidth(tokens: MathToken[], size: number): number {
+  let w = 0;
+  for (const t of tokens) w += t.text.length * (t.kind === "base" ? size * 0.6 : size * 0.42);
+  return w;
 }
 
 /**
- * KaTeX inside the figure, in SVG user units, so it scales with the drawing.
- * x/y is the baseline of the formula: the box is laid out to sit on it.
+ * A formula as SVG text, in user units, so it scales with the drawing.
+ * x/y is the text baseline; sub/superscripts are real tspans.
  */
 function tex(
   art: SVGSVGElement,
   x: number,
   y: number,
-  latex: string,
-  o: { size?: number; align?: "left" | "center"; color?: string } = {},
+  math: string,
+  o: { size?: number; align?: "left" | "center"; color?: string; width?: number } = {},
 ): void {
   const size = o.size ?? 12;
-  const { w, h } = katexBox(latex, size);
-  const fo = s("foreignObject", {
-    x: Math.round(o.align === "center" ? x - w / 2 : x),
-    y: Math.round(y - h),
-    width: w,
-    height: h,
-    overflow: "visible",
+  const tokens = parseMath(math);
+  const start = o.align === "center" ? x - mathWidth(tokens, size) / 2 : x;
+  const node = s("text", {
+    x: start,
+    y,
+    "font-size": size,
+    fill: o.color ?? C.fg,
+    "font-family": MATH_FONT,
   });
-  const div = document.createElement("div");
-  div.setAttribute(
-    "style",
-    "font-size:" + size + "px;line-height:" + h + "px;white-space:nowrap;color:" + (o.color ?? C.fg),
-  );
-  div.innerHTML = katex.renderToString(latex, { throwOnError: false, displayMode: false });
-  fo.appendChild(div);
-  art.appendChild(fo);
+  let cursor = start;
+  let shift = 0;
+  for (const token of tokens) {
+    const target = token.kind === "base" ? 0 : token.kind === "sub" ? size * 0.3 : -size * 0.42;
+    const span = s("tspan", { x: cursor, dy: target - shift, "font-size": token.kind === "base" ? size : size * 0.72 });
+    span.textContent = token.text;
+    node.appendChild(span);
+    shift = target;
+    cursor += token.text.length * (token.kind === "base" ? size * 0.6 : size * 0.42);
+  }
+  art.appendChild(node);
 }
 
 function cellFill(v: number, base: string): string {
@@ -379,23 +397,23 @@ const kvCache: SceneFactory = (host) => {
   const glossary = document.createElement("div");
   glossary.className = "ill-glossary";
   const symbols: Array<[string, string]> = [
-    [T`x_1 \dots x_n`, "the input tokens"],
-    [T`h_t`, "hidden state: the vector for position t entering a block"],
-    [T`W_Q,\ W_K,\ W_V`, "learned projection matrices"],
-    [T`q_t = W_Q h_t`, "query: what position t asks"],
-    [T`k_t = W_K h_t`, "key: what position t offers to be matched"],
-    [T`v_t = W_V h_t`, "value: what position t contributes once matched"],
-    [T`d`, "head dimension — how many numbers q, k, v have (8 here)"],
-    [T`a_{t,p}`, "attention weight: how much position t reads position p"],
-    [T`n`, "how many positions have been processed"],
-    [T`L,\ H`, "layers, and attention heads per layer"],
-    [T`p(x_{t+1} \mid x_{\le t})`, "the model output: probability of the next token"],
+    ["x<sub>1</sub> … x<sub>n</sub>", "the input tokens"],
+    ["h<sub>t</sub>", "hidden state: the vector for position t entering a block"],
+    ["W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>", "learned projection matrices"],
+    ["q<sub>t</sub> = W<sub>Q</sub>h<sub>t</sub>", "query: what position t asks"],
+    ["k<sub>t</sub> = W<sub>K</sub>h<sub>t</sub>", "key: what position t offers to be matched"],
+    ["v<sub>t</sub> = W<sub>V</sub>h<sub>t</sub>", "value: what position t contributes once matched"],
+    ["d", "head dimension — how many numbers q, k, v have (8 here)"],
+    ["a<sub>t,p</sub>", "attention weight: how much position t reads position p"],
+    ["n", "how many positions have been processed"],
+    ["L, H", "layers, and attention heads per layer"],
+    ["p(x<sub>t+1</sub> | x<sub>≤t</sub>)", "the model output: probability of the next token"],
   ];
   glossary.innerHTML =
     '<div class="ill-legend-head">symbols used on this page</div>' +
     symbols
       .map(([sym, def]) => {
-        return '<span class="ill-gloss-item"><span class="sym">' + katex.renderToString(sym, { throwOnError: false }) + '</span><span class="def">' + def + "</span></span>";
+        return '<span class="ill-gloss-item"><span class="sym">' + sym + '</span><span class="def">' + def + "</span></span>";
       })
       .join("");
 
@@ -445,13 +463,6 @@ const kvCache: SceneFactory = (host) => {
 
   root.append(ctl, glossary, toc);
   host.appendChild(root);
-
-  /* measurements are only exact once the KaTeX fonts have loaded */
-  if (document.fonts && typeof document.fonts.ready === "object") {
-    document.fonts.ready.then(() => {
-      if (!dead) render();
-    });
-  }
 
   /* ------------------------------ section 1 ----------------------------- */
 
@@ -507,8 +518,8 @@ const kvCache: SceneFactory = (host) => {
     const p3 = blocks[3];
     const on3 = layerStep === 3;
     art.appendChild(s("rect", { x, y: p3.y, width: w, height: p3.h, rx: 8, fill: C.accent, "fill-opacity": on3 ? 0.18 : 0.1, stroke: on3 ? C.fg : C.accent, "stroke-width": on3 ? 1.8 : 1 }));
-    tex(art, x + 12, p3.y + 22, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11 });
-    tex(art, x + 12, p3.y + 52, T`\sum_{p} a_{t,p} v_p`, { size: 11.5, width: 200 });
+    tex(art, x + 12, p3.y + 22, T`a_{t,p} = softmax(q_t · k_p / √d)`, { size: 11 });
+    tex(art, x + 12, p3.y + 52, T`Σ_{p} a_{t,p} v_p`, { size: 11.5 });
     art.appendChild(txt(x + 150, p3.y + 56, "· the context it gets back", { size: 10, fill: C.accent }));
 
     arrow(art, x + w / 2, 74, x + w / 2, 84, C.dim, "arw-d");
@@ -532,7 +543,7 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(s("rect", { x: 336, y: 182, width: 352, height: 92, rx: 9, fill: C.panel, "fill-opacity": coupling ? 1 : 0.5, stroke: coupling ? C.warn : C.line, "stroke-width": coupling ? 1.4 : 1 }));
     art.appendChild(s("circle", { cx: 352, cy: 200, r: 4, fill: C.warn }));
     art.appendChild(txt(364, 204, "couples positions", { size: 10.5, fill: C.warn, weight: 600 }));
-    tex(art, 352, 226, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11, width: 340 });
+    tex(art, 352, 226, T`a_{t,p} = softmax(q_t · k_p / √d)`, { size: 11 });
     art.appendChild(txt(352, 250, "over every position p this query may read", { size: 10.5 }));
     arrow(art, 336, 240, 304, 240, C.warn, "arw-w", 1.2);
 
@@ -598,7 +609,7 @@ const kvCache: SceneFactory = (host) => {
     const bw = 40;
     const bpitch = 56;
     const bx0 = 20;
-    tex(art, bx0, 190, T`p(x_{n+1} \mid x_{\le n})`, { size: 12, width: 260 });
+    tex(art, bx0, 190, T`p(x_{n+1} | x_{≤n})`, { size: 12 });
     art.appendChild(txt(170, 190, "· one probability per vocabulary entry", { size: 10.5 }));
     let argmax = 0;
     probs.forEach((p, i) => {
@@ -692,7 +703,7 @@ const kvCache: SceneFactory = (host) => {
       txt(bx0 + 160, 188, pre ? "computed for this position" : "the only new arithmetic", { size: 10, fill: C.ok }),
     );
 
-    tex(art, bx0 + 12, 236, T`a_{t,p} = \mathrm{softmax}(q_t \cdot k_p / \sqrt{d})`, { size: 11 });
+    tex(art, bx0 + 12, 236, T`a_{t,p} = softmax(q_t · k_p / √d)`, { size: 11 });
     art.appendChild(
       txt(bx0 + 12, 262, pre ? "over p ≤ t — the positions to its left" : "over p ≤ t — every row already in the cache", { size: 10.5 }),
     );
@@ -1047,10 +1058,6 @@ const kvCache: SceneFactory = (host) => {
     },
     destroy() {
       dead = true;
-      if (measureHost !== null) {
-        measureHost.remove();
-        measureHost = null;
-      }
       if (timer !== null) window.clearTimeout(timer);
       if (preTimer !== null) window.clearInterval(preTimer);
       if (decTimer !== null) window.clearInterval(decTimer);

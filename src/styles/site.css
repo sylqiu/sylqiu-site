@@ -722,12 +722,11 @@ h1, h2, h3 { line-height: 1.25; }
 .ill-sec-blurb { margin: 6px 0 12px; font-size: 13.5px; color: var(--dim); }
 .ill-sec-ctl { display: flex; gap: 8px; }
 
-/* KaTeX inside figures: measured off-screen, then cut to size */
-.ill-tex-measure {
-  position: absolute;
-  left: -10000px;
-  top: 0;
-  visibility: hidden;
-  white-space: nowrap;
-  pointer-events: none;
+/* glossary symbols use the same mono face as the figures */
+.ill-gloss-item .sym {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fg);
+}
+.ill-gloss-item .sym sub {
+  font-size: 0.72em;
 }
