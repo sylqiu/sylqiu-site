@@ -290,7 +290,7 @@ const SECS: Sec[] = [
   },
   {
     id: "next-token-prediction",
-    title: "Next token prediction",
+    title: "Next Token Prediction",
     blurb:
       "A token is an element of the vocabulary. Every token is mapped to a probability distribution of the next token.",
     h: 380,
@@ -298,7 +298,7 @@ const SECS: Sec[] = [
   },
   {
     id: "prefill",
-    title: "Prefill: processing the prompt sequence all at once",
+    title: "The Prefill Stage",
     blurb:
       "This is the standard forward pass of the transformer on an input sequence with causal attention.",
     h: 640,
@@ -306,9 +306,9 @@ const SECS: Sec[] = [
   },
   {
     id: "decode",
-    title: "Decode: sample the next token, then repeat the forward pass with the updated token sequence",
+    title: "The Decode Stage",
     blurb:
-      "",
+      "Each step we sample the next token, then repeat the forward pass with the updated token sequence. We only need to compute the QKV for the new token and its attention to the past, which only needs K and V.",
     h: 640,
     top: 44,
   },
@@ -544,7 +544,7 @@ const kvCache: SceneFactory = (host) => {
       const rowPitch = 18;
       const ry = 392;
       art.appendChild(txt(barX, ry - 14, "a_{t,p}", { size: 9.5, fill: C.warn }));
-      art.appendChild(txt(vX, ry - 14, "v_[t] · one square per position", { size: 9.5, fill: C.teal }));
+      art.appendChild(txt(vX, ry - 14, "v_[t]", { size: 9.5, fill: C.teal }));
       for (let p = 0; p < n; p++) {
         const allowed = p <= t;
         const r = allowed && t > 0 ? rel(weights[p]) : allowed ? 1 : 0;
@@ -687,7 +687,7 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(txt(32, y + 19, label, { size: 10, weight: 600, fill: color }));
     };
     box(20, 106, "input", C.dim);
-    box(154, 316, "prefill · one pass", C.accent);
+    box(154, 316, "Forward the whole prompt at once", C.accent);
     box(498, 114, "output", C.dim);
     arrow(art, MID, 130, MID, 150, C.dim, "arw-d");
     arrow(art, MID, 474, MID, 494, C.dim, "arw-d");
@@ -698,8 +698,6 @@ const kvCache: SceneFactory = (host) => {
     sqList(art, 36, n, C.accent, "q_[t]", hasDots ? n : 0);
     sqList(art, 68, n, C.purple, "k_[t]", hasKV ? n : 0);
     sqList(art, 100, n, C.teal, "v_[t]", hasKV ? n : 0);
-
-    art.appendChild(txt(210, 173, "the whole prompt at once", { size: 10, fill: C.accent, weight: 600 }));
 
     const chipW = 30;
     const cpitch = 34;
@@ -761,7 +759,7 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(txt(32, y + 19, label, { size: 10, weight: 600, fill: color }));
     };
     box(20, 106, "input", C.dim);
-    box(154, 316, "decode · one token per step", C.teal);
+    box(154, 316, "decode one token per step", C.teal);
     box(498, 114, "output", C.dim);
     arrow(art, MID, 130, MID, 150, C.dim, "arw-d");
     arrow(art, MID, 474, MID, 494, C.dim, "arw-d");
@@ -802,8 +800,6 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(cX0 + pos * cpc + cw / 2, 111, String(pos), { anchor: "middle", size: 8, mono: true, fill: C.fg }));
     art.appendChild(txt(40, 111, "q_" + pos + " · the only new vector", { size: 10, fill: C.accent }));
 
-    art.appendChild(txt(210, 173, "one step: the new query reads the frozen cache", { size: 10, fill: C.teal, weight: 600 }));
-
     const count = pos + 1;
     const chipW = 26;
     const cpitch = 30;
@@ -836,8 +832,8 @@ const kvCache: SceneFactory = (host) => {
       art.appendChild(s("line", { x1: cx(pos), y1: qY, x2: cx(p), y2: kY + 20, stroke: C.accent, "stroke-width": 0.8 + 4.5 * w, opacity: 0.45 + 0.55 * w }));
     }
     art.appendChild(txt(40, qY + 16, "q_" + pos, { size: 10, fill: C.accent }));
-    art.appendChild(txt(32, 424, "everything left of the dashed line came from prefill · rows read, never rewritten", { size: 10.5, fill: C.fg }));
-    art.appendChild(txt(32, 448, "this step appends one row and computes one new output", { size: 10.5, fill: C.teal }));
+    art.appendChild(txt(32, 424, "everything left of the dashed line came from prefill KV cache", { size: 10.5, fill: C.fg }));
+    art.appendChild(txt(32, 448, "each step appends one more KV cache", { size: 10.5, fill: C.teal }));
 
     const opitch = Math.min(38, Math.floor(643 / count));
     const ox0 = MID - (count * opitch - 4) / 2;
