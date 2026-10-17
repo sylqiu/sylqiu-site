@@ -268,7 +268,7 @@ export const illustrations: Illustration[] = [
     id: 'kv-cache',
     title: 'How KV cache works in an autoregressive LLM',
     blurb:
-      'From one transformer layer to prefill and decode: what a position computes for itself, the single step where it reads its past, and why the cache only ever keeps K and V.',
+      'From one transformer layer to prefill and decode: what a position computes for itself, the step where it reads its past, and how serving systems store that past in paged blocks and schedule around it.',
     scene: 'kv-cache',
   },
 ];

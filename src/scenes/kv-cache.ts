@@ -1,12 +1,15 @@
 /**
  * Illustration: How KV cache works in an autoregressive LLM.
  *
- * A stacked explainer: five sections, each its own figure, read top to bottom.
+ * A stacked explainer: eight sections, each its own figure, read top to bottom.
  *  1  inside one transformer layer — per-token blocks vs the one cross-token step,
  *     with the causal mask drawn explicitly
  *  2  the autoregressive loop — a token becomes a distribution over the next token
  *  3  prefill, walked position by position
  *  4  decode, the same walk with K and V read from the cache
+ *  5  contiguous cache allocation — reserved buffers and the waste they leave
+ *  6  PagedAttention — fixed-size physical blocks and per-sequence block tables
+ *  7  continuous batching — iteration-level scheduling against a paged pool
  *
  * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
  * one (layer, head) slice is eight numbers wide. Formulas are plain SVG text with
@@ -312,7 +315,30 @@ const SECS: Sec[] = [
     h: 640,
     top: 44,
   },
-
+  {
+    id: "contiguous",
+    title: "The Cost of Contiguity",
+    blurb:
+      "The cache is now the thing to store, and it grows one token at a time. A serving system that gives each request one contiguous buffer has to reserve the longest sequence it might produce up front — so most of the cache is allocated but empty.",
+    h: 310,
+    top: 44,
+  },
+  {
+    id: "paged",
+    title: "PagedAttention: Blocks, Not Buffers",
+    blurb:
+      "PagedAttention cuts the cache into fixed-size physical blocks. Each sequence keeps a block table mapping its logical blocks to blocks anywhere in the pool, so memory is allocated on demand and a sequence's cache never has to be contiguous.",
+    h: 430,
+    top: 44,
+  },
+  {
+    id: "batching",
+    title: "Continuous Batching",
+    blurb:
+      "Once the cache is paged, the scheduler can reconsider the batch on every forward pass. A finished request returns its blocks immediately and a queued request joins the next iteration — no waiting for the slowest sequence to finish.",
+    h: 360,
+    top: 44,
+  },
 ];
 
 /* --------------------------------- scene ---------------------------------- */
@@ -352,6 +378,12 @@ const kvCache: SceneFactory = (host) => {
   let decoded = 0;
   let preTimer: number | null = null;
   let decTimer: number | null = null;
+  let naiveStep = 0;
+  let pageDecoded = 0;
+  let pageD = false;
+  let dAt = 0;
+  let batchIter = 0;
+  let batchTimer: number | null = null;
   let dead = false;
   let timer: number | null = null;
 
@@ -847,17 +879,464 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(MID, 604, "the prompt outputs came from prefill · one new output per step", { anchor: "middle", size: 9.5, fill: C.dim }));
   }
 
+  /* ------------------------------ section 5 ----------------------------- */
+
+  const NAIVE_MAX = 16;
+  const NAIVE_CAP = 48;
+  const NAIVE_REQS = [
+    { name: "A", len: 8, color: C.accent },
+    { name: "B", len: 3, color: C.teal },
+    { name: "C", len: 11, color: C.purple },
+  ];
+  const NAIVE_WAIT = { name: "D", len: 6, color: C.ok };
+
+  function drawNaive(art: SVGSVGElement): void {
+    const admitted = Math.min(naiveStep, NAIVE_REQS.length);
+    const dFailed = naiveStep > NAIVE_REQS.length;
+    const reserved = admitted * NAIVE_MAX;
+    const live = NAIVE_REQS.slice(0, admitted).reduce((sum, r) => sum + r.len, 0);
+    const waste = reserved - live;
+    const free = NAIVE_CAP - reserved;
+
+    svgBtn(art, 20, -36, 190, "▶ Admit next request", advanceNaive, naiveStep < 4);
+    svgBtn(art, 220, -36, 96, "↺ Reset", resetNaive);
+    art.appendChild(
+      txt(20, 14, "one contiguous buffer per request · each buffer reserves max_len = " + NAIVE_MAX + " slots", { size: 10.5, fill: C.fg }),
+    );
+
+    const x0 = 24;
+    const cw = 12;
+    const pitch = 13;
+    const y = 58;
+    const h = 34;
+
+    for (let i = 0; i < NAIVE_CAP; i++) {
+      const owner = Math.floor(i / NAIVE_MAX);
+      const slot = i % NAIVE_MAX;
+      const req = NAIVE_REQS[owner];
+      const has = owner < admitted;
+      const on = has && slot < req.len;
+      if (has) {
+        art.appendChild(
+          s("rect", {
+            x: x0 + i * pitch,
+            y,
+            width: cw,
+            height: h,
+            rx: 3,
+            fill: on ? req.color : "none",
+            "fill-opacity": on ? 0.36 : 0,
+            stroke: req.color,
+            "stroke-opacity": on ? 0.95 : 0.26,
+            "stroke-dasharray": on ? "" : "2 2",
+          }),
+        );
+        if (on) {
+          art.appendChild(txt(x0 + i * pitch + cw / 2, y + 21, String(slot), { anchor: "middle", size: 7, mono: true, fill: C.fg }));
+        }
+      } else {
+        art.appendChild(
+          s("rect", { x: x0 + i * pitch, y, width: cw, height: h, rx: 3, fill: "none", stroke: C.line, "stroke-dasharray": "2 3", opacity: 0.55 }),
+        );
+      }
+    }
+
+    NAIVE_REQS.forEach((r, i) => {
+      if (i >= admitted) return;
+      const center = x0 + (i * NAIVE_MAX + NAIVE_MAX / 2) * pitch;
+      art.appendChild(txt(center, y - 7, r.name + " · " + r.len + " / " + NAIVE_MAX + " used", { anchor: "middle", size: 9.5, fill: r.color, weight: 600 }));
+    });
+
+    art.appendChild(
+      txt(20, 114, "reserved " + reserved + " / " + NAIVE_CAP + " slots   ·   live " + live + "   ·   idle-but-reserved " + waste + "   ·   free " + free, {
+        size: 10.5,
+        fill: C.fg,
+      }),
+    );
+
+    const by = 144;
+    art.appendChild(
+      s("rect", {
+        x: 20,
+        y: by,
+        width: 680,
+        height: 88,
+        rx: 10,
+        fill: C.panel,
+        "fill-opacity": 0.5,
+        stroke: dFailed ? C.bad : C.line,
+        "stroke-dasharray": dFailed ? "" : "4 4",
+      }),
+    );
+    art.appendChild(txt(32, by + 22, NAIVE_WAIT.name + " · 6-token request", { size: 11, weight: 600, fill: NAIVE_WAIT.color }));
+    art.appendChild(txt(32, by + 40, "asks for one contiguous region of " + NAIVE_MAX + " slots", { size: 10, fill: C.dim }));
+
+    for (let j = 0; j < NAIVE_MAX; j++) {
+      art.appendChild(
+        s("rect", {
+          x: 470 + j * 14,
+          y: by + 28,
+          width: 13,
+          height: 26,
+          rx: 3,
+          fill: dFailed ? C.bad : C.ok,
+          "fill-opacity": 0.1,
+          stroke: dFailed ? C.bad : C.ok,
+          "stroke-opacity": 0.55,
+          "stroke-dasharray": "3 2",
+        }),
+      );
+    }
+
+    const msg = dFailed
+      ? "✕ rejected · " + waste + " slots are idle, but no " + NAIVE_MAX + "-slot contiguous run is free"
+      : naiveStep >= NAIVE_REQS.length
+        ? "waiting · every buffer is reserved, although " + waste + " slots inside them are empty"
+        : "waiting in the queue";
+    art.appendChild(txt(32, by + 66, msg, { size: 10.5, fill: dFailed ? C.bad : C.warn }));
+
+    if (admitted === NAIVE_REQS.length) {
+      art.appendChild(
+        txt(20, 258, "Only " + live + " of the " + NAIVE_CAP + " reserved slots hold K or V. The rest is fragmentation:", { size: 10.5, fill: C.fg }),
+      );
+      art.appendChild(txt(20, 276, "reserved tails inside each buffer, plus buffer-wide gaps that cannot be merged for a new request.", { size: 10, fill: C.dim }));
+    } else {
+      art.appendChild(txt(20, 258, "Each admitted request takes a fixed " + NAIVE_MAX + "-slot region, whether or not it ever reaches that length.", { size: 10.5, fill: C.fg }));
+      art.appendChild(txt(20, 276, "The tail of the region is reserved up front and stays empty until the sequence grows into it.", { size: 10, fill: C.dim }));
+    }
+  }
+
+  /* ------------------------------ section 6 ----------------------------- */
+
+  const PAGE_BLOCK = 4;
+  const PAGE_POOL = 12;
+
+  interface PageRow {
+    name: string;
+    color: string;
+    len: number;
+    map: number[];
+    queued?: boolean;
+  }
+
+  function pagedRows(): PageRow[] {
+    const rows: PageRow[] = [
+      { name: "A", color: C.accent, len: 8 + pageDecoded, map: [5, 1, 10] },
+      { name: "B", color: C.teal, len: 3 + pageDecoded, map: [8, 4] },
+      { name: "C", color: C.purple, len: 11 + pageDecoded, map: [0, 7, 2, 3] },
+    ];
+    if (pageD) {
+      rows.push({ name: "D", color: C.ok, len: 6 + Math.max(0, pageDecoded - dAt), map: [6, 9, 11] });
+    } else {
+      rows.push({ name: "D", color: C.ok, len: 0, map: [], queued: true });
+    }
+    return rows.map((r) => ({ ...r, map: r.map.slice(0, Math.ceil(r.len / PAGE_BLOCK)) }));
+  }
+
+  function drawPaged(art: SVGSVGElement): void {
+    svgBtn(art, 20, -36, 180, "▶ Decode iteration", stepPaged, pageDecoded < 3);
+    svgBtn(art, 210, -36, 130, pageD ? "D admitted" : "＋ Admit D", admitD, !pageD);
+    svgBtn(art, 350, -36, 96, "↺ Reset", resetPaged);
+    art.appendChild(
+      txt(20, 12, "logical sequence · 4-token blocks · L0→#5 means logical block 0 lives in physical block 5", { size: 10.5, fill: C.fg }),
+    );
+
+    const rows = pagedRows();
+    rows.forEach((r, i) => {
+      const ry = 38 + i * 44;
+      art.appendChild(txt(24, ry + 20, r.name, { size: 12, weight: 700, fill: r.color }));
+      if (r.queued) {
+        art.appendChild(txt(48, ry + 19, "queued · 6 tokens · will take 2 blocks", { size: 10, fill: C.dim }));
+        return;
+      }
+      art.appendChild(txt(24, ry + 33, "len " + r.len, { size: 8, fill: C.dim }));
+      r.map.forEach((pid, b) => {
+        const bx = 48 + b * 84;
+        art.appendChild(txt(bx + 2, ry - 3, "L" + b + "→#" + pid, { size: 8.5, mono: true, fill: r.color }));
+        for (let j = 0; j < 4; j++) {
+          const p = b * 4 + j;
+          const used = p < r.len;
+          const newest = p === r.len - 1;
+          art.appendChild(
+            s("rect", {
+              x: bx + j * 16,
+              y: ry,
+              width: 15,
+              height: 30,
+              rx: 4,
+              fill: used ? r.color : "none",
+              "fill-opacity": used ? (newest ? 0.6 : 0.3) : 0,
+              stroke: used ? (newest ? C.fg : r.color) : C.line,
+              "stroke-dasharray": used ? "" : "2 2",
+              "stroke-opacity": used ? 0.95 : 0.7,
+            }),
+          );
+          art.appendChild(
+            txt(bx + j * 16 + 7.5, ry + 19, used ? String(p) : "·", { anchor: "middle", size: 7.5, mono: true, fill: C.fg, opacity: used ? 1 : 0.35 }),
+          );
+        }
+      });
+    });
+
+    const usedBlocks = rows.reduce((sum, r) => sum + r.map.length, 0);
+    const live = rows.reduce((sum, r) => sum + r.len, 0);
+    const waste = usedBlocks * PAGE_BLOCK - live;
+    const lx = 430;
+    const ly = 18;
+    art.appendChild(s("rect", { x: lx, y: ly, width: 270, height: 174, rx: 10, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    art.appendChild(txt(lx + 12, ly + 21, "block table", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(lx + 12, ly + 42, "one array per sequence,", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(lx + 12, ly + 58, "logical block → physical block", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(lx + 12, ly + 84, "blocks need not be adjacent", { size: 9.5, fill: C.fg }));
+    art.appendChild(txt(lx + 12, ly + 112, "now   " + usedBlocks + " blocks · " + (usedBlocks * PAGE_BLOCK) + " slots", { size: 10, mono: true, fill: C.teal }));
+    art.appendChild(txt(lx + 12, ly + 130, "waste " + waste + " slots · " + Math.round((live / Math.max(1, usedBlocks * PAGE_BLOCK)) * 100) + "% full", { size: 10, mono: true, fill: C.fg }));
+    art.appendChild(txt(lx + 12, ly + 154, "vs " + NAIVE_REQS.length * NAIVE_MAX + " slots reserved", { size: 9.5, fill: C.dim }));
+
+    art.appendChild(txt(20, 232, "physical block pool · " + PAGE_POOL + " blocks × " + PAGE_BLOCK + " slots", { size: 10.5, fill: C.fg }));
+
+    const px0 = 131;
+    const bw = 68;
+    const gap = 10;
+    for (let id = 0; id < PAGE_POOL; id++) {
+      const col = id % 6;
+      const prow = Math.floor(id / 6);
+      const bx = px0 + col * (bw + gap);
+      const py = 250 + prow * 60;
+      const owner = rows.find((r) => !r.queued && r.map.indexOf(id) >= 0);
+      art.appendChild(txt(bx + 2, py - 5, "#" + id, { size: 8, mono: true, fill: owner ? owner.color : C.dim }));
+      art.appendChild(
+        s("rect", {
+          x: bx,
+          y: py,
+          width: bw,
+          height: 38,
+          rx: 7,
+          fill: owner ? owner.color : "none",
+          "fill-opacity": owner ? 0.07 : 0,
+          stroke: owner ? owner.color : C.line,
+          "stroke-dasharray": owner ? "" : "3 3",
+          "stroke-opacity": owner ? 0.6 : 0.8,
+        }),
+      );
+      if (!owner) {
+        art.appendChild(txt(bx + bw / 2, py + 23, "free", { anchor: "middle", size: 9, fill: C.dim }));
+        continue;
+      }
+      const logical = owner.map.indexOf(id);
+      for (let j = 0; j < 4; j++) {
+        const p = logical * 4 + j;
+        const used = p < owner.len;
+        const newest = p === owner.len - 1;
+        art.appendChild(
+          s("rect", {
+            x: bx + 3 + j * 16,
+            y: py + 4,
+            width: 15,
+            height: 30,
+            rx: 3,
+            fill: used ? owner.color : "none",
+            "fill-opacity": used ? (newest ? 0.65 : 0.32) : 0,
+            stroke: used ? (newest ? C.fg : owner.color) : C.line,
+            "stroke-dasharray": used ? "" : "2 2",
+            "stroke-opacity": used ? 0.9 : 0.55,
+          }),
+        );
+        art.appendChild(
+          txt(bx + 3 + j * 16 + 7.5, py + 23, used ? String(p) : "·", { anchor: "middle", size: 7, mono: true, fill: C.fg, opacity: used ? 1 : 0.3 }),
+        );
+      }
+    }
+
+    art.appendChild(txt(20, 386, "Blocks need not be adjacent; the last block of a sequence may be only partly filled.", { size: 10, fill: C.dim }));
+    art.appendChild(txt(20, 404, "Real systems also share blocks across requests, with reference counts and copy-on-write on divergence.", { size: 10, fill: C.dim }));
+  }
+
+  /* ------------------------------ section 7 ----------------------------- */
+
+  const BATCH_N = 8;
+  const BATCH_ROWS = [
+    { name: "A", color: C.accent, p: 1, d0: 2, d1: 4 },
+    { name: "B", color: C.teal, p: 1, d0: 2, d1: 7 },
+    { name: "C", color: C.purple, p: 1, d0: 2, d1: 8 },
+    { name: "D", color: C.ok, p: 5, d0: 6, d1: 8 },
+  ];
+
+  function batchActive(iter: number): typeof BATCH_ROWS {
+    if (iter <= 0) return [];
+    return BATCH_ROWS.filter((r) => iter >= r.p && iter <= r.d1);
+  }
+
+  function drawBatching(art: SVGSVGElement): void {
+    svgBtn(art, 20, -36, 150, batchTimer !== null ? "❚❚ Pause" : "▶ Run", toggleBatch, batchIter < BATCH_N || batchTimer !== null);
+    svgBtn(art, 180, -36, 96, "Step ▸", stepBatch, batchIter < BATCH_N);
+    svgBtn(art, 286, -36, 96, "↺ Reset", resetBatch);
+    art.appendChild(txt(20, 12, "iteration-level schedule · one column per forward pass", { size: 10.5, fill: C.fg }));
+    art.appendChild(txt(520, 12, "P = prefill · D = decode · queue = waiting", { size: 9.5, fill: C.dim }));
+
+    const x0 = 100;
+    const colW = 72;
+    const cellW = 60;
+    const cx = (iter: number): number => x0 + (iter - 0.5) * colW;
+    const rowY = (i: number): number => 58 + i * 34;
+
+    for (let iter = 1; iter <= BATCH_N; iter++) {
+      art.appendChild(txt(cx(iter), 46, String(iter), { anchor: "middle", size: 9.5, mono: true, fill: iter === batchIter ? C.fg : C.dim, weight: iter === batchIter ? 700 : 400 }));
+    }
+    if (batchIter > 0) {
+      art.appendChild(s("rect", { x: cx(batchIter) - cellW / 2 - 5, y: 34, width: cellW + 10, height: 274, rx: 8, fill: C.accent, "fill-opacity": 0.05, stroke: C.accent, "stroke-opacity": 0.25 }));
+    }
+
+    BATCH_ROWS.forEach((r, i) => {
+      const ry = rowY(i);
+      art.appendChild(txt(24, ry + 18, r.name, { size: 11, weight: 700, fill: r.color }));
+      for (let iter = 1; iter <= BATCH_N; iter++) {
+        const isP = iter === r.p;
+        const isD = iter >= r.d0 && iter <= r.d1;
+        const isQueue = iter < r.p;
+        const isDone = iter > r.d1 && !isQueue;
+        const current = iter === batchIter;
+        const past = batchIter > 0 && iter <= batchIter;
+        const alpha = past ? 1 : 0.22;
+        const label = isP ? "P" : isD ? "D" : isQueue ? "queue" : "done";
+        const color = isP ? C.accent : isD ? r.color : C.dim;
+        art.appendChild(
+          s("rect", {
+            x: cx(iter) - cellW / 2,
+            y: ry,
+            width: cellW,
+            height: 26,
+            rx: 6,
+            fill: isQueue || isDone ? "none" : color,
+            "fill-opacity": isQueue || isDone ? 0 : current ? 0.34 : 0.2,
+            stroke: isQueue ? C.line : isDone ? C.line : color,
+            "stroke-opacity": isQueue || isDone ? 0.7 : current ? 1 : 0.8,
+            "stroke-dasharray": isQueue || isDone ? "3 3" : "",
+            opacity: alpha,
+          }),
+        );
+        art.appendChild(
+          txt(cx(iter), ry + 17, label, {
+            anchor: "middle",
+            size: isQueue ? 7.5 : 9,
+            mono: true,
+            fill: isP ? C.fg : isD ? C.fg : C.dim,
+            opacity: alpha,
+            weight: current ? 700 : 400,
+          }),
+        );
+      }
+    });
+
+    art.appendChild(txt(24, 218, "batch size", { size: 9.5, fill: C.dim }));
+    const base = 280;
+    for (let iter = 1; iter <= BATCH_N; iter++) {
+      const count = batchActive(iter).length;
+      const bh = (count / 3) * 36;
+      const on = iter === batchIter;
+      art.appendChild(
+        s("rect", {
+          x: cx(iter) - 16,
+          y: base - bh,
+          width: 32,
+          height: bh,
+          rx: 3,
+          fill: on ? C.accent : C.accent,
+          "fill-opacity": batchIter > 0 && iter <= batchIter ? (on ? 0.8 : 0.35) : 0.12,
+        }),
+      );
+      art.appendChild(txt(cx(iter), base + 12, String(count), { anchor: "middle", size: 8.5, mono: true, fill: on ? C.fg : C.dim }));
+    }
+    art.appendChild(s("line", { x1: x0, y1: base, x2: x0 + BATCH_N * colW, y2: base, stroke: C.line }));
+
+    art.appendChild(txt(20, 320, "A finishes after iteration 4, so its blocks return to the pool; D prefills in iteration 5.", { size: 10.5, fill: C.fg }));
+    art.appendChild(txt(20, 338, "The batch never drains between requests: finished sequences leave and queued ones join at iteration boundaries.", { size: 10, fill: C.dim }));
+  }
+
   const draws = [
     drawLayer,
     drawLoop,
     drawPrefill,
     drawDecode,
+    drawNaive,
+    drawPaged,
+    drawBatching,
   ];
 
   /* -------------------------------- cards -------------------------------- */
 
   function cardsFor(_i: number): Array<{ k: string; v: string; hint?: string }> {
     return [];
+  }
+
+  /* --------------------------- new-demo controls -------------------------- */
+
+  function advanceNaive(): void {
+    if (naiveStep < 4) naiveStep += 1;
+    render();
+  }
+
+  function resetNaive(): void {
+    naiveStep = 0;
+    render();
+  }
+
+  function stepPaged(): void {
+    if (pageDecoded < 3) pageDecoded += 1;
+    render();
+  }
+
+  function admitD(): void {
+    if (!pageD) {
+      pageD = true;
+      dAt = pageDecoded;
+    }
+    render();
+  }
+
+  function resetPaged(): void {
+    pageDecoded = 0;
+    pageD = false;
+    dAt = 0;
+    render();
+  }
+
+  function stopBatch(): void {
+    if (batchTimer !== null) {
+      window.clearInterval(batchTimer);
+      batchTimer = null;
+    }
+  }
+
+  function stepBatch(): void {
+    stopBatch();
+    if (batchIter < BATCH_N) batchIter += 1;
+    render();
+  }
+
+  function toggleBatch(): void {
+    if (batchTimer !== null) {
+      stopBatch();
+      render();
+      return;
+    }
+    if (batchIter >= BATCH_N) batchIter = 0;
+    render();
+    batchTimer = window.setInterval(() => {
+      if (batchIter < BATCH_N) {
+        batchIter += 1;
+        render();
+      }
+      if (batchIter >= BATCH_N) {
+        stopBatch();
+        render();
+      }
+    }, 760);
+  }
+
+  function resetBatch(): void {
+    stopBatch();
+    batchIter = 0;
+    render();
   }
 
   /* ------------------------------- controls ------------------------------ */
@@ -996,6 +1475,12 @@ const kvCache: SceneFactory = (host) => {
   return {
     reset() {
       n = MIN_N;
+      naiveStep = 0;
+      pageDecoded = 0;
+      pageD = false;
+      dAt = 0;
+      batchIter = 0;
+      stopBatch();
       render();
     },
     destroy() {
@@ -1004,6 +1489,7 @@ const kvCache: SceneFactory = (host) => {
       if (attnTimer !== null) window.clearInterval(attnTimer);
       if (preTimer !== null) window.clearInterval(preTimer);
       if (decTimer !== null) window.clearInterval(decTimer);
+      stopBatch();
     },
   };
 };
