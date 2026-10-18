@@ -740,6 +740,45 @@ h1, h2, h3 { line-height: 1.25; }
 .ill-prose a { color: var(--accent); text-decoration: none; }
 .ill-prose a:hover { text-decoration: underline; }
 
+.ill-prose .code-card {
+  margin: 12px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b1220;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.code-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: #111827;
+  border-bottom: 1px solid var(--line);
+  font: 11px/1 var(--mono);
+  color: var(--dim);
+}
+.code-dots { display: flex; gap: 4px; }
+.code-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: #3a4254; }
+.code-title { color: var(--fg); opacity: 0.85; }
+.code-lang { margin-left: auto; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ill-prose .code-card pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 10px 0;
+  font: 12px/1.65 var(--mono);
+  overflow-x: auto;
+}
+.ill-prose .code-card pre code { display: block; min-width: max-content; }
+.code-line { display: flex; min-height: 1.65em; }
+.code-line .ln { flex: 0 0 32px; padding-right: 12px; text-align: right; color: #4b5563; user-select: none; }
+.code-line .lc { flex: 1; padding-right: 16px; white-space: pre; }
+.tok-kw { color: #c792ea; }
+.tok-com { color: #6b7280; font-style: italic; }
+.tok-num { color: #f78c6c; }
+
 /* glossary symbols use the same mono face as the figures */
 .ill-gloss-item .sym {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

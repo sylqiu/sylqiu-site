@@ -534,6 +534,7 @@ const kvCache: SceneFactory = (host) => {
       proseEl = document.createElement("div");
       proseEl.className = "ill-prose";
       proseEl.innerHTML = sec.prose.map((p) => (p.trim().startsWith("<") ? p : "<p>" + p + "</p>")).join("");
+      styleCodeBlocks(proseEl);
       section.appendChild(proseEl);
     }
     root.appendChild(section);
@@ -1777,6 +1778,56 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(360, 538, "P:D imbalance can still queue decode", { size: 9.5, fill: C.dim }));
     art.appendChild(txt(360, 554, "placement, more queues, more failure modes", { size: 9.5, fill: C.dim }));
     art.appendChild(txt(20, 578, "Chunked prefill avoids the stall without a second pool; it just delays the new prompt's first token.", { size: 9.5, fill: C.dim }));
+  }
+
+  function styleCodeBlocks(root: HTMLElement): void {
+    const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const highlight = (line: string): string => {
+      let html = esc(line);
+      let comment = "";
+      const hash = html.indexOf("#");
+      if (hash >= 0) {
+        comment = html.slice(hash);
+        html = html.slice(0, hash);
+      }
+      html = html.replace(/\b(def|if|else|elif|while|for|in|return|break|continue|not|and|or|None|True|False)\b/g, '<span class="tok-kw">$1</span>');
+      html = html.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
+      if (comment) html += '<span class="tok-com">' + comment + '</span>';
+      return html || " ";
+    };
+
+    root.querySelectorAll("pre").forEach((pre) => {
+      const previous = pre.previousElementSibling;
+      const title = previous && previous.tagName === "H3" ? (previous.textContent || "pseudocode").split(":")[0] : "pseudocode";
+      const lines = (pre.textContent || "").replace(/\n$/, "").split("\n");
+      const card = document.createElement("div");
+      card.className = "code-card";
+
+      const head = document.createElement("div");
+      head.className = "code-head";
+      head.innerHTML = '<span class="code-dots"><i></i><i></i><i></i></span><span class="code-title"></span><span class="code-lang">python</span>';
+      const titleEl = head.querySelector(".code-title");
+      if (titleEl) titleEl.textContent = title;
+
+      const codeEl = document.createElement("code");
+      lines.forEach((line, index) => {
+        const row = document.createElement("span");
+        row.className = "code-line";
+        const ln = document.createElement("span");
+        ln.className = "ln";
+        ln.textContent = String(index + 1);
+        const lc = document.createElement("span");
+        lc.className = "lc";
+        lc.innerHTML = highlight(line);
+        row.append(ln, lc);
+        codeEl.appendChild(row);
+      });
+
+      const newPre = document.createElement("pre");
+      newPre.appendChild(codeEl);
+      card.append(head, newPre);
+      pre.replaceWith(card);
+    });
   }
 
   /* ----------------------------- section 11 ----------------------------- */
