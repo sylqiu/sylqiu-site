@@ -388,6 +388,7 @@ const SECS: Sec[] = [
           'class KVBlock:',
           '    id: int',
           '    refs: int = 1',
+          '    slots: list[KVTensor]',
           '',
           '@dataclass',
           'class Sequence:',
@@ -398,8 +399,10 @@ const SECS: Sec[] = [
           '    # plus prefill(), decode(), finished',
           '',
           'class BlockPool(Protocol):',
+          '    def __getitem__(self, block: int) -> KVBlock: ...',
           '    def alloc(self) -> int: ...',
           '    def free(self, block: int) -> None: ...',
+          '    def free_sequence(self, seq: Sequence) -> None: ...',
           '    def can_fit(self, seq: Sequence) -> bool: ...',
           '',
           '@dataclass',
@@ -415,14 +418,14 @@ const SECS: Sec[] = [
       '<h3>PagedAttention: block table + copy-on-write</h3>' +
         '<pre><code>' +
         [
-          'def append_kv(seq: Sequence, k: Tensor, v: Tensor) -> None:',
+          'def append_kv(seq: Sequence, k: Tensor, v: Tensor, pool: BlockPool) -> None:',
           '    if seq.len % B == 0:',
           '        seq.table.append(pool.alloc())   # logical -> physical',
           '    blk = seq.table[-1]',
-          '    pool[blk][seq.len % B] = (k, v)',
+          '    pool[blk].slots[seq.len % B] = (k, v)',
           '    seq.len += 1',
           '',
-          'def cow_write(seq: Sequence, logical: int, slot: int, kv: KVTensor) -> None:',
+          'def cow_write(seq: Sequence, logical: int, slot: int, kv: KVTensor, pool: BlockPool) -> None:',
           '    blk = seq.table[logical]',
           '    if pool[blk].refs &gt; 1:',
           '        new = pool.alloc()',
@@ -430,7 +433,7 @@ const SECS: Sec[] = [
           '        pool[blk].refs -= 1',
           '        seq.table[logical] = new',
           '        blk = new',
-          '    pool[blk][slot % B] = kv',
+          '    pool[blk].slots[slot % B] = kv',
         ].join('\n') +
         '</code></pre>' +
         '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/kv_cache_manager.py">vLLM KVCacheManager</a> · <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/block_pool.py">BlockPool</a> · <a href="https://arxiv.org/abs/2309.06180">PagedAttention paper</a></p>',
@@ -451,7 +454,7 @@ const SECS: Sec[] = [
           '    return node, i                       # cached KV up to i',
           '',
           'def insert(node: RadixNode, tokens: list[int], i: int) -> None:',
-          '    node.children[tokens[i]] = Node(tokens[i:], alloc_blocks(tokens[i:]))',
+          '    node.children[tokens[i]] = RadixNode(tokens[i:], alloc_blocks(tokens[i:]), {})',
         ].join('\n') +
         '</code></pre>' +
         '<p class="ill-refs"><a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">SGLang radix_cache.py</a> · <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py">SGLang scheduler.py</a> · <a href="https://arxiv.org/abs/2312.07104">RadixAttention paper</a></p>',
@@ -460,14 +463,14 @@ const SECS: Sec[] = [
         [
           'def scheduler_step(batch: list[Sequence], waiting: deque[Sequence], blocks: BlockPool) -> None:',
           '    while batch or waiting:',
-          '        for seq in batch:',
+          '        for seq in list(batch):',
           '            if seq.is_prefill:',
           '                seq.prefill(chunk_size)',
           '            else:',
           '                seq.decode()',
           '            if seq.finished:',
           '                batch.remove(seq)',
-          '                blocks.free(seq)             # refcount-aware',
+          '                blocks.free_sequence(seq)    # refcount-aware',
           '        while waiting and blocks.can_fit(waiting[0]):',
           '            batch.append(waiting.popleft())',
         ].join('\n') +
@@ -477,15 +480,17 @@ const SECS: Sec[] = [
         '<pre><code>' +
         [
           '# prefill worker',
-          'blocks: list[int] = pool.alloc(ceil(prompt_len / B))',
+          'blocks: list[int] = pool.alloc(ceil(len(prompt) / B))',
           'prefill(prompt, blocks)',
           'send_kv(blocks, decode_worker)        # bytes + block table',
           '',
-          '# decode worker',
+          '# decode worker — pool: BlockPool',
           'blocks: list[int] = recv_kv()',
+          'seq: Sequence = Sequence(tokens=[], table=blocks)',
           'for _ in range(max_new_tokens):',
-          '    logits = decode(blocks)',
-          '    append_kv(blocks, sample(logits))',
+          '    logits = decode(seq)',
+          '    k, v = project(seq, sample(logits))',
+          '    append_kv(seq, k, v, pool)',
         ].join('\n') +
         '</code></pre>' +
         '<p class="ill-refs"><a href="https://github.com/NVIDIA/TensorRT-LLM/blob/main/cpp/tensorrt_llm/batch_manager/kvCacheManager.cpp">TensorRT-LLM KV cache manager</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe / disaggregated prefill+decode</a></p>',
