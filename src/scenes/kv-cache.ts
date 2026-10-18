@@ -409,6 +409,11 @@ const SECS: Sec[] = [
         pseudocode.handoff,
         '<p class="ill-refs"><a href="https://github.com/NVIDIA/TensorRT-LLM/blob/main/cpp/tensorrt_llm/batch_manager/kvCacheManager.cpp">TensorRT-LLM KV cache manager</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe / disaggregated prefill+decode</a></p>',
       ),
+      pyBlock(
+        "Async serving loop",
+        pseudocode.asyncServing,
+        '<p class="ill-refs">Conceptual host-side shape; production uses device streams/events. <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a></p>',
+      ),
       '<p><strong>Concurrency note:</strong> the pseudocode is synchronous at the level of one sequence: the next token depends on the previous KV. The serving loop is not a global barrier. The scheduler runs on the host, GPU kernels are submitted asynchronously, and KV transfer can overlap with the tail of prefill. Continuous batching mixes requests at different phases; decode waits only for the blocks it needs.</p>',
       '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/vllm-project/vllm">vLLM</a> · <a href="https://github.com/sgl-project/sglang">SGLang</a> · <a href="https://github.com/NVIDIA/TensorRT-LLM">TensorRT-LLM</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve</a></p>',
     ],
@@ -1741,8 +1746,8 @@ const kvCache: SceneFactory = (host) => {
 
   function styleCodeBlocks(root: HTMLElement): void {
     const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const keywords = new Set(["def","if","else","elif","while","for","in","return","break","continue","not","and","or","is","lambda","yield","pass","raise","try","except","finally","with","as","import","from","class"]);
-    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","tuple","bool","deque","dataclass","None","True","False","Node"]);
+    const keywords = new Set(["def","if","else","elif","while","for","in","return","break","continue","not","and","or","is","lambda","yield","pass","raise","try","except","finally","with","as","import","from","class","async","await"]);
+    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","tuple","bool","deque","dataclass","asyncio","None","True","False","Node"]);
     const types = new Set(["Tensor","Sequence","KVBlock","RadixNode","BlockPool","KVTensor","Protocol","Worker"]);
     const highlight = (line: string): string => {
       const token = /("""[^"]*"""|"[^"]*"|'[^']*')|(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
