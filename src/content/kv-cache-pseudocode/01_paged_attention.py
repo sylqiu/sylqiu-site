@@ -8,14 +8,16 @@ def copy_block(source: KVBlock, target: KVBlock) -> None:
     target.slots = list(source.slots)
 
 
-def ensure_private_block(
+def ensure_writable_block(
     sequence: Sequence,
     logical_block: int,
     block_pool: BlockPool,
 ) -> int:
-    """Return a physical block this sequence may modify, copying if shared."""
+    """Return a block safe to modify; copy only if it is shared."""
     block_id = sequence.block_table[logical_block]
     block = block_pool[block_id]
+
+    # Fast path: a private block can be written in place.
     if block.refs == 1:
         return block_id
 
@@ -34,7 +36,7 @@ def write_kv(
     block_pool: BlockPool,
 ) -> None:
     """Write one packed KV pair into a logical block, copying it if shared."""
-    block_id = ensure_private_block(
+    block_id = ensure_writable_block(
         sequence=sequence,
         logical_block=logical_block,
         block_pool=block_pool,
@@ -48,6 +50,7 @@ def append_kv(
     block_pool: BlockPool,
 ) -> None:
     """Append one packed KV pair at the sequence's next token position."""
+    # Cross a block boundary: the new block is private and can be written.
     if sequence.num_tokens % TOKENS_PER_BLOCK == 0:
         sequence.block_table.append(block_pool.allocate_block())
 

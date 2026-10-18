@@ -21,8 +21,25 @@ class Sequence:
     tokens: list[int]
     block_table: list[int]   # logical block -> physical block id
     num_tokens: int = 0
-    state: str = "waiting"
-    # plus prefill(), decode(), finished
+    state: str = "waiting"    # waiting -> decoding -> finished
+
+    @property
+    def is_prefill(self) -> bool:
+        """True while the prompt still has unprocessed tokens."""
+        return self.state == "waiting"
+
+    @property
+    def finished(self) -> bool:
+        """True after EOS or the max-new-token limit."""
+        return self.state == "finished"
+
+    def prefill(self, chunk_size: int) -> None:
+        """Process up to chunk_size prompt tokens and append their KV."""
+        ...
+
+    def decode(self) -> None:
+        """Generate one token and append its KV; update finished state."""
+        ...
 
 
 class BlockPool(Protocol):
