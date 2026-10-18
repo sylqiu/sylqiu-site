@@ -362,8 +362,8 @@ const SECS: Sec[] = [
     id: "disagg",
     title: "Prefill / Decode Disaggregation",
     blurb:
-      "Prefill is compute-bound and produces the prompt's KV; decode is memory-bound and latency-sensitive. If they share a worker, one long prompt stalls every decode step behind it. Disaggregation gives each stage its own pool and moves the prompt's KV blocks from the prefill worker to the decode worker over the interconnect.",
-    h: 470,
+      "Without chunked prefill, a long prompt on a shared worker stalls decode behind it. Chunked prefill interleaves prompt chunks with decode; disaggregation goes further, giving prefill and decode separate pools and handing the prompt's KV blocks from the prefill worker to the decode worker over the interconnect.",
+    h: 600,
     top: 44,
   },
 ];
@@ -1603,7 +1603,7 @@ const kvCache: SceneFactory = (host) => {
     };
 
     art.appendChild(s("rect", { x: 12, y: 26, width: 696, height: 140, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
-    art.appendChild(txt(20, 46, "colocated", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 46, "colocated · unchunked", { size: 10.5, weight: 700, fill: C.fg }));
     art.appendChild(txt(20, 60, "one pool · prefill and decode share a batch", { size: 9, fill: C.dim }));
     art.appendChild(txt(20, 90, "A/B/C decode", { size: 9.5, fill: C.accent }));
     art.appendChild(txt(20, 120, "long prompt", { size: 9.5, fill: C.warn }));
@@ -1627,7 +1627,7 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(s("rect", { x: 12, y: 176, width: 696, height: 184, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
     art.appendChild(txt(20, 196, "disaggregated", { size: 10.5, weight: 700, fill: C.fg }));
     art.appendChild(txt(20, 210, "separate pools · KV handoff", { size: 9, fill: C.dim }));
-    art.appendChild(txt(700, 196, "P pool ×1 · D pool ×4", { anchor: "end", size: 9, fill: C.dim }));
+    art.appendChild(txt(700, 196, "P:D = 1:4 · example", { anchor: "end", size: 9, fill: C.dim }));
     art.appendChild(txt(20, 246, "prefill P0", { size: 9.5, fill: C.warn }));
     art.appendChild(txt(20, 276, "decode D0", { size: 9.5, fill: C.accent }));
     art.appendChild(txt(20, 306, "long prompt", { size: 9.5, fill: C.ok }));
@@ -1650,20 +1650,44 @@ const kvCache: SceneFactory = (host) => {
     }
     if (pdLong) {
       art.appendChild(txt(20, 330, "KV blocks move P0 → D0 before the first decode token", { size: 9.5, fill: C.teal }));
-      art.appendChild(txt(20, 346, "decode never pauses · ITL stays flat; TTFT pays the handoff", { size: 9.5, fill: C.ok }));
+      art.appendChild(txt(20, 346, "decode keeps running if D has capacity · TTFT pays the handoff", { size: 9.5, fill: C.ok }));
     } else {
       art.appendChild(txt(20, 330, "no long prompt · both deployments are in steady state", { size: 9.5, fill: C.dim }));
     }
 
-    art.appendChild(txt(20, 382, "Why split", { size: 10.5, weight: 700, fill: C.fg }));
-    art.appendChild(txt(20, 398, "prefill is compute-bound; decode is memory-bound", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(20, 414, "a long prompt stops blocking the token loop", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(20, 430, "size the two pools independently", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(360, 382, "What it costs", { size: 10.5, weight: 700, fill: C.fg }));
-    art.appendChild(txt(360, 398, "KV transfer: bandwidth plus a handoff delay", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(360, 414, "placement: pick a decode worker with room", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(360, 430, "more queues and more failure modes", { size: 9.5, fill: C.dim }));
-    art.appendChild(txt(20, 454, "Chunked prefill is the middle ground: split a long prompt so it interleaves with decode instead of blocking it.", { size: 9.5, fill: C.dim }));
+    art.appendChild(s("rect", { x: 12, y: 370, width: 696, height: 118, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
+    art.appendChild(txt(20, 390, "colocated + chunked prefill", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 404, "same pool · prompt split into chunks", { size: 9, fill: C.dim }));
+    art.appendChild(txt(20, 434, "A/B/C decode", { size: 9.5, fill: C.accent }));
+    art.appendChild(txt(20, 464, "long prompt", { size: 9.5, fill: C.warn }));
+    for (let i = 1; i <= PD_N; i++) {
+      cell(i, 424, "D", C.accent);
+      if (!pdLong) {
+        cell(i, 454, "—", C.line, false);
+      } else if (i < PD_ARRIVE) {
+        cell(i, 454, "queue", C.warn, true, true);
+      } else if (i <= PD_ARRIVE + 3) {
+        cell(i, 454, "P", C.warn);
+      } else {
+        cell(i, 454, "D", C.ok);
+      }
+    }
+    art.appendChild(
+      txt(20, 482, pdLong ? "no decode gaps · the new prompt's first token slips to iteration 7" : "no long prompt · steady state", {
+        size: 9.5,
+        fill: pdLong ? C.ok : C.dim,
+      }),
+    );
+
+    art.appendChild(txt(20, 506, "Why split", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 522, "prefill is compute-bound; decode is memory-bound", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 538, "size the two pools independently", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 554, "chunked prefill is the usual baseline", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 506, "What it costs", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(360, 522, "KV transfer adds to TTFT", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 538, "P:D imbalance can still queue decode", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 554, "placement, more queues, more failure modes", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 578, "Chunked prefill avoids the stall without a second pool; it just delays the new prompt's first token.", { size: 9.5, fill: C.dim }));
   }
 
   const draws = [
