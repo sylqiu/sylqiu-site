@@ -1,6 +1,10 @@
-from .core_objects import BlockPool, KVBlock, KVTensor, Sequence
-
-TOKENS_PER_BLOCK = 4
+from .core_objects import (
+    BlockPool,
+    KVBlock,
+    KVTensor,
+    Sequence,
+    TOKENS_PER_BLOCK,
+)
 
 
 def copy_block(source: KVBlock, target: KVBlock) -> None:
@@ -50,11 +54,14 @@ def append_kv(
     block_pool: BlockPool,
 ) -> None:
     """Append one packed KV pair at the sequence's next token position."""
-    # Cross a block boundary: the new block is private and can be written.
+    # Cross a block boundary. The block may already be reserved by a
+    # prefill worker; only allocate when the table is short.
     if sequence.num_tokens % TOKENS_PER_BLOCK == 0:
-        sequence.block_table.append(block_pool.allocate_block())
+        logical_block = sequence.num_tokens // TOKENS_PER_BLOCK
+        if logical_block == len(sequence.block_table):
+            sequence.block_table.append(block_pool.allocate_block())
 
-    logical_block = len(sequence.block_table) - 1
+    logical_block = sequence.num_tokens // TOKENS_PER_BLOCK
     write_kv(
         sequence=sequence,
         logical_block=logical_block,

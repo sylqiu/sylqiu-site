@@ -19,7 +19,8 @@
  * real sub/superscripts.
  */
 import type { SceneFactory } from "../lib/registry.ts";
-import { pseudocode } from "../content/kv-cache-pseudocode/index.ts";
+import { pseudocode } from "../content/kv_cache_pseudocode/index.ts";
+import framesData from "../content/kv-cache-frames.json";
 
 const NS = "http://www.w3.org/2000/svg";
 const T = String.raw;
@@ -37,6 +38,12 @@ const C = {
   teal: "#39c5cf",
   purple: "#a371f7",
 };
+
+type SimBlock = { id: number; refs: number; fill: number; owners: string[] };
+type SimSequence = { id: string; promptLen: number; decodeTotal: number; produced: number; table: number[]; phase: string };
+type SimFrame = { blocks: SimBlock[]; seqs: SimSequence[]; log: string[] };
+const SIM_FRAMES = (framesData as { frames: SimFrame[] }).frames;
+const SIM_TOTAL = SIM_FRAMES.length - 1;
 
 /* ------------------------------- tiny model ------------------------------- */
 
@@ -379,11 +386,11 @@ const SECS: Sec[] = [
     id: "pseudocode",
     title: "Pseudocode: The Serving Loop",
     blurb:
-      "Every diagram above is a data-structure cartoon. Here is the shape of the code: a block table with copy-on-write, a radix prefix matcher, an iteration-level scheduler, and a prefill/decode handoff. The links point to production implementations.",
+      "Every diagram above is a data-structure cartoon. Here is the code behind it: a block table with copy-on-write, a radix prefix matcher, an iteration-level scheduler, and a prefill/decode handoff. The snippets are runnable toy implementations; §12 replays frames generated from them. The links point to production implementations.",
     h: 250,
     top: 44,
     prose: [
-      '<p>Shape-of-the-code pseudocode with lightweight Python types, not drop-in API calls. The snippets are kept as standalone Python files and rendered here verbatim.</p>',
+      '<p>Toy implementation with lightweight Python types, not drop-in API calls. The snippets are kept as standalone Python files and rendered here verbatim.</p>',
       pyBlock(
         "Core objects",
         pseudocode.coreObjects,
@@ -419,6 +426,9 @@ const SECS: Sec[] = [
       "Run the model from §11 on a tiny workload. A and B share a prompt prefix; A's first decode copies the shared block, C arrives later, and the physical block pool shows the result. Step through the schedule or press Run.",
     h: 560,
     top: 44,
+    prose: [
+      '<p class="ill-refs">Frames are precomputed by <a href="https://github.com/sylqiu/sylqiu-site/blob/main/src/content/kv_cache_pseudocode/sim.py"><code>sim.py</code></a>, which runs the implementation in §11; the page only replays the recorded states. <a href="https://github.com/sylqiu/sylqiu-site/tree/main/src/content/kv_cache_pseudocode">source</a></p>',
+    ],
   },
 ];
 
@@ -435,7 +445,6 @@ const kvCache: SceneFactory = (host) => {
   let simStep = 0;
   let simPlaying = false;
   let simTimer: number | null = null;
-  const SIM_TOTAL = 8;
 
   /* one token per step: a step produces the whole output vector of that token */
   function toggleAttn(): void {
@@ -1853,74 +1862,8 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(355, 236, "next iteration", { anchor: "middle", size: 8.5, fill: C.dim }));
   }
 
-  type SimBlock = { id: number; refs: number; fill: number; owners: string[] };
-  type SimSequence = { id: string; promptLen: number; decodeTotal: number; produced: number; table: number[]; phase: string };
-
-  function simState(step: number): { blocks: SimBlock[]; seqs: SimSequence[]; log: string[] } {
-    const blocks: SimBlock[] = Array.from({ length: 8 }, (_, id) => ({ id, refs: 0, fill: 0, owners: [] }));
-    const seqs: SimSequence[] = [];
-    const log: string[] = [];
-    const add = (id: string, promptLen: number, decodeTotal: number, table: number[], phase: string): void => {
-      seqs.push({ id, promptLen, decodeTotal, produced: 0, table, phase });
-    };
-
-    if (step >= 1) {
-      add("A", 6, 2, [0, 1], "decode");
-      blocks[0] = { id: 0, refs: 1, fill: 4, owners: ["A"] };
-      blocks[1] = { id: 1, refs: 1, fill: 2, owners: ["A"] };
-      log.push("A prefill complete → blocks 0–1");
-    }
-    if (step >= 2) {
-      add("B", 6, 2, [0, 1], "decode");
-      blocks[0].refs = 2;
-      blocks[0].owners = ["A", "B"];
-      blocks[1].refs = 2;
-      blocks[1].owners = ["A", "B"];
-      log.push("B prefix hit → shares 0–1");
-    }
-    if (step >= 3) {
-      const a = seqs.find((q) => q.id === "A")!;
-      blocks[1].refs = 1;
-      blocks[1].owners = ["B"];
-      blocks[2] = { id: 2, refs: 1, fill: 3, owners: ["A"] };
-      a.table = [0, 2];
-      a.produced = 1;
-      log.push("A decode · COW block 1 → 2");
-    }
-    if (step >= 4) {
-      const b = seqs.find((q) => q.id === "B")!;
-      blocks[1].fill = 3;
-      b.produced = 1;
-      log.push("B decode · writes block 1 in place");
-    }
-    if (step >= 5) {
-      const a = seqs.find((q) => q.id === "A")!;
-      blocks[2].fill = 4;
-      a.produced = 2;
-      a.phase = "done";
-      log.push("A hits max_new_tokens · done");
-    }
-    if (step >= 6) {
-      add("C", 5, 1, [3, 4], "decode");
-      blocks[3] = { id: 3, refs: 1, fill: 4, owners: ["C"] };
-      blocks[4] = { id: 4, refs: 1, fill: 1, owners: ["C"] };
-      log.push("C prefill complete → blocks 3–4");
-    }
-    if (step >= 7) {
-      const c = seqs.find((q) => q.id === "C")!;
-      blocks[4].fill = 2;
-      c.produced = 1;
-      c.phase = "done";
-      log.push("C decode · done");
-    }
-    if (step >= 8) {
-      const b = seqs.find((q) => q.id === "B")!;
-      blocks[1].fill = 4;
-      b.produced = 2;
-      b.phase = "done";
-      log.push("B decode · done");
-    }
-    return { blocks, seqs, log };
+  function simState(step: number): SimFrame {
+    return SIM_FRAMES[Math.max(0, Math.min(step, SIM_TOTAL))];
   }
 
   function stopSim(): void {

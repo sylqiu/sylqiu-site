@@ -11,13 +11,13 @@ async def advance(
     block_pool: BlockPool,
 ) -> None:
     """Advance one sequence; await only its own phase."""
+    if sequence.finished:
+        return
     if sequence.is_prefill:
         await sequence.prefill(chunk_size=PREFILL_CHUNK_SIZE)
     else:
         await sequence.decode()
-
-    if sequence.finished:
-        block_pool.free_sequence(sequence=sequence)
+    # Retirement is the serving loop's job, after the result is delivered.
 
 
 async def scheduler_loop(
@@ -25,14 +25,19 @@ async def scheduler_loop(
     waiting: deque[Sequence],
     block_pool: BlockPool,
 ) -> None:
-    """Submit independent work; task retirement is elided."""
+    """Submit independent work and admit waiting requests each iteration."""
     while running or waiting:
-        for sequence in list(running):
-            asyncio.create_task(
-                advance(sequence=sequence, block_pool=block_pool)
-            )
+        tasks = [
+            asyncio.create_task(advance(sequence, block_pool))
+            for sequence in running
+            if not sequence.finished
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)
 
-        while waiting and block_pool.can_allocate(sequence=waiting[0]):
+        while waiting and block_pool.can_allocate(waiting[0]):
             running.append(waiting.popleft())
 
+        if not tasks and not waiting:
+            break
         await asyncio.sleep(0)

@@ -1,0 +1,808 @@
+{
+  "workload": {
+    "tokensPerBlock": 4,
+    "poolSize": 8
+  },
+  "frames": [
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 1,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 2,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [],
+      "log": []
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 2,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 0,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 2,
+          "fill": 2,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 0,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 0,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 2,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "decode"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 0,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "decode"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2",
+        "B decode · writes block 1 in place"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 4,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 2,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "done"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2",
+        "B decode · writes block 1 in place",
+        "A hits max_new_tokens · done"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 4,
+          "refs": 1,
+          "fill": 1,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 2,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "done"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        },
+        {
+          "id": "C",
+          "promptLen": 5,
+          "decodeTotal": 1,
+          "produced": 0,
+          "table": [
+            3,
+            4
+          ],
+          "phase": "decode"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2",
+        "B decode · writes block 1 in place",
+        "A hits max_new_tokens · done",
+        "C prefill complete → blocks 3–4"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 3,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 4,
+          "refs": 1,
+          "fill": 2,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 2,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "done"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 1,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "decode"
+        },
+        {
+          "id": "C",
+          "promptLen": 5,
+          "decodeTotal": 1,
+          "produced": 1,
+          "table": [
+            3,
+            4
+          ],
+          "phase": "done"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2",
+        "B decode · writes block 1 in place",
+        "A hits max_new_tokens · done",
+        "C prefill complete → blocks 3–4",
+        "C decode · done"
+      ]
+    },
+    {
+      "blocks": [
+        {
+          "id": 0,
+          "refs": 2,
+          "fill": 4,
+          "owners": [
+            "A",
+            "B"
+          ]
+        },
+        {
+          "id": 1,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "B"
+          ]
+        },
+        {
+          "id": 2,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "A"
+          ]
+        },
+        {
+          "id": 3,
+          "refs": 1,
+          "fill": 4,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 4,
+          "refs": 1,
+          "fill": 2,
+          "owners": [
+            "C"
+          ]
+        },
+        {
+          "id": 5,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 6,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        },
+        {
+          "id": 7,
+          "refs": 0,
+          "fill": 0,
+          "owners": []
+        }
+      ],
+      "seqs": [
+        {
+          "id": "A",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 2,
+          "table": [
+            0,
+            2
+          ],
+          "phase": "done"
+        },
+        {
+          "id": "B",
+          "promptLen": 6,
+          "decodeTotal": 2,
+          "produced": 2,
+          "table": [
+            0,
+            1
+          ],
+          "phase": "done"
+        },
+        {
+          "id": "C",
+          "promptLen": 5,
+          "decodeTotal": 1,
+          "produced": 1,
+          "table": [
+            3,
+            4
+          ],
+          "phase": "done"
+        }
+      ],
+      "log": [
+        "A prefill complete → blocks 0–1",
+        "B prefix hit → shares 0–1",
+        "A decode · COW block 1 → 2",
+        "B decode · writes block 1 in place",
+        "A hits max_new_tokens · done",
+        "C prefill complete → blocks 3–4",
+        "C decode · done",
+        "B decode · done"
+      ]
+    }
+  ]
+}
