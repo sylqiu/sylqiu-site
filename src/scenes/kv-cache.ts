@@ -1,7 +1,7 @@
 /**
  * Illustration: How KV cache works in an autoregressive LLM.
  *
- * A stacked explainer: nine sections, each its own figure, read top to bottom.
+ * A stacked explainer: ten sections, each its own figure, read top to bottom.
  *  1  inside one transformer layer — per-token blocks vs the one cross-token step,
  *     with the causal mask drawn explicitly
  *  2  the autoregressive loop — a token becomes a distribution over the next token
@@ -12,6 +12,7 @@
  *  7  continuous batching — iteration-level scheduling against a paged pool
  *  8  block sharing — reference counts and copy-on-write for a shared prefix
  *  9  RadixAttention — a global radix tree that reuses the longest matching prefix
+ * 10  prefill/decode disaggregation — separate pools and the KV handoff
  *
  * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
  * one (layer, head) slice is eight numbers wide. Formulas are plain SVG text with
@@ -357,6 +358,14 @@ const SECS: Sec[] = [
     h: 430,
     top: 44,
   },
+  {
+    id: "disagg",
+    title: "Prefill / Decode Disaggregation",
+    blurb:
+      "Prefill is compute-bound and produces the prompt's KV; decode is memory-bound and latency-sensitive. If they share a worker, one long prompt stalls every decode step behind it. Disaggregation gives each stage its own pool and moves the prompt's KV blocks from the prefill worker to the decode worker over the interconnect.",
+    h: 470,
+    top: 44,
+  },
 ];
 
 /* --------------------------------- scene ---------------------------------- */
@@ -402,6 +411,7 @@ const kvCache: SceneFactory = (host) => {
   let dAt = 0;
   let batchIter = 0;
   let batchTimer: number | null = null;
+  let pdLong = false;
   let dead = false;
   let timer: number | null = null;
 
@@ -1551,6 +1561,111 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(20, 414, "When they diverge the node splits; unused leaves are evicted LRU, while shared ancestors survive.", { size: 10, fill: C.dim }));
   }
 
+  /* ----------------------------- section 10 ----------------------------- */
+
+  const PD_N = 8;
+  const PD_ARRIVE = 3;
+
+  function drawDisagg(art: SVGSVGElement): void {
+    svgBtn(art, 20, -36, 190, pdLong ? "↺ Reset prompt" : "▶ Send long prompt", togglePd);
+    art.appendChild(
+      txt(20, 12, pdLong ? "a 256-token prompt arrives at iteration " + PD_ARRIVE : "steady state · only decode is running", { size: 10.5, fill: C.fg }),
+    );
+
+    const x0 = 150;
+    const colW = 62;
+    const cellW = 54;
+    const cx = (i: number): number => x0 + (i - 1) * colW + cellW / 2;
+
+    for (let i = 1; i <= PD_N; i++) {
+      art.appendChild(txt(cx(i), 44, String(i), { anchor: "middle", size: 9, mono: true, fill: C.dim }));
+    }
+
+    const cell = (i: number, y: number, label: string, color: string, on = true, dashed = false): void => {
+      const x = x0 + (i - 1) * colW + 4;
+      art.appendChild(
+        s("rect", {
+          x,
+          y,
+          width: cellW,
+          height: 24,
+          rx: 6,
+          fill: on ? color : "none",
+          "fill-opacity": on ? 0.18 : 0,
+          stroke: color,
+          "stroke-opacity": on ? 0.8 : 0.45,
+          "stroke-dasharray": dashed ? "3 2" : "",
+        }),
+      );
+      art.appendChild(
+        txt(x + cellW / 2, y + 16, label, { anchor: "middle", size: 8.5, mono: true, fill: on ? C.fg : C.dim, opacity: on ? 1 : 0.6 }),
+      );
+    };
+
+    art.appendChild(s("rect", { x: 12, y: 26, width: 696, height: 140, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
+    art.appendChild(txt(20, 46, "colocated", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 60, "one pool · prefill and decode share a batch", { size: 9, fill: C.dim }));
+    art.appendChild(txt(20, 90, "A/B/C decode", { size: 9.5, fill: C.accent }));
+    art.appendChild(txt(20, 120, "long prompt", { size: 9.5, fill: C.warn }));
+    for (let i = 1; i <= PD_N; i++) {
+      const stalled = pdLong && i >= PD_ARRIVE && i <= PD_ARRIVE + 1;
+      cell(i, 74, stalled ? "stall" : "D", stalled ? C.bad : C.accent, true, stalled);
+      if (!pdLong) {
+        cell(i, 104, "—", C.line, false);
+      } else if (i < PD_ARRIVE) {
+        cell(i, 104, "queue", C.warn, true, true);
+      } else if (i <= PD_ARRIVE + 1) {
+        cell(i, 104, "P", C.warn);
+      } else {
+        cell(i, 104, "D", C.ok);
+      }
+    }
+    art.appendChild(
+      txt(20, 154, pdLong ? "decode stalls for 2 iterations → ITL spike" : "all three requests decode every iteration", { size: 9.5, fill: pdLong ? C.bad : C.dim }),
+    );
+
+    art.appendChild(s("rect", { x: 12, y: 176, width: 696, height: 184, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
+    art.appendChild(txt(20, 196, "disaggregated", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 210, "separate pools · KV handoff", { size: 9, fill: C.dim }));
+    art.appendChild(txt(700, 196, "P pool ×1 · D pool ×4", { anchor: "end", size: 9, fill: C.dim }));
+    art.appendChild(txt(20, 246, "prefill P0", { size: 9.5, fill: C.warn }));
+    art.appendChild(txt(20, 276, "decode D0", { size: 9.5, fill: C.accent }));
+    art.appendChild(txt(20, 306, "long prompt", { size: 9.5, fill: C.ok }));
+    for (let i = 1; i <= PD_N; i++) {
+      if (!pdLong || i < PD_ARRIVE || i > PD_ARRIVE + 1) {
+        cell(i, 232, "—", C.line, false);
+      } else {
+        cell(i, 232, "P", C.warn);
+      }
+      cell(i, 262, "D", C.accent);
+      if (!pdLong) {
+        cell(i, 292, "—", C.line, false);
+      } else if (i < PD_ARRIVE) {
+        cell(i, 292, "queue", C.warn, true, true);
+      } else if (i <= PD_ARRIVE + 1) {
+        cell(i, 292, "wait", C.dim, true, true);
+      } else {
+        cell(i, 292, "D", C.ok);
+      }
+    }
+    if (pdLong) {
+      art.appendChild(txt(20, 330, "KV blocks move P0 → D0 before the first decode token", { size: 9.5, fill: C.teal }));
+      art.appendChild(txt(20, 346, "decode never pauses · ITL stays flat; TTFT pays the handoff", { size: 9.5, fill: C.ok }));
+    } else {
+      art.appendChild(txt(20, 330, "no long prompt · both deployments are in steady state", { size: 9.5, fill: C.dim }));
+    }
+
+    art.appendChild(txt(20, 382, "Why split", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 398, "prefill is compute-bound; decode is memory-bound", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 414, "a long prompt stops blocking the token loop", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 430, "size the two pools independently", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 382, "What it costs", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(360, 398, "KV transfer: bandwidth plus a handoff delay", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 414, "placement: pick a decode worker with room", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(360, 430, "more queues and more failure modes", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(20, 454, "Chunked prefill is the middle ground: split a long prompt so it interleaves with decode instead of blocking it.", { size: 9.5, fill: C.dim }));
+  }
+
   const draws = [
     drawLayer,
     drawLoop,
@@ -1561,6 +1676,7 @@ const kvCache: SceneFactory = (host) => {
     drawBatching,
     drawSharing,
     drawRadix,
+    drawDisagg,
   ];
 
   /* -------------------------------- cards -------------------------------- */
@@ -1667,6 +1783,11 @@ const kvCache: SceneFactory = (host) => {
 
   function resetRadix(): void {
     radixStep = 0;
+    render();
+  }
+
+  function togglePd(): void {
+    pdLong = !pdLong;
     render();
   }
 
@@ -1815,6 +1936,7 @@ const kvCache: SceneFactory = (host) => {
       shareB = SHARE_PREFIX;
       cowBy = null;
       radixStep = 0;
+      pdLong = false;
       stopBatch();
       render();
     },
