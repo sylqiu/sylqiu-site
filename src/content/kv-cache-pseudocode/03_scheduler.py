@@ -14,11 +14,11 @@ def scheduler_step(
     while running or waiting:
         for sequence in list(running):
             if sequence.is_prefill:
-                sequence.prefill(PREFILL_CHUNK_SIZE)
+                sequence.prefill(chunk_size=PREFILL_CHUNK_SIZE)
             else:
                 sequence.decode()
             if sequence.finished:
                 running.remove(sequence)
-                block_pool.free_sequence(sequence)  # refcount-aware
-        while waiting and block_pool.can_allocate(waiting[0]):
+                block_pool.free_sequence(sequence=sequence)  # refcount-aware
+        while waiting and block_pool.can_allocate(sequence=waiting[0]):
             running.append(waiting.popleft())

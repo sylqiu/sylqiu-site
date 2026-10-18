@@ -30,9 +30,12 @@ def match_prefix(
         child = node.children.get(token_ids[matched])
         if child is None:
             break
-        common = longest_common_prefix(child.token_ids, token_ids[matched:])
+        common = longest_common_prefix(
+            left=child.token_ids,
+            right=token_ids[matched:],
+        )
         if common < len(child.token_ids):
-            child = split_node(child, common)
+            child = split_node(node=child, prefix_length=common)
             break
         node, matched = child, matched + common
     return node, matched
@@ -42,7 +45,7 @@ def insert(node: RadixNode, token_ids: list[int], matched: int) -> None:
     """Attach the uncached suffix below the matched node."""
     suffix = token_ids[matched:]
     node.children[token_ids[matched]] = RadixNode(
-        suffix,
-        allocate_blocks(suffix),
-        {},
+        token_ids=suffix,
+        block_ids=allocate_blocks(token_ids=suffix),
+        children={},
     )
