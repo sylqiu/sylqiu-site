@@ -19,6 +19,7 @@
  * real sub/superscripts.
  */
 import type { SceneFactory } from "../lib/registry.ts";
+import { pseudocode } from "../content/kv-cache-pseudocode/index.ts";
 
 const NS = "http://www.w3.org/2000/svg";
 const T = String.raw;
@@ -285,6 +286,14 @@ interface Sec {
   prose?: string[];
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function pyBlock(title: string, code: string, refs: string): string {
+  return "<h3>" + title + "</h3><pre><code>" + escapeHtml(code) + "</code></pre>" + refs;
+}
+
 const SECS: Sec[] = [
   {
     id: "layer",
@@ -374,126 +383,32 @@ const SECS: Sec[] = [
     h: 250,
     top: 44,
     prose: [
-      '<p>Shape-of-the-code pseudocode with lightweight Python types, not drop-in API calls. Error handling, tensor batching, and the exact allocator APIs are omitted; the linked files are the source of truth.</p>',
-      '<h3>Core objects</h3>' +
-        '<pre><code>' +
-        [
-          'from dataclasses import dataclass',
-          'from typing import Protocol',
-          'from collections import deque',
-          '',
-          'KVTensor = tuple[Tensor, Tensor]',
-          '',
-          '@dataclass',
-          'class KVBlock:',
-          '    id: int',
-          '    refs: int = 1',
-          '    slots: list[KVTensor]',
-          '',
-          '@dataclass',
-          'class Sequence:',
-          '    tokens: list[int]',
-          '    table: list[int]          # logical block -> physical block',
-          '    len: int = 0',
-          '    state: str = "waiting"',
-          '    # plus prefill(), decode(), finished',
-          '',
-          'class BlockPool(Protocol):',
-          '    def __getitem__(self, block: int) -> KVBlock: ...',
-          '    def alloc(self) -> int: ...',
-          '    def free(self, block: int) -> None: ...',
-          '    def free_sequence(self, seq: Sequence) -> None: ...',
-          '    def can_fit(self, seq: Sequence) -> bool: ...',
-          '',
-          '@dataclass',
-          'class RadixNode:',
-          '    key: list[int]',
-          '    kv: list[int]',
-          '    children: dict[int, "RadixNode"]',
-          '    refs: int = 0',
-          '    last_access: int = 0',
-        ].join('\n') +
-        '</code></pre>' +
+      '<p>Shape-of-the-code pseudocode with lightweight Python types, not drop-in API calls. The snippets are kept as standalone Python files and rendered here verbatim.</p>',
+      pyBlock(
+        "Core objects",
+        pseudocode.coreObjects,
         '<p class="ill-refs">Types are illustrative; vLLM uses <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/block_pool.py">KVCacheBlock / BlockPool</a>, SGLang uses <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">TreeNode / RadixKey</a>.</p>',
-      '<h3>PagedAttention: block table + copy-on-write</h3>' +
-        '<pre><code>' +
-        [
-          'def append_kv(seq: Sequence, k: Tensor, v: Tensor, pool: BlockPool) -> None:',
-          '    if seq.len % B == 0:',
-          '        seq.table.append(pool.alloc())   # logical -> physical',
-          '    blk = seq.table[-1]',
-          '    pool[blk].slots[seq.len % B] = (k, v)',
-          '    seq.len += 1',
-          '',
-          'def cow_write(seq: Sequence, logical: int, slot: int, kv: KVTensor, pool: BlockPool) -> None:',
-          '    blk = seq.table[logical]',
-          '    if pool[blk].refs &gt; 1:',
-          '        new = pool.alloc()',
-          '        copy(pool[blk], pool[new])',
-          '        pool[blk].refs -= 1',
-          '        seq.table[logical] = new',
-          '        blk = new',
-          '    pool[blk].slots[slot % B] = kv',
-        ].join('\n') +
-        '</code></pre>' +
+      ),
+      pyBlock(
+        "PagedAttention: block table + copy-on-write",
+        pseudocode.pagedAttention,
         '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/kv_cache_manager.py">vLLM KVCacheManager</a> · <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/block_pool.py">BlockPool</a> · <a href="https://arxiv.org/abs/2309.06180">PagedAttention paper</a></p>',
-      '<h3>RadixAttention: longest-prefix match</h3>' +
-        '<pre><code>' +
-        [
-          'def match_prefix(root: RadixNode, tokens: list[int]) -> tuple[RadixNode, int]:',
-          '    node, i = root, 0',
-          '    while i &lt; len(tokens):',
-          '        child = node.children.get(tokens[i])',
-          '        if not child:',
-          '            break',
-          '        n = lcp(child.key, tokens[i:])   # longest common prefix',
-          '        if n &lt; len(child.key):',
-          '            child = split(child, n)       # shared prefix becomes a node',
-          '            break',
-          '        node, i = child, i + n',
-          '    return node, i                       # cached KV up to i',
-          '',
-          'def insert(node: RadixNode, tokens: list[int], i: int) -> None:',
-          '    node.children[tokens[i]] = RadixNode(tokens[i:], alloc_blocks(tokens[i:]), {})',
-        ].join('\n') +
-        '</code></pre>' +
+      ),
+      pyBlock(
+        "RadixAttention: longest-prefix match",
+        pseudocode.radixAttention,
         '<p class="ill-refs"><a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">SGLang radix_cache.py</a> · <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py">SGLang scheduler.py</a> · <a href="https://arxiv.org/abs/2312.07104">RadixAttention paper</a></p>',
-      '<h3>Continuous batching: one iteration at a time</h3>' +
-        '<pre><code>' +
-        [
-          'def scheduler_step(batch: list[Sequence], waiting: deque[Sequence], blocks: BlockPool) -> None:',
-          '    while batch or waiting:',
-          '        for seq in list(batch):',
-          '            if seq.is_prefill:',
-          '                seq.prefill(chunk_size)',
-          '            else:',
-          '                seq.decode()',
-          '            if seq.finished:',
-          '                batch.remove(seq)',
-          '                blocks.free_sequence(seq)    # refcount-aware',
-          '        while waiting and blocks.can_fit(waiting[0]):',
-          '            batch.append(waiting.popleft())',
-        ].join('\n') +
-        '</code></pre>' +
+      ),
+      pyBlock(
+        "Continuous batching: one iteration at a time",
+        pseudocode.scheduler,
         '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen / Dynamic SplitFuse</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve / chunked prefill</a></p>',
-      '<h3>Prefill → decode handoff</h3>' +
-        '<pre><code>' +
-        [
-          '# prefill worker',
-          'blocks: list[int] = pool.alloc(ceil(len(prompt) / B))',
-          'prefill(prompt, blocks)',
-          'send_kv(blocks, decode_worker)        # bytes + block table',
-          '',
-          '# decode worker — pool: BlockPool',
-          'blocks: list[int] = recv_kv()',
-          'seq: Sequence = Sequence(tokens=[], table=blocks)',
-          'for _ in range(max_new_tokens):',
-          '    logits = decode(seq)',
-          '    k, v = project(seq, sample(logits))',
-          '    append_kv(seq, k, v, pool)',
-        ].join('\n') +
-        '</code></pre>' +
+      ),
+      pyBlock(
+        "Prefill → decode handoff",
+        pseudocode.handoff,
         '<p class="ill-refs"><a href="https://github.com/NVIDIA/TensorRT-LLM/blob/main/cpp/tensorrt_llm/batch_manager/kvCacheManager.cpp">TensorRT-LLM KV cache manager</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe / disaggregated prefill+decode</a></p>',
+      ),
       '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/vllm-project/vllm">vLLM</a> · <a href="https://github.com/sgl-project/sglang">SGLang</a> · <a href="https://github.com/NVIDIA/TensorRT-LLM">TensorRT-LLM</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve</a></p>',
     ],
   },
