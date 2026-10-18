@@ -8,5 +8,4 @@ text into its code cards.
 - `01_paged_attention.py` — block append and copy-on-write
 - `02_radix_attention.py` — prefix match and insertion
 - `03_scheduler.py` — continuous-batching step
-- `04_handoff.py` — prefill-to-decode KV handoff
-- `05_async_serving.py` — conceptual async scheduling and per-request tasks
+- `04_handoff.py` — async prefill-to-decode KV handoff

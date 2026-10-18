@@ -33,11 +33,11 @@ class Sequence:
         """True after EOS or the max-new-token limit."""
         return self.state == "finished"
 
-    def prefill(self, chunk_size: int) -> None:
+    async def prefill(self, chunk_size: int) -> None:
         """Process up to chunk_size prompt tokens and append their KV."""
         ...
 
-    def decode(self) -> None:
+    async def decode(self) -> None:
         """Generate one token and append its KV; update finished state."""
         ...
 

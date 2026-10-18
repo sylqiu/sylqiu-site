@@ -400,7 +400,7 @@ const SECS: Sec[] = [
         '<p class="ill-refs"><a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">SGLang radix_cache.py</a> · <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py">SGLang scheduler.py</a> · <a href="https://arxiv.org/abs/2312.07104">RadixAttention paper</a></p>',
       ),
       pyBlock(
-        "Continuous batching: one iteration at a time",
+        "Continuous batching: asynchronous request loops",
         pseudocode.scheduler,
         '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen / Dynamic SplitFuse</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve / chunked prefill</a></p>',
       ),
@@ -409,12 +409,6 @@ const SECS: Sec[] = [
         pseudocode.handoff,
         '<p class="ill-refs"><a href="https://github.com/NVIDIA/TensorRT-LLM/blob/main/cpp/tensorrt_llm/batch_manager/kvCacheManager.cpp">TensorRT-LLM KV cache manager</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe / disaggregated prefill+decode</a></p>',
       ),
-      pyBlock(
-        "Async serving loop",
-        pseudocode.asyncServing,
-        '<p class="ill-refs">Conceptual host-side shape; production uses device streams/events. <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a></p>',
-      ),
-      '<p><strong>Concurrency note:</strong> the pseudocode is synchronous at the level of one sequence: the next token depends on the previous KV. The serving loop is not a global barrier. The scheduler runs on the host, GPU kernels are submitted asynchronously, and KV transfer can overlap with the tail of prefill. Continuous batching mixes requests at different phases; decode waits only for the blocks it needs.</p>',
       '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/vllm-project/vllm">vLLM</a> · <a href="https://github.com/sgl-project/sglang">SGLang</a> · <a href="https://github.com/NVIDIA/TensorRT-LLM">TensorRT-LLM</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve</a></p>',
     ],
   },
