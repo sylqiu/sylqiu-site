@@ -412,6 +412,14 @@ const SECS: Sec[] = [
       '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/vllm-project/vllm">vLLM</a> · <a href="https://github.com/sgl-project/sglang">SGLang</a> · <a href="https://github.com/NVIDIA/TensorRT-LLM">TensorRT-LLM</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve</a></p>',
     ],
   },
+  {
+    id: "sim",
+    title: "Simulation: A Shared Prefix, Step by Step",
+    blurb:
+      "Run the model from §11 on a tiny workload. A and B share a prompt prefix; A's first decode copies the shared block, C arrives later, and the physical block pool shows the result. Step through the schedule or press Run.",
+    h: 560,
+    top: 44,
+  },
 ];
 
 /* --------------------------------- scene ---------------------------------- */
@@ -424,6 +432,10 @@ const kvCache: SceneFactory = (host) => {
   let step = 0;
   let attnToken = Math.min(2, 7);
   let attnTimer: number | null = null;
+  let simStep = 0;
+  let simPlaying = false;
+  let simTimer: number | null = null;
+  const SIM_TOTAL = 8;
 
   /* one token per step: a step produces the whole output vector of that token */
   function toggleAttn(): void {
@@ -1841,6 +1853,168 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(355, 236, "next iteration", { anchor: "middle", size: 8.5, fill: C.dim }));
   }
 
+  type SimBlock = { id: number; refs: number; fill: number; owners: string[] };
+  type SimSequence = { id: string; promptLen: number; decodeTotal: number; produced: number; table: number[]; phase: string };
+
+  function simState(step: number): { blocks: SimBlock[]; seqs: SimSequence[]; log: string[] } {
+    const blocks: SimBlock[] = Array.from({ length: 8 }, (_, id) => ({ id, refs: 0, fill: 0, owners: [] }));
+    const seqs: SimSequence[] = [];
+    const log: string[] = [];
+    const add = (id: string, promptLen: number, decodeTotal: number, table: number[], phase: string): void => {
+      seqs.push({ id, promptLen, decodeTotal, produced: 0, table, phase });
+    };
+
+    if (step >= 1) {
+      add("A", 6, 2, [0, 1], "decode");
+      blocks[0] = { id: 0, refs: 1, fill: 4, owners: ["A"] };
+      blocks[1] = { id: 1, refs: 1, fill: 2, owners: ["A"] };
+      log.push("A prefill complete → blocks 0–1");
+    }
+    if (step >= 2) {
+      add("B", 6, 2, [0, 1], "decode");
+      blocks[0].refs = 2;
+      blocks[0].owners = ["A", "B"];
+      blocks[1].refs = 2;
+      blocks[1].owners = ["A", "B"];
+      log.push("B prefix hit → shares 0–1");
+    }
+    if (step >= 3) {
+      const a = seqs.find((q) => q.id === "A")!;
+      blocks[1].refs = 1;
+      blocks[1].owners = ["B"];
+      blocks[2] = { id: 2, refs: 1, fill: 3, owners: ["A"] };
+      a.table = [0, 2];
+      a.produced = 1;
+      log.push("A decode · COW block 1 → 2");
+    }
+    if (step >= 4) {
+      const b = seqs.find((q) => q.id === "B")!;
+      blocks[1].fill = 3;
+      b.produced = 1;
+      log.push("B decode · writes block 1 in place");
+    }
+    if (step >= 5) {
+      const a = seqs.find((q) => q.id === "A")!;
+      blocks[2].fill = 4;
+      a.produced = 2;
+      a.phase = "done";
+      log.push("A hits max_new_tokens · done");
+    }
+    if (step >= 6) {
+      add("C", 5, 1, [3, 4], "decode");
+      blocks[3] = { id: 3, refs: 1, fill: 4, owners: ["C"] };
+      blocks[4] = { id: 4, refs: 1, fill: 1, owners: ["C"] };
+      log.push("C prefill complete → blocks 3–4");
+    }
+    if (step >= 7) {
+      const c = seqs.find((q) => q.id === "C")!;
+      blocks[4].fill = 2;
+      c.produced = 1;
+      c.phase = "done";
+      log.push("C decode · done");
+    }
+    if (step >= 8) {
+      const b = seqs.find((q) => q.id === "B")!;
+      blocks[1].fill = 4;
+      b.produced = 2;
+      b.phase = "done";
+      log.push("B decode · done");
+    }
+    return { blocks, seqs, log };
+  }
+
+  function stopSim(): void {
+    if (simTimer !== null) {
+      window.clearTimeout(simTimer);
+      simTimer = null;
+    }
+    simPlaying = false;
+  }
+
+  function toggleSim(): void {
+    if (simPlaying) {
+      stopSim();
+      render();
+      return;
+    }
+    if (simStep >= SIM_TOTAL) simStep = 0;
+    simPlaying = true;
+    const tick = (): void => {
+      if (!simPlaying) return;
+      if (simStep >= SIM_TOTAL) {
+        simPlaying = false;
+        simTimer = null;
+        render();
+        return;
+      }
+      simStep += 1;
+      render();
+      simTimer = window.setTimeout(tick, 750);
+    };
+    simTimer = window.setTimeout(tick, 450);
+    render();
+  }
+
+  function drawSimulator(art: SVGSVGElement): void {
+    const { blocks, seqs, log } = simState(simStep);
+    const seqColor = (id: string): string => (id === "A" ? C.accent : id === "B" ? C.ok : C.purple);
+    const blockColor = (block: SimBlock): string => (block.owners.length > 1 ? C.warn : block.owners.length === 1 ? seqColor(block.owners[0]) : C.dim);
+
+    art.appendChild(txt(20, 24, "step " + simStep + " / " + SIM_TOTAL, { size: 9.5, weight: 700, fill: C.dim }));
+    art.appendChild(txt(350, 24, "physical block pool · refs / fill", { size: 9.5, weight: 700, fill: C.dim }));
+
+    seqs.forEach((seq, index) => {
+      const y = 48 + index * 78;
+      const color = seqColor(seq.id);
+      art.appendChild(s("rect", { x: 20, y, width: 300, height: 68, rx: 9, fill: C.panel, "fill-opacity": 0.65, stroke: color, "stroke-opacity": 0.7 }));
+      art.appendChild(txt(34, y + 22, "request " + seq.id, { size: 11, weight: 700, fill: color }));
+      art.appendChild(txt(286, y + 22, seq.phase, { anchor: "end", size: 9, fill: seq.phase === "done" ? C.dim : color }));
+      art.appendChild(txt(34, y + 40, "prompt " + seq.promptLen + " · decoded " + seq.produced + "/" + seq.decodeTotal, { size: 9.5, fill: C.dim }));
+      art.appendChild(txt(34, y + 59, "blocks", { size: 8.5, fill: C.dim }));
+      seq.table.forEach((id, j) => {
+        const bx = 78 + j * 34;
+        const bc = blockColor(blocks[id]);
+        art.appendChild(s("rect", { x: bx, y: y + 48, width: 28, height: 16, rx: 4, fill: bc, "fill-opacity": 0.2, stroke: bc }));
+        art.appendChild(txt(bx + 14, y + 60, String(id), { anchor: "middle", size: 8.5, mono: true, fill: C.fg }));
+      });
+    });
+    if (seqs.length === 0) {
+      art.appendChild(txt(20, 80, "no requests yet — press Run or Step", { size: 10, fill: C.dim }));
+    }
+
+    blocks.forEach((block, i) => {
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const x = 350 + col * 90;
+      const y = 48 + row * 78;
+      const color = blockColor(block);
+      art.appendChild(s("rect", { x, y, width: 82, height: 68, rx: 8, fill: C.panel, "fill-opacity": block.refs ? 0.8 : 0.35, stroke: color, "stroke-opacity": block.refs ? 0.9 : 0.4 }));
+      art.appendChild(txt(x + 8, y + 16, "#" + block.id, { size: 9.5, weight: 700, fill: block.refs ? C.fg : C.dim }));
+      art.appendChild(txt(x + 74, y + 16, "refs " + block.refs, { anchor: "end", size: 8, fill: C.dim }));
+      art.appendChild(txt(x + 8, y + 34, block.owners.length ? block.owners.join("+") : "free", { size: 8.5, fill: block.refs ? color : C.dim }));
+      for (let p = 0; p < 4; p++) {
+        art.appendChild(s("rect", { x: x + 8 + p * 16, y: y + 44, width: 13, height: 10, rx: 2, fill: p < block.fill ? color : "none", "fill-opacity": 0.55, stroke: p < block.fill ? color : C.line }));
+      }
+      art.appendChild(txt(x + 8, y + 64, block.fill + "/4", { size: 8, fill: C.dim }));
+    });
+
+    art.appendChild(s("rect", { x: 360, y: 220, width: 390, height: 260, rx: 9, fill: C.panel, "fill-opacity": 0.45, stroke: C.line }));
+    art.appendChild(txt(372, 242, "event log", { size: 9.5, weight: 700, fill: C.dim }));
+    const shown = log.slice(-7);
+    if (shown.length === 0) {
+      art.appendChild(txt(372, 266, "the schedule starts empty", { size: 9.5, fill: C.dim }));
+    } else {
+      shown.forEach((line, i) => {
+        art.appendChild(txt(372, 266 + i * 23, String(log.length - shown.length + i + 1).padStart(2, "0") + " · " + line, { size: 9.5, fill: i === shown.length - 1 ? C.fg : C.dim }));
+      });
+    }
+
+    svgBtn(art, 20, 500, 86, "▶ Step", () => { stopSim(); if (simStep < SIM_TOTAL) simStep += 1; render(); });
+    svgBtn(art, 116, 500, 86, simPlaying ? "⏸ Pause" : "▶ Run", () => { toggleSim(); });
+    svgBtn(art, 212, 500, 86, "↺ Reset", () => { stopSim(); simStep = 0; render(); });
+    art.appendChild(txt(20, 548, "A and B share blocks 0–1; A's first decode copies block 1.", { size: 8.5, fill: C.dim }));
+  }
+
   const draws = [
     drawLayer,
     drawLoop,
@@ -1853,6 +2027,7 @@ const kvCache: SceneFactory = (host) => {
     drawRadix,
     drawDisagg,
     drawServingLoop,
+    drawSimulator,
   ];
 
   /* -------------------------------- cards -------------------------------- */
@@ -2113,6 +2288,8 @@ const kvCache: SceneFactory = (host) => {
       cowBy = null;
       radixStep = 0;
       pdLong = false;
+      stopSim();
+      simStep = 0;
       stopBatch();
       render();
     },
@@ -2122,6 +2299,7 @@ const kvCache: SceneFactory = (host) => {
       if (attnTimer !== null) window.clearInterval(attnTimer);
       if (preTimer !== null) window.clearInterval(preTimer);
       if (decTimer !== null) window.clearInterval(decTimer);
+      stopSim();
       stopBatch();
     },
   };
