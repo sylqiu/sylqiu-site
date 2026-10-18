@@ -1580,6 +1580,7 @@ const kvCache: SceneFactory = (host) => {
     for (let i = 1; i <= PD_N; i++) {
       art.appendChild(txt(cx(i), 44, String(i), { anchor: "middle", size: 9, mono: true, fill: C.dim }));
     }
+    art.appendChild(txt(700, 58, "iteration (time) →", { anchor: "end", size: 8.5, fill: C.dim }));
 
     const cell = (i: number, y: number, label: string, color: string, on = true, dashed = false): void => {
       const x = x0 + (i - 1) * colW + 4;
@@ -1624,56 +1625,56 @@ const kvCache: SceneFactory = (host) => {
       txt(20, 154, pdLong ? "decode stalls for 2 iterations → ITL spike" : "all three requests decode every iteration", { size: 9.5, fill: pdLong ? C.bad : C.dim }),
     );
 
-    art.appendChild(s("rect", { x: 12, y: 176, width: 696, height: 184, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
-    art.appendChild(txt(20, 196, "disaggregated", { size: 10.5, weight: 700, fill: C.fg }));
-    art.appendChild(txt(20, 210, "separate pools · KV handoff", { size: 9, fill: C.dim }));
-    art.appendChild(txt(700, 196, "P:D = 1:4 · example", { anchor: "end", size: 9, fill: C.dim }));
-    art.appendChild(txt(20, 246, "prefill P0", { size: 9.5, fill: C.warn }));
-    art.appendChild(txt(20, 276, "decode D0", { size: 9.5, fill: C.accent }));
-    art.appendChild(txt(20, 306, "long prompt", { size: 9.5, fill: C.ok }));
+    art.appendChild(s("rect", { x: 12, y: 304, width: 696, height: 184, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
+    art.appendChild(txt(20, 324, "disaggregated", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 338, "separate pools · KV handoff", { size: 9, fill: C.dim }));
+    art.appendChild(txt(700, 324, "P:D = 1:4 · example", { anchor: "end", size: 9, fill: C.dim }));
+    art.appendChild(txt(20, 374, "prefill P0", { size: 9.5, fill: C.warn }));
+    art.appendChild(txt(20, 404, "decode D0", { size: 9.5, fill: C.accent }));
+    art.appendChild(txt(20, 434, "long prompt", { size: 9.5, fill: C.ok }));
     for (let i = 1; i <= PD_N; i++) {
       if (!pdLong || i < PD_ARRIVE || i > PD_ARRIVE + 1) {
-        cell(i, 232, "—", C.line, false);
+        cell(i, 360, "—", C.line, false);
       } else {
-        cell(i, 232, "P", C.warn);
+        cell(i, 360, "P", C.warn);
       }
-      cell(i, 262, "D", C.accent);
+      cell(i, 390, "D", C.accent);
       if (!pdLong) {
-        cell(i, 292, "—", C.line, false);
+        cell(i, 420, "—", C.line, false);
       } else if (i < PD_ARRIVE) {
-        cell(i, 292, "queue", C.warn, true, true);
+        cell(i, 420, "queue", C.warn, true, true);
       } else if (i <= PD_ARRIVE + 1) {
-        cell(i, 292, "wait", C.dim, true, true);
+        cell(i, 420, "wait", C.dim, true, true);
       } else {
-        cell(i, 292, "D", C.ok);
+        cell(i, 420, "D", C.ok);
       }
     }
     if (pdLong) {
-      art.appendChild(txt(20, 330, "KV blocks move P0 → D0 before the first decode token", { size: 9.5, fill: C.teal }));
-      art.appendChild(txt(20, 346, "decode keeps running if D has capacity · TTFT pays the handoff", { size: 9.5, fill: C.ok }));
+      art.appendChild(txt(20, 458, "KV blocks move P0 → D0 before the first decode token", { size: 9.5, fill: C.teal }));
+      art.appendChild(txt(20, 474, "decode keeps running if D has capacity · TTFT pays the handoff", { size: 9.5, fill: C.ok }));
     } else {
-      art.appendChild(txt(20, 330, "no long prompt · both deployments are in steady state", { size: 9.5, fill: C.dim }));
+      art.appendChild(txt(20, 458, "no long prompt · both deployments are in steady state", { size: 9.5, fill: C.dim }));
     }
 
-    art.appendChild(s("rect", { x: 12, y: 370, width: 696, height: 118, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
-    art.appendChild(txt(20, 390, "colocated + chunked prefill", { size: 10.5, weight: 700, fill: C.fg }));
-    art.appendChild(txt(20, 404, "same pool · prompt split into chunks", { size: 9, fill: C.dim }));
-    art.appendChild(txt(20, 434, "A/B/C decode", { size: 9.5, fill: C.accent }));
-    art.appendChild(txt(20, 464, "long prompt", { size: 9.5, fill: C.warn }));
+    art.appendChild(s("rect", { x: 12, y: 176, width: 696, height: 118, rx: 10, fill: C.panel, "fill-opacity": 0.42, stroke: C.line }));
+    art.appendChild(txt(20, 196, "colocated + chunked prefill", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(20, 210, "same pool · prompt split into chunks", { size: 9, fill: C.dim }));
+    art.appendChild(txt(20, 234, "A/B/C decode", { size: 9.5, fill: C.accent }));
+    art.appendChild(txt(20, 264, "long prompt", { size: 9.5, fill: C.warn }));
     for (let i = 1; i <= PD_N; i++) {
-      cell(i, 424, "D", C.accent);
+      cell(i, 224, "D", C.accent);
       if (!pdLong) {
-        cell(i, 454, "—", C.line, false);
+        cell(i, 254, "—", C.line, false);
       } else if (i < PD_ARRIVE) {
-        cell(i, 454, "queue", C.warn, true, true);
+        cell(i, 254, "queue", C.warn, true, true);
       } else if (i <= PD_ARRIVE + 3) {
-        cell(i, 454, "P", C.warn);
+        cell(i, 254, "P", C.warn);
       } else {
-        cell(i, 454, "D", C.ok);
+        cell(i, 254, "D", C.ok);
       }
     }
     art.appendChild(
-      txt(20, 482, pdLong ? "no decode gaps · the new prompt's first token slips to iteration 7" : "no long prompt · steady state", {
+      txt(20, 286, pdLong ? "no decode gaps · the new prompt's first token slips to iteration 7" : "no long prompt · steady state", {
         size: 9.5,
         fill: pdLong ? C.ok : C.dim,
       }),
