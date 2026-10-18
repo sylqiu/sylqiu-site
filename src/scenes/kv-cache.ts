@@ -1,7 +1,7 @@
 /**
  * Illustration: How KV cache works in an autoregressive LLM.
  *
- * A stacked explainer: eight sections, each its own figure, read top to bottom.
+ * A stacked explainer: nine sections, each its own figure, read top to bottom.
  *  1  inside one transformer layer — per-token blocks vs the one cross-token step,
  *     with the causal mask drawn explicitly
  *  2  the autoregressive loop — a token becomes a distribution over the next token
@@ -10,6 +10,8 @@
  *  5  contiguous cache allocation — reserved buffers and the waste they leave
  *  6  PagedAttention — fixed-size physical blocks and per-sequence block tables
  *  7  continuous batching — iteration-level scheduling against a paged pool
+ *  8  block sharing — reference counts and copy-on-write for a shared prefix
+ *  9  RadixAttention — a global radix tree that reuses the longest matching prefix
  *
  * One toy model throughout: 2 layers x 2 heads per layer, head dimension d = 8, so
  * one (layer, head) slice is eight numbers wide. Formulas are plain SVG text with
@@ -337,6 +339,22 @@ const SECS: Sec[] = [
     blurb:
       "Once the cache is paged, the scheduler can reconsider the batch on every forward pass. A finished request returns its blocks immediately and a queued request joins the next iteration — no waiting for the slowest sequence to finish.",
     h: 360,
+    top: 44,
+  },
+  {
+    id: "sharing",
+    title: "Sharing Blocks: Copy-on-Write",
+    blurb:
+      "A block table makes sharing cheap: two requests can point at the same physical block. Each block keeps a reference count, and a write to a shared block triggers copy-on-write — copy the block, update one table, and leave the other request untouched.",
+    h: 350,
+    top: 44,
+  },
+  {
+    id: "radix",
+    title: "RadixAttention: One Tree of Prefixes",
+    blurb:
+      "RadixAttention sits on top of paged blocks: the cache becomes a radix tree keyed by token sequences. A request walks the tree to its longest matching prefix, reuses those KV blocks, and computes only the unmatched suffix. Shared ancestors stay put while leaves are evicted LRU.",
+    h: 430,
     top: 44,
   },
 ];
@@ -1252,6 +1270,287 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(20, 338, "The batch never drains between requests: finished sequences leave and queued ones join at iteration boundaries.", { size: 10, fill: C.dim }));
   }
 
+  /* ------------------------------ section 8 ----------------------------- */
+
+  const SHARE_PREFIX = 10;
+  const SHARE_MAX = 14;
+  let shareA = SHARE_PREFIX;
+  let shareB = SHARE_PREFIX;
+  let cowBy: "A" | "B" | null = null;
+
+  interface ShareBlock {
+    color: string;
+    refs: number;
+    start: number;
+    end: number;
+    cow?: boolean;
+  }
+
+  function shareMap(len: number, side: "A" | "B"): number[] {
+    const copy = side === "A" ? 7 : 8;
+    const map = [0, 1, cowBy === side ? copy : 2];
+    if (len > 12) map.push(side === "A" ? 9 : 10);
+    return map;
+  }
+
+  function sharePoolBlock(id: number): ShareBlock | null {
+    if (id === 0) return { color: C.ok, refs: 2, start: 0, end: 4 };
+    if (id === 1) return { color: C.ok, refs: 2, start: 4, end: 8 };
+    if (id === 2) {
+      const color = cowBy === null ? C.ok : cowBy === "A" ? C.teal : C.accent;
+      const end = cowBy === null ? Math.min(shareA, shareB) : cowBy === "A" ? shareB : shareA;
+      return { color, refs: cowBy === null ? 2 : 1, start: 8, end };
+    }
+    if (id === 7) return cowBy === "A" ? { color: C.accent, refs: 1, start: 8, end: shareA, cow: true } : null;
+    if (id === 8) return cowBy === "B" ? { color: C.teal, refs: 1, start: 8, end: shareB, cow: true } : null;
+    if (id === 9) return shareA > 12 ? { color: C.accent, refs: 1, start: 12, end: shareA } : null;
+    if (id === 10) return shareB > 12 ? { color: C.teal, refs: 1, start: 12, end: shareB } : null;
+    return null;
+  }
+
+  function drawSharing(art: SVGSVGElement): void {
+    svgBtn(art, 20, -36, 118, "Append A ▸", () => appendShare("A"), shareA < SHARE_MAX);
+    svgBtn(art, 148, -36, 118, "Append B ▸", () => appendShare("B"), shareB < SHARE_MAX);
+    svgBtn(art, 276, -36, 96, "↺ Reset", resetShare);
+    art.appendChild(
+      txt(20, 12, "two requests share a " + SHARE_PREFIX + "-token system prompt · a block is shared until someone writes to it", { size: 10.5, fill: C.fg }),
+    );
+
+    const rows: Array<{ name: string; color: string; len: number; map: number[] }> = [
+      { name: "A", color: C.accent, len: shareA, map: shareMap(shareA, "A") },
+      { name: "B", color: C.teal, len: shareB, map: shareMap(shareB, "B") },
+    ];
+    rows.forEach((r, i) => {
+      const ry = 42 + i * 42;
+      art.appendChild(txt(24, ry + 18, r.name, { size: 12, weight: 700, fill: r.color }));
+      art.appendChild(txt(24, ry + 31, "len " + r.len, { size: 8, fill: C.dim }));
+      r.map.forEach((id, b) => {
+        const bx = 64 + b * 90;
+        const c = sharePoolBlock(id);
+        const color = c ? c.color : C.dim;
+        art.appendChild(txt(bx + 2, ry - 4, "L" + b + "→#" + id, { size: 8.5, mono: true, fill: color }));
+        art.appendChild(s("rect", { x: bx, y: ry, width: 82, height: 26, rx: 6, fill: color, "fill-opacity": 0.12, stroke: color, "stroke-opacity": 0.8 }));
+        art.appendChild(txt(bx + 41, ry + 17, "#" + id, { anchor: "middle", size: 10, mono: true, fill: C.fg }));
+        if (c && c.refs > 1) art.appendChild(txt(bx + 76, ry + 10, "×" + c.refs, { anchor: "end", size: 8, mono: true, fill: C.ok }));
+      });
+    });
+
+    art.appendChild(s("rect", { x: 455, y: 24, width: 245, height: 118, rx: 10, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    art.appendChild(txt(467, 45, "reference counts", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(467, 64, "shared block = ×2", { size: 9.5, fill: C.ok }));
+    art.appendChild(txt(467, 82, "a write to a shared block", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(467, 98, "copies it before writing", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(467, 116, "only the writer's table changes", { size: 9.5, fill: C.dim }));
+    art.appendChild(txt(467, 134, "block #2: ×" + (cowBy === null ? 2 : 1), { size: 10, mono: true, fill: cowBy === null ? C.ok : C.warn }));
+
+    const status =
+      cowBy === null
+        ? "Both tables point at block #2 for tokens 8–9. Either request can fork it; neither can write in place."
+        : cowBy === "A"
+          ? "A copied #2 → #7 before writing; B still reads #2. Refcount on #2 is now 1."
+          : "B copied #2 → #8 before writing; A still reads #2. Refcount on #2 is now 1.";
+    art.appendChild(txt(20, 152, status, { size: 10, fill: cowBy === null ? C.warn : C.ok }));
+
+    art.appendChild(txt(20, 174, "physical pool · blocks with reference counts", { size: 10.5, fill: C.fg }));
+
+    const px0 = 131;
+    const bw = 68;
+    const gap = 10;
+    for (let id = 0; id < 12; id++) {
+      const col = id % 6;
+      const prow = Math.floor(id / 6);
+      const bx = px0 + col * (bw + gap);
+      const py = 194 + prow * 60;
+      const c = sharePoolBlock(id);
+      const label = "#" + id + (c ? " ×" + c.refs : "") + (c && c.cow ? " · COW" : "");
+      art.appendChild(txt(bx + 2, py - 5, label, { size: 8, mono: true, fill: c ? c.color : C.dim }));
+      art.appendChild(
+        s("rect", {
+          x: bx,
+          y: py,
+          width: bw,
+          height: 38,
+          rx: 7,
+          fill: c ? c.color : "none",
+          "fill-opacity": c ? 0.07 : 0,
+          stroke: c ? c.color : C.line,
+          "stroke-dasharray": c ? "" : "3 3",
+          "stroke-opacity": c ? 0.6 : 0.8,
+        }),
+      );
+      if (!c) {
+        art.appendChild(txt(bx + bw / 2, py + 23, "free", { anchor: "middle", size: 9, fill: C.dim }));
+        continue;
+      }
+      for (let j = 0; j < 4; j++) {
+        const p = c.start + j;
+        const used = p < c.end;
+        const newest = used && p === c.end - 1 && c.end % 4 !== 0;
+        art.appendChild(
+          s("rect", {
+            x: bx + 3 + j * 16,
+            y: py + 4,
+            width: 15,
+            height: 30,
+            rx: 3,
+            fill: used ? c.color : "none",
+            "fill-opacity": used ? (newest ? 0.65 : 0.32) : 0,
+            stroke: used ? (newest ? C.fg : c.color) : C.line,
+            "stroke-dasharray": used ? "" : "2 2",
+            "stroke-opacity": used ? 0.9 : 0.55,
+          }),
+        );
+        art.appendChild(
+          txt(bx + 3 + j * 16 + 7.5, py + 23, used ? String(p) : "·", { anchor: "middle", size: 7, mono: true, fill: C.fg, opacity: used ? 1 : 0.3 }),
+        );
+      }
+    }
+
+    art.appendChild(txt(20, 322, "A block is freed only when its reference count reaches zero.", { size: 10, fill: C.dim }));
+    art.appendChild(
+      txt(
+        20,
+        340,
+        shareA > 12 && shareB > 12
+          ? "Private blocks #9/#10 hold the tokens past position 12; the shared prefix still has a refcount of 2."
+          : shareA > 12
+            ? "A's #9 holds the token past position 12; B's #10 is still free."
+            : shareB > 12
+              ? "B's #10 holds the token past position 12; A's #9 is still free."
+              : "Copy-on-write keeps the shared prefix immutable until a request writes into its partial block.",
+        { size: 10, fill: C.dim },
+      ),
+    );
+  }
+
+  /* ------------------------------ section 9 ----------------------------- */
+
+  let radixStep = 0;
+  const RADIX_REQS = [
+    { id: "R1", matched: 0, computed: 7, step: 1, prompt: "You are a helpful assistant. Answer:" },
+    { id: "R2", matched: 5, computed: 1, step: 2, prompt: "You are a helpful assistant. Summarize:" },
+    { id: "R3", matched: 7, computed: 2, step: 3, prompt: "You are a helpful assistant. Answer: in French:" },
+    { id: "R4", matched: 0, computed: 3, step: 4, prompt: "Translate this sentence:" },
+  ];
+
+  interface RadixNode {
+    id: string;
+    label: string;
+    tokens: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    parent: string | null;
+    createdAt: number;
+  }
+
+  const RADIX_NODES: RadixNode[] = [
+    { id: "root", label: "root", tokens: 0, x: 20, y: 150, w: 48, h: 28, parent: null, createdAt: 0 },
+    { id: "n1", label: "You are a helpful assistant.", tokens: 5, x: 95, y: 150, w: 215, h: 28, parent: "root", createdAt: 1 },
+    { id: "n2", label: "Answer:", tokens: 2, x: 345, y: 82, w: 82, h: 28, parent: "n1", createdAt: 1 },
+    { id: "n3", label: "Summarize:", tokens: 1, x: 345, y: 200, w: 98, h: 28, parent: "n1", createdAt: 2 },
+    { id: "n4", label: "in French:", tokens: 2, x: 455, y: 82, w: 96, h: 28, parent: "n2", createdAt: 3 },
+    { id: "n5", label: "Translate this sentence:", tokens: 3, x: 345, y: 260, w: 170, h: 28, parent: "root", createdAt: 4 },
+  ];
+
+  function radixNode(id: string): RadixNode {
+    return RADIX_NODES.find((n) => n.id === id) as RadixNode;
+  }
+
+  function drawRadix(art: SVGSVGElement): void {
+    svgBtn(
+      art,
+      20,
+      -36,
+      170,
+      radixStep < RADIX_REQS.length ? "▶ Send " + RADIX_REQS[radixStep].id : "✓ All sent",
+      stepRadix,
+      radixStep < RADIX_REQS.length,
+    );
+    svgBtn(art, 200, -36, 96, "↺ Reset", resetRadix);
+    art.appendChild(txt(20, 12, "one tree for every prefix · a node holds the cached KV for its token sequence", { size: 10.5, fill: C.fg }));
+
+    const visible = (nd: RadixNode): boolean => nd.createdAt <= radixStep;
+    for (const nd of RADIX_NODES) {
+      if (!visible(nd) || nd.parent === null) continue;
+      const p = radixNode(nd.parent);
+      if (!visible(p)) continue;
+      const x1 = p.x + p.w;
+      const y1 = p.y + p.h / 2;
+      const x2 = nd.x;
+      const y2 = nd.y + nd.h / 2;
+      const color = nd.createdAt === radixStep && radixStep > 0 ? C.warn : C.ok;
+      const d =
+        Math.abs(y1 - y2) < 1
+          ? "M " + x1 + " " + y1 + " L " + x2 + " " + y2
+          : "M " + x1 + " " + y1 + " C " + (x1 + 40) + " " + y1 + ", " + (x2 - 40) + " " + y2 + ", " + x2 + " " + y2;
+      art.appendChild(s("path", { d, fill: "none", stroke: color, "stroke-width": 1.3, opacity: 0.75 }));
+    }
+
+    for (const nd of RADIX_NODES) {
+      if (!visible(nd)) continue;
+      const isRoot = nd.id === "root";
+      const fresh = !isRoot && nd.createdAt === radixStep && radixStep > 0;
+      const color = isRoot ? C.dim : fresh ? C.warn : C.ok;
+      art.appendChild(
+        s("rect", {
+          x: nd.x,
+          y: nd.y,
+          width: nd.w,
+          height: nd.h,
+          rx: 7,
+          fill: color,
+          "fill-opacity": isRoot ? 0.08 : fresh ? 0.2 : 0.1,
+          stroke: color,
+          "stroke-width": fresh ? 1.5 : 1,
+        }),
+      );
+      art.appendChild(txt(nd.x + nd.w / 2, nd.y + 18, nd.label, { anchor: "middle", size: 9.5, mono: true, fill: isRoot ? C.dim : C.fg, weight: fresh ? 700 : 400 }));
+      if (!isRoot) {
+        art.appendChild(txt(nd.x + nd.w / 2, nd.y + nd.h + 11, nd.tokens + " tok", { anchor: "middle", size: 8, fill: color }));
+      }
+    }
+
+    const px = 570;
+    const py = 36;
+    art.appendChild(s("rect", { x: px, y: py, width: 130, height: 190, rx: 10, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    art.appendChild(txt(px + 10, py + 20, "requests", { size: 10.5, weight: 700, fill: C.fg }));
+    art.appendChild(txt(px + 10, py + 34, "matched + new", { size: 8, fill: C.dim }));
+    RADIX_REQS.forEach((r, i) => {
+      const ry = py + 58 + i * 32;
+      const done = radixStep >= r.step;
+      const on = radixStep === r.step;
+      const color = on ? C.warn : done ? C.ok : C.dim;
+      art.appendChild(txt(px + 10, ry, r.id, { size: 10, mono: true, fill: color, weight: on ? 700 : 400 }));
+      art.appendChild(txt(px + 38, ry, r.matched + " + " + r.computed, { size: 9, mono: true, fill: color }));
+    });
+
+    const completed = RADIX_REQS.filter((r) => r.step <= radixStep);
+    const naive = completed.reduce((sum, r) => sum + r.matched + r.computed, 0);
+    const unique = RADIX_NODES.filter(visible).reduce((sum, nd) => sum + nd.tokens, 0);
+    const max = 25;
+    const barX = 220;
+    const barW = 430;
+
+    const shown = RADIX_REQS[Math.min(radixStep === 0 ? 0 : radixStep - 1, RADIX_REQS.length - 1)];
+    art.appendChild(txt(20, 306, shown.id + " · " + shown.prompt, { size: 9.5, fill: C.dim }));
+
+    art.appendChild(txt(20, 326, "KV computed across the requests so far", { size: 10.5, fill: C.fg }));
+    if (naive > 0) {
+      art.appendChild(txt(650, 318, Math.round((1 - unique / naive) * 100) + "% less KV", { anchor: "end", size: 10.5, weight: 700, fill: C.ok }));
+    }
+    art.appendChild(txt(20, 342, "with reuse", { size: 9.5, fill: C.ok }));
+    art.appendChild(s("rect", { x: barX, y: 332, width: Math.max(2, (unique / max) * barW), height: 12, rx: 3, fill: C.ok, "fill-opacity": 0.7 }));
+    art.appendChild(txt(barX + (unique / max) * barW + 8, 342, unique + " tok", { size: 9, mono: true, fill: C.ok }));
+    art.appendChild(txt(20, 366, "without reuse", { size: 9.5, fill: C.dim }));
+    art.appendChild(s("rect", { x: barX, y: 356, width: Math.max(2, (naive / max) * barW), height: 12, rx: 3, fill: C.dim, "fill-opacity": 0.35 }));
+    art.appendChild(txt(barX + (naive / max) * barW + 8, 366, naive + " tok", { size: 9, mono: true, fill: C.dim }));
+
+    art.appendChild(txt(20, 396, "A node is a token sequence with its KV; two requests share a node while their prefixes agree.", { size: 10, fill: C.dim }));
+    art.appendChild(txt(20, 414, "When they diverge the node splits; unused leaves are evicted LRU, while shared ancestors survive.", { size: 10, fill: C.dim }));
+  }
+
   const draws = [
     drawLayer,
     drawLoop,
@@ -1260,6 +1559,8 @@ const kvCache: SceneFactory = (host) => {
     drawNaive,
     drawPaged,
     drawBatching,
+    drawSharing,
+    drawRadix,
   ];
 
   /* -------------------------------- cards -------------------------------- */
@@ -1336,6 +1637,36 @@ const kvCache: SceneFactory = (host) => {
   function resetBatch(): void {
     stopBatch();
     batchIter = 0;
+    render();
+  }
+
+  function appendShare(side: "A" | "B"): void {
+    if (side === "A") {
+      if (shareA >= SHARE_MAX) return;
+      if (cowBy === null) cowBy = "A";
+      shareA += 1;
+    } else {
+      if (shareB >= SHARE_MAX) return;
+      if (cowBy === null) cowBy = "B";
+      shareB += 1;
+    }
+    render();
+  }
+
+  function resetShare(): void {
+    shareA = SHARE_PREFIX;
+    shareB = SHARE_PREFIX;
+    cowBy = null;
+    render();
+  }
+
+  function stepRadix(): void {
+    if (radixStep < RADIX_REQS.length) radixStep += 1;
+    render();
+  }
+
+  function resetRadix(): void {
+    radixStep = 0;
     render();
   }
 
@@ -1480,6 +1811,10 @@ const kvCache: SceneFactory = (host) => {
       pageD = false;
       dAt = 0;
       batchIter = 0;
+      shareA = SHARE_PREFIX;
+      shareB = SHARE_PREFIX;
+      cowBy = null;
+      radixStep = 0;
       stopBatch();
       render();
     },
