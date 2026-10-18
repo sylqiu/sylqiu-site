@@ -366,6 +366,94 @@ const SECS: Sec[] = [
     h: 600,
     top: 44,
   },
+  {
+    id: "pseudocode",
+    title: "Pseudocode: The Serving Loop",
+    blurb:
+      "Every diagram above is a data-structure cartoon. Here is the shape of the code: a block table with copy-on-write, a radix prefix matcher, an iteration-level scheduler, and a prefill/decode handoff. The links point to production implementations.",
+    h: 250,
+    top: 44,
+    prose: [
+      '<p>Shape-of-the-code pseudocode, not drop-in API calls. Error handling, tensor batching, and the exact allocator APIs are omitted; the linked files are the source of truth.</p>',
+      '<h3>PagedAttention: block table + copy-on-write</h3>' +
+        '<pre><code>' +
+        [
+          'def append_kv(seq, k, v):',
+          '    if seq.len % B == 0:',
+          '        seq.table.append(pool.alloc())   # logical -> physical',
+          '    blk = seq.table[-1]',
+          '    pool[blk][seq.len % B] = (k, v)',
+          '    seq.len += 1',
+          '',
+          'def cow_write(seq, logical, slot, kv):',
+          '    blk = seq.table[logical]',
+          '    if pool[blk].refs &gt; 1:',
+          '        new = pool.alloc()',
+          '        copy(pool[blk], pool[new])',
+          '        pool[blk].refs -= 1',
+          '        seq.table[logical] = new',
+          '        blk = new',
+          '    pool[blk][slot % B] = kv',
+        ].join('\n') +
+        '</code></pre>' +
+        '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/kv_cache_manager.py">vLLM KVCacheManager</a> · <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/block_pool.py">BlockPool</a> · <a href="https://arxiv.org/abs/2309.06180">PagedAttention paper</a></p>',
+      '<h3>RadixAttention: longest-prefix match</h3>' +
+        '<pre><code>' +
+        [
+          'def match_prefix(root, tokens):',
+          '    node, i = root, 0',
+          '    while i &lt; len(tokens):',
+          '        child = node.children.get(tokens[i])',
+          '        if not child:',
+          '            break',
+          '        n = lcp(child.key, tokens[i:])   # longest common prefix',
+          '        if n &lt; len(child.key):',
+          '            child = split(child, n)       # shared prefix becomes a node',
+          '            break',
+          '        node, i = child, i + n',
+          '    return node, i                       # cached KV up to i',
+          '',
+          'def insert(node, tokens, i):',
+          '    node.children[tokens[i]] = Node(tokens[i:], alloc_blocks(tokens[i:]))',
+        ].join('\n') +
+        '</code></pre>' +
+        '<p class="ill-refs"><a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">SGLang radix_cache.py</a> · <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py">SGLang scheduler.py</a> · <a href="https://arxiv.org/abs/2312.07104">RadixAttention paper</a></p>',
+      '<h3>Continuous batching: one iteration at a time</h3>' +
+        '<pre><code>' +
+        [
+          'while serving:',
+          '    for seq in batch:',
+          '        if seq.is_prefill:',
+          '            seq.prefill(chunk_size)',
+          '        else:',
+          '            seq.decode()',
+          '        if seq.finished:',
+          '            batch.remove(seq)',
+          '            blocks.free(seq)             # refcount-aware',
+          '    while waiting and blocks.can_fit(waiting[0]):',
+          '        batch.append(waiting.popleft())',
+        ].join('\n') +
+        '</code></pre>' +
+        '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen / Dynamic SplitFuse</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve / chunked prefill</a></p>',
+      '<h3>Prefill → decode handoff</h3>' +
+        '<pre><code>' +
+        [
+          '# prefill worker',
+          'blocks = pool.alloc(ceil(prompt_len / B))',
+          'prefill(prompt, blocks)',
+          'send_kv(blocks, decode_worker)        # bytes + block table',
+          '',
+          '# decode worker',
+          'blocks = recv_kv()',
+          'for _ in range(max_new_tokens):',
+          '    logits = decode(blocks)',
+          '    append_kv(blocks, sample(logits))',
+        ].join('\n') +
+        '</code></pre>' +
+        '<p class="ill-refs"><a href="https://github.com/NVIDIA/TensorRT-LLM/blob/main/cpp/tensorrt_llm/batch_manager/kvCacheManager.cpp">TensorRT-LLM KV cache manager</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe / disaggregated prefill+decode</a></p>',
+      '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/vllm-project/vllm">vLLM</a> · <a href="https://github.com/sgl-project/sglang">SGLang</a> · <a href="https://github.com/NVIDIA/TensorRT-LLM">TensorRT-LLM</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen</a> · <a href="https://arxiv.org/abs/2401.09670">DistServe</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve</a></p>',
+    ],
+  },
 ];
 
 /* --------------------------------- scene ---------------------------------- */
@@ -445,7 +533,7 @@ const kvCache: SceneFactory = (host) => {
     if (sec.prose) {
       proseEl = document.createElement("div");
       proseEl.className = "ill-prose";
-      proseEl.innerHTML = sec.prose.map((p) => "<p>" + p + "</p>").join("");
+      proseEl.innerHTML = sec.prose.map((p) => (p.trim().startsWith("<") ? p : "<p>" + p + "</p>")).join("");
       section.appendChild(proseEl);
     }
     root.appendChild(section);
@@ -1691,6 +1779,41 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(20, 578, "Chunked prefill avoids the stall without a second pool; it just delays the new prompt's first token.", { size: 9.5, fill: C.dim }));
   }
 
+  /* ----------------------------- section 11 ----------------------------- */
+
+  function drawServingLoop(art: SVGSVGElement): void {
+    const box = (x: number, y: number, w: number, label: string, sub: string, color: string): void => {
+      art.appendChild(s("rect", { x, y, width: w, height: 50, rx: 8, fill: C.panel, "fill-opacity": 0.7, stroke: color, "stroke-opacity": 0.7 }));
+      art.appendChild(txt(x + 12, y + 21, label, { size: 10.5, weight: 700, fill: C.fg }));
+      art.appendChild(txt(x + 12, y + 38, sub, { size: 8.5, fill: C.dim }));
+    };
+
+    art.appendChild(txt(20, 24, "control plane", { size: 9.5, weight: 700, fill: C.accent }));
+    box(20, 40, 150, "scheduler", "admit · batch · SLO", C.accent);
+    box(190, 40, 160, "radix cache", "prefix match · LRU", C.ok);
+    box(370, 40, 150, "block manager", "alloc · refcount", C.purple);
+    box(540, 40, 150, "handoff", "KV to decode pool", C.teal);
+    arrow(art, 170, 65, 190, 65, C.dim, "arw-d");
+    arrow(art, 350, 65, 370, 65, C.dim, "arw-d");
+    arrow(art, 520, 65, 540, 65, C.dim, "arw-d");
+
+    art.appendChild(txt(20, 134, "data plane", { size: 9.5, weight: 700, fill: C.teal }));
+    box(20, 150, 150, "attention", "gather K/V by table", C.accent);
+    box(190, 150, 160, "KV pool", "physical blocks", C.purple);
+    box(370, 150, 150, "prefill / decode", "one iteration", C.ok);
+    box(540, 150, 150, "append / evict", "write KV · drop LRU", C.teal);
+    arrow(art, 170, 175, 190, 175, C.dim, "arw-d");
+    arrow(art, 350, 175, 370, 175, C.dim, "arw-d");
+    arrow(art, 520, 175, 540, 175, C.dim, "arw-d");
+
+    art.appendChild(
+      s("line", { x1: 95, y1: 90, x2: 95, y2: 150, stroke: C.accent, "stroke-width": 1.2, "stroke-dasharray": "3 3", "marker-end": "url(#arw-a)" }),
+    );
+    art.appendChild(txt(105, 124, "block table / batch", { size: 8.5, fill: C.dim }));
+    arrow(art, 690, 220, 20, 220, C.dim, "arw-d");
+    art.appendChild(txt(355, 236, "next iteration", { anchor: "middle", size: 8.5, fill: C.dim }));
+  }
+
   const draws = [
     drawLayer,
     drawLoop,
@@ -1702,6 +1825,7 @@ const kvCache: SceneFactory = (host) => {
     drawSharing,
     drawRadix,
     drawDisagg,
+    drawServingLoop,
   ];
 
   /* -------------------------------- cards -------------------------------- */
