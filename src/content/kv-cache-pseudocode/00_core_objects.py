@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 Tensor = Any
-KVTensor = tuple[Tensor, Tensor]
+KVTensor = tuple[Tensor, Tensor]  # packed (k, v) pair
 
 
 @dataclass

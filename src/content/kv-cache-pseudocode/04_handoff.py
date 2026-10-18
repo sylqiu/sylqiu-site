@@ -1,6 +1,6 @@
 from math import ceil
 
-from .core_objects import BlockPool, Sequence
+from .core_objects import BlockPool, KVTensor, Sequence
 from .paged_attention import B, append_kv
 
 # prefill worker
@@ -13,5 +13,5 @@ blocks: list[int] = recv_kv()
 seq: Sequence = Sequence(tokens=[], table=blocks)
 for _ in range(max_new_tokens):
     logits = decode(seq)
-    k, v = project(seq, sample(logits))
-    append_kv(seq, k, v, pool)
+    kv: KVTensor = project(seq, sample(logits))
+    append_kv(seq, kv, pool)

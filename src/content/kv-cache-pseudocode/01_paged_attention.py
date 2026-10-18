@@ -1,20 +1,19 @@
 from copy import copy
 
-from .core_objects import BlockPool, KVTensor, Sequence, Tensor
+from .core_objects import BlockPool, KVTensor, Sequence
 
 B = 4  # tokens per block
 
 
 def append_kv(
     seq: Sequence,
-    k: Tensor,
-    v: Tensor,
+    kv: KVTensor,
     pool: BlockPool,
 ) -> None:
     if seq.len % B == 0:
         seq.table.append(pool.alloc())   # logical -> physical
     blk = seq.table[-1]
-    pool[blk].slots[seq.len % B] = (k, v)
+    pool[blk].slots[seq.len % B] = kv
     seq.len += 1
 
 
