@@ -1782,18 +1782,33 @@ const kvCache: SceneFactory = (host) => {
 
   function styleCodeBlocks(root: HTMLElement): void {
     const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const keywords = new Set(["def","if","else","elif","while","for","in","return","break","continue","not","and","or","is","lambda","yield","pass","raise","try","except","finally","with","as","import","from","class"]);
+    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","None","True","False","Node"]);
     const highlight = (line: string): string => {
-      let html = esc(line);
-      let comment = "";
-      const hash = html.indexOf("#");
-      if (hash >= 0) {
-        comment = html.slice(hash);
-        html = html.slice(0, hash);
+      const token = /(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
+      let out = "";
+      let last = "";
+      let m: RegExpExecArray | null;
+      while ((m = token.exec(line)) !== null) {
+        const [raw, comment, num, ident, space, op] = m;
+        if (comment) {
+          out += '<span class="tok-com">' + esc(comment) + '</span>';
+        } else if (num) {
+          out += '<span class="tok-num">' + esc(num) + '</span>';
+        } else if (ident) {
+          const cls = keywords.has(ident) ? "tok-kw" : last === "def" ? "tok-fn" : builtins.has(ident) ? "tok-builtin" : "";
+          out += cls ? '<span class="' + cls + '">' + esc(ident) + '</span>' : esc(ident);
+          last = ident;
+          continue;
+        } else if (space) {
+          out += space;
+          continue;
+        } else if (op) {
+          out += '<span class="tok-op">' + esc(op) + '</span>';
+        }
+        last = raw;
       }
-      html = html.replace(/\b(def|if|else|elif|while|for|in|return|break|continue|not|and|or|None|True|False)\b/g, '<span class="tok-kw">$1</span>');
-      html = html.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
-      if (comment) html += '<span class="tok-com">' + comment + '</span>';
-      return html || " ";
+      return out || " ";
     };
 
     root.querySelectorAll("pre").forEach((pre) => {
