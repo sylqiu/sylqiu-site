@@ -7,32 +7,40 @@ KVTensor = tuple[Tensor, Tensor]  # packed (k, v) pair
 
 @dataclass
 class KVBlock:
-    id: int
+    """One fixed-size physical block of cached K/V pairs."""
+
+    block_id: int
     refs: int = 1
     slots: list[KVTensor]
 
 
 @dataclass
 class Sequence:
+    """One request's token state and logical-to-physical block table."""
+
     tokens: list[int]
-    table: list[int]          # logical block -> physical block
-    len: int = 0
+    block_table: list[int]   # logical block -> physical block id
+    num_tokens: int = 0
     state: str = "waiting"
     # plus prefill(), decode(), finished
 
 
 class BlockPool(Protocol):
-    def __getitem__(self, block: int) -> KVBlock: ...
-    def alloc(self) -> int: ...
-    def free(self, block: int) -> None: ...
-    def free_sequence(self, seq: Sequence) -> None: ...
-    def can_fit(self, seq: Sequence) -> bool: ...
+    """Allocator and refcount owner for physical KV blocks."""
+
+    def __getitem__(self, block_id: int) -> KVBlock: ...
+    def allocate_block(self) -> int: ...
+    def free_block(self, block_id: int) -> None: ...
+    def free_sequence(self, sequence: Sequence) -> None: ...
+    def can_allocate(self, sequence: Sequence) -> bool: ...
 
 
 @dataclass
 class RadixNode:
-    key: list[int]
-    kv: list[int]
+    """One radix-tree edge: a token range and the KV blocks covering it."""
+
+    token_ids: list[int]
+    block_ids: list[int]
     children: dict[int, "RadixNode"]
-    refs: int = 0
-    last_access: int = 0
+    ref_count: int = 0
+    last_access_time: int = 0

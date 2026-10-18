@@ -1744,13 +1744,15 @@ const kvCache: SceneFactory = (host) => {
     const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","tuple","bool","deque","dataclass","None","True","False","Node"]);
     const types = new Set(["Tensor","Sequence","KVBlock","RadixNode","BlockPool","KVTensor","Protocol","Worker"]);
     const highlight = (line: string): string => {
-      const token = /(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
+      const token = /("""[^"]*"""|"[^"]*"|'[^']*')|(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
       let out = "";
       let last = "";
       let m: RegExpExecArray | null;
       while ((m = token.exec(line)) !== null) {
-        const [raw, comment, num, ident, space, op] = m;
-        if (comment) {
+        const [raw, str, comment, num, ident, space, op] = m;
+        if (str) {
+          out += '<span class="tok-str">' + esc(str) + '</span>';
+        } else if (comment) {
           out += '<span class="tok-com">' + esc(comment) + '</span>';
         } else if (num) {
           out += '<span class="tok-num">' + esc(num) + '</span>';

@@ -1,26 +1,48 @@
 from .core_objects import RadixNode
 
 
+def longest_common_prefix(left: list[int], right: list[int]) -> int:
+    """Length of the longest shared prefix between two token lists."""
+    limit = min(len(left), len(right))
+    matched = 0
+    while matched < limit and left[matched] == right[matched]:
+        matched += 1
+    return matched
+
+
+def split_node(node: RadixNode, prefix_length: int) -> RadixNode:
+    """Split a radix edge and return the node for the shared prefix."""
+    ...
+
+
+def allocate_blocks(token_ids: list[int]) -> list[int]:
+    """Allocate enough physical blocks to cover a token suffix."""
+    ...
+
+
 def match_prefix(
     root: RadixNode,
-    tokens: list[int],
+    token_ids: list[int],
 ) -> tuple[RadixNode, int]:
-    node, i = root, 0
-    while i < len(tokens):
-        child = node.children.get(tokens[i])
-        if not child:
+    """Return the deepest cached prefix node and its token count."""
+    node, matched = root, 0
+    while matched < len(token_ids):
+        child = node.children.get(token_ids[matched])
+        if child is None:
             break
-        n = lcp(child.key, tokens[i:])      # longest common prefix
-        if n < len(child.key):
-            child = split(child, n)          # shared prefix becomes a node
+        common = longest_common_prefix(child.token_ids, token_ids[matched:])
+        if common < len(child.token_ids):
+            child = split_node(child, common)
             break
-        node, i = child, i + n
-    return node, i                          # cached KV up to i
+        node, matched = child, matched + common
+    return node, matched
 
 
-def insert(node: RadixNode, tokens: list[int], i: int) -> None:
-    node.children[tokens[i]] = RadixNode(
-        tokens[i:],
-        alloc_blocks(tokens[i:]),
+def insert(node: RadixNode, token_ids: list[int], matched: int) -> None:
+    """Attach the uncached suffix below the matched node."""
+    suffix = token_ids[matched:]
+    node.children[token_ids[matched]] = RadixNode(
+        suffix,
+        allocate_blocks(suffix),
         {},
     )
