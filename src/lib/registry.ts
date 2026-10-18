@@ -28,6 +28,7 @@ const registry: Record<string, () => Promise<{ default: SceneFactory }>> = {
   'stat-vs-comp': () => import('../scenes/stat-vs-comp.ts'),
   'prg-stretch': () => import('../scenes/prg-stretch.ts'),
   'kv-cache': () => import('../scenes/kv-cache.ts'),
+  'flash-attention': () => import('../scenes/flash-attention.ts'),
 };
 
 export function knownScenes(): string[] {

@@ -265,6 +265,13 @@ export interface Illustration {
 
 export const illustrations: Illustration[] = [
   {
+    id: 'flash-attention',
+    title: 'FlashAttention: The Evolution of the Attention Kernel',
+    blurb:
+      'Why attention is memory-bound, how tiling and online softmax avoid the N×N matrix, and what changed from FlashAttention v1 to v4 — work partitioning, Hopper asynchrony, and Blackwell co-design.',
+    scene: 'flash-attention',
+  },
+  {
     id: 'kv-cache',
     title: 'How KV cache works in an autoregressive LLM',
     blurb:
