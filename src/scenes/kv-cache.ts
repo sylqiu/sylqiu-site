@@ -374,18 +374,55 @@ const SECS: Sec[] = [
     h: 250,
     top: 44,
     prose: [
-      '<p>Shape-of-the-code pseudocode, not drop-in API calls. Error handling, tensor batching, and the exact allocator APIs are omitted; the linked files are the source of truth.</p>',
+      '<p>Shape-of-the-code pseudocode with lightweight Python types, not drop-in API calls. Error handling, tensor batching, and the exact allocator APIs are omitted; the linked files are the source of truth.</p>',
+      '<h3>Core objects</h3>' +
+        '<pre><code>' +
+        [
+          'from dataclasses import dataclass',
+          'from typing import Protocol',
+          'from collections import deque',
+          '',
+          'KVTensor = tuple[Tensor, Tensor]',
+          '',
+          '@dataclass',
+          'class KVBlock:',
+          '    id: int',
+          '    refs: int = 1',
+          '',
+          '@dataclass',
+          'class Sequence:',
+          '    tokens: list[int]',
+          '    table: list[int]          # logical block -> physical block',
+          '    len: int = 0',
+          '    state: str = "waiting"',
+          '    # plus prefill(), decode(), finished',
+          '',
+          'class BlockPool(Protocol):',
+          '    def alloc(self) -> int: ...',
+          '    def free(self, block: int) -> None: ...',
+          '    def can_fit(self, seq: Sequence) -> bool: ...',
+          '',
+          '@dataclass',
+          'class RadixNode:',
+          '    key: list[int]',
+          '    kv: list[int]',
+          '    children: dict[int, "RadixNode"]',
+          '    refs: int = 0',
+          '    last_access: int = 0',
+        ].join('\n') +
+        '</code></pre>' +
+        '<p class="ill-refs">Types are illustrative; vLLM uses <a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/block_pool.py">KVCacheBlock / BlockPool</a>, SGLang uses <a href="https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py">TreeNode / RadixKey</a>.</p>',
       '<h3>PagedAttention: block table + copy-on-write</h3>' +
         '<pre><code>' +
         [
-          'def append_kv(seq, k, v):',
+          'def append_kv(seq: Sequence, k: Tensor, v: Tensor) -> None:',
           '    if seq.len % B == 0:',
           '        seq.table.append(pool.alloc())   # logical -> physical',
           '    blk = seq.table[-1]',
           '    pool[blk][seq.len % B] = (k, v)',
           '    seq.len += 1',
           '',
-          'def cow_write(seq, logical, slot, kv):',
+          'def cow_write(seq: Sequence, logical: int, slot: int, kv: KVTensor) -> None:',
           '    blk = seq.table[logical]',
           '    if pool[blk].refs &gt; 1:',
           '        new = pool.alloc()',
@@ -400,7 +437,7 @@ const SECS: Sec[] = [
       '<h3>RadixAttention: longest-prefix match</h3>' +
         '<pre><code>' +
         [
-          'def match_prefix(root, tokens):',
+          'def match_prefix(root: RadixNode, tokens: list[int]) -> tuple[RadixNode, int]:',
           '    node, i = root, 0',
           '    while i &lt; len(tokens):',
           '        child = node.children.get(tokens[i])',
@@ -413,7 +450,7 @@ const SECS: Sec[] = [
           '        node, i = child, i + n',
           '    return node, i                       # cached KV up to i',
           '',
-          'def insert(node, tokens, i):',
+          'def insert(node: RadixNode, tokens: list[int], i: int) -> None:',
           '    node.children[tokens[i]] = Node(tokens[i:], alloc_blocks(tokens[i:]))',
         ].join('\n') +
         '</code></pre>' +
@@ -421,17 +458,18 @@ const SECS: Sec[] = [
       '<h3>Continuous batching: one iteration at a time</h3>' +
         '<pre><code>' +
         [
-          'while serving:',
-          '    for seq in batch:',
-          '        if seq.is_prefill:',
-          '            seq.prefill(chunk_size)',
-          '        else:',
-          '            seq.decode()',
-          '        if seq.finished:',
-          '            batch.remove(seq)',
-          '            blocks.free(seq)             # refcount-aware',
-          '    while waiting and blocks.can_fit(waiting[0]):',
-          '        batch.append(waiting.popleft())',
+          'def scheduler_step(batch: list[Sequence], waiting: deque[Sequence], blocks: BlockPool) -> None:',
+          '    while batch or waiting:',
+          '        for seq in batch:',
+          '            if seq.is_prefill:',
+          '                seq.prefill(chunk_size)',
+          '            else:',
+          '                seq.decode()',
+          '            if seq.finished:',
+          '                batch.remove(seq)',
+          '                blocks.free(seq)             # refcount-aware',
+          '        while waiting and blocks.can_fit(waiting[0]):',
+          '            batch.append(waiting.popleft())',
         ].join('\n') +
         '</code></pre>' +
         '<p class="ill-refs"><a href="https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py">vLLM scheduler.py</a> · <a href="https://arxiv.org/abs/2404.14294">DeepSpeed-FastGen / Dynamic SplitFuse</a> · <a href="https://arxiv.org/abs/2403.02310">Sarathi-Serve / chunked prefill</a></p>',
@@ -439,12 +477,12 @@ const SECS: Sec[] = [
         '<pre><code>' +
         [
           '# prefill worker',
-          'blocks = pool.alloc(ceil(prompt_len / B))',
+          'blocks: list[int] = pool.alloc(ceil(prompt_len / B))',
           'prefill(prompt, blocks)',
           'send_kv(blocks, decode_worker)        # bytes + block table',
           '',
           '# decode worker',
-          'blocks = recv_kv()',
+          'blocks: list[int] = recv_kv()',
           'for _ in range(max_new_tokens):',
           '    logits = decode(blocks)',
           '    append_kv(blocks, sample(logits))',
@@ -1783,7 +1821,8 @@ const kvCache: SceneFactory = (host) => {
   function styleCodeBlocks(root: HTMLElement): void {
     const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const keywords = new Set(["def","if","else","elif","while","for","in","return","break","continue","not","and","or","is","lambda","yield","pass","raise","try","except","finally","with","as","import","from","class"]);
-    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","None","True","False","Node"]);
+    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","tuple","bool","deque","dataclass","None","True","False","Node"]);
+    const types = new Set(["Tensor","Sequence","KVBlock","RadixNode","BlockPool","KVTensor","Protocol","Worker"]);
     const highlight = (line: string): string => {
       const token = /(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
       let out = "";
@@ -1796,7 +1835,7 @@ const kvCache: SceneFactory = (host) => {
         } else if (num) {
           out += '<span class="tok-num">' + esc(num) + '</span>';
         } else if (ident) {
-          const cls = keywords.has(ident) ? "tok-kw" : last === "def" ? "tok-fn" : builtins.has(ident) ? "tok-builtin" : "";
+          const cls = keywords.has(ident) ? "tok-kw" : last === "def" ? "tok-fn" : types.has(ident) ? "tok-type" : builtins.has(ident) ? "tok-builtin" : "";
           out += cls ? '<span class="' + cls + '">' + esc(ident) + '</span>' : esc(ident);
           last = ident;
           continue;

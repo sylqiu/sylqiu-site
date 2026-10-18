@@ -779,6 +779,7 @@ h1, h2, h3 { line-height: 1.25; }
 .tok-com { color: #6b7280; font-style: italic; }
 .tok-num { color: #f78c6c; }
 .tok-fn { color: #ffcb6b; }
+.tok-type { color: #82aaff; }
 .tok-builtin { color: #89ddff; }
 .tok-op { color: #89ddff; opacity: 0.8; }
 .tok-str { color: #c3e88d; }
