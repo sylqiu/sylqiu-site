@@ -281,6 +281,7 @@ const flash: SceneFactory = (host) => {
   let attnPlaying = true;
   let activeQ = 0;
   let attnPhaseT = 0;
+  let osDone = [false, false, false, false];
   let attnRaf: number | null = null;
   let attnLast = 0;
   let attnSingle = false;
@@ -389,6 +390,7 @@ const flash: SceneFactory = (host) => {
     const phase = Math.min(1, Math.max(0, attnPhaseT));
     const ease = 1 - Math.pow(1 - phase, 3);
     const qCenter = { x: qx + qw / 2, y: qys[activeQ] + 15 };
+    const oY = qys[activeQ] + 15;
     const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
     txt(20, 24, "one Q  →  every K  →  softmax  →  every V  →  one O", { size: 10, weight: 700, fill: C.fg });
@@ -458,7 +460,7 @@ const flash: SceneFactory = (host) => {
         }
         const flow = clamp01((phase - 0.45 - i * 0.05) / 0.5);
         if (flow > 0 && flow < 1) {
-          chip(vx + (640 - vx) * flow, vy + 15 + (317 - (vy + 15)) * flow, "w·V", C.purple, 1 - flow, 34, 16);
+          chip(vx + (640 - vx) * flow, vy + 15 + (oY - (vy + 15)) * flow, "w·V", C.purple, 1 - flow, 34, 16);
         }
       }
     });
@@ -476,16 +478,15 @@ const flash: SceneFactory = (host) => {
       txt(170, sy - 5, "logits", { size: 8.5, fill: C.warn, anchor: "end" });
     }
 
-    const oOn = attnStep >= 3;
-    art.appendChild(s("rect", { x: 590, y: 292, width: 100, height: 50, rx: 8, fill: oOn ? C.purple : C.panel, "fill-opacity": oOn ? 0.16 : 0.55, stroke: oOn ? C.purple : C.line }));
-    txt(640, 314, "O", { anchor: "middle", size: 13, weight: 700, fill: oOn ? C.fg : C.dim, mono: true });
-    txt(640, 332, "for this Q", { anchor: "middle", size: 8, fill: C.dim });
-
-    if (oOn && phase > 0.55) {
-      const loop = s("path", { d: "M 640 342 L 640 378 L 65 378 L 65 260", fill: "none", stroke: C.accent, "stroke-opacity": 0.5, "stroke-dasharray": "4 4", "marker-end": "url(#arw-def)" });
-      art.appendChild(loop);
-      txt(350, 394, "next Q", { anchor: "middle", size: 8.5, fill: C.accent });
-    }
+    txt(590, 58, "O loop · one per Q", { size: 9, weight: 700, fill: C.dim });
+    qys.forEach((y, i) => {
+      const active = i === activeQ;
+      const done = osDone[i];
+      const lit = done || (active && attnStep >= 3);
+      art.appendChild(s("rect", { x: 590, y, width: 100, height: 30, rx: 6, fill: lit ? C.purple : C.panel2, "fill-opacity": lit ? (done ? 0.22 : 0.12 + 0.1 * phase) : 0.55, stroke: lit ? C.purple : C.line, "stroke-width": active ? 1.5 : 1 }));
+      txt(640, y + 19, "O", { anchor: "middle", size: 11, weight: 700, fill: lit ? C.fg : C.dim, mono: true });
+    });
+    txt(590, 260, "one O per Q", { size: 8.5, fill: C.dim });
 
     const stage = [
       "",
@@ -533,22 +534,27 @@ const flash: SceneFactory = (host) => {
   }
 
   function stopAttn(): void {
+    attnPlaying = false;
     if (attnRaf !== null) {
       window.cancelAnimationFrame(attnRaf);
       attnRaf = null;
     }
-    attnPlaying = false;
   }
 
   function startAttn(single = false): void {
-    if (attnRaf !== null) window.cancelAnimationFrame(attnRaf);
+    if (attnRaf !== null) {
+      window.cancelAnimationFrame(attnRaf);
+      attnRaf = null;
+    }
     attnPlaying = true;
     attnSingle = single;
     attnLast = performance.now();
+    renderDefinition();
     attnRaf = window.requestAnimationFrame(attnTick);
   }
 
   function attnTick(now: number): void {
+    attnRaf = null;
     if (!attnPlaying) return;
     const dt = Math.min(0.05, (now - attnLast) / 1000);
     attnLast = now;
@@ -574,6 +580,7 @@ const flash: SceneFactory = (host) => {
         }
         attnStep = 3;
       } else {
+        osDone[activeQ] = true;
         if (attnSingle) {
           attnPhaseT = 1;
           stopAttn();
@@ -586,7 +593,7 @@ const flash: SceneFactory = (host) => {
     }
 
     renderDefinition();
-    attnRaf = window.requestAnimationFrame(attnTick);
+    if (attnPlaying) attnRaf = window.requestAnimationFrame(attnTick);
   }
 
   function stepAttn(): void {
@@ -617,6 +624,7 @@ const flash: SceneFactory = (host) => {
     activeQ = 0;
     attnStep = 1;
     attnPhaseT = 0;
+    osDone = [false, false, false, false];
     renderDefinition();
   }
 
