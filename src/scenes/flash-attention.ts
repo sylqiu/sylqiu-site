@@ -383,13 +383,14 @@ const flash: SceneFactory = (host) => {
     const ky = 70;
     const kw = 70;
     const sy = 150;
-    const wy = 212;
+    const wy = 232;
     const vy = 310;
     const qys = [80, 130, 180, 230];
     const kxs = [180, 275, 370, 465];
     const phase = Math.min(1, Math.max(0, attnPhaseT));
     const ease = 1 - Math.pow(1 - phase, 3);
     const qCenter = { x: qx + qw / 2, y: qys[activeQ] + 15 };
+    const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
 
     txt(20, 24, "one Q  →  every K  →  softmax  →  every V  →  one O", { size: 10, weight: 700, fill: C.fg });
     txt(20, 40, "each Q loops over the K/V tokens; the animation runs the loop for you", { size: 8.5, fill: C.dim });
@@ -412,61 +413,78 @@ const flash: SceneFactory = (host) => {
     };
 
     kxs.forEach((x, i) => {
+      const target = { x: x + kw / 2, y: sy };
       const current = attnStep === 1 && i === attnPair;
       const done = attnStep > 1 || (attnStep === 1 && i < attnPair);
-      const target = { x: x + kw / 2, y: sy };
 
-      // K token
+      // K and V tokens.
       art.appendChild(s("rect", { x, y: ky, width: kw, height: 30, rx: 6, fill: attnStep >= 1 ? C.ok : C.panel2, "fill-opacity": attnStep >= 1 ? 0.16 : 0.55, stroke: attnStep >= 1 ? C.ok : C.line }));
       txt(x + kw / 2, ky + 19, "K", { anchor: "middle", size: 11, weight: 700, fill: attnStep >= 1 ? C.fg : C.dim, mono: true });
-
-      // V token
       const vOn = attnStep >= 3;
       art.appendChild(s("rect", { x, y: vy, width: kw, height: 30, rx: 6, fill: vOn ? C.purple : C.panel2, "fill-opacity": vOn ? 0.16 : 0.55, stroke: vOn ? C.purple : C.line }));
       txt(x + kw / 2, vy + 19, "V", { anchor: "middle", size: 11, weight: 700, fill: vOn ? C.fg : C.dim, mono: true });
 
-      // Q and K move into the logit position.
+      // Step 1: Q and K merge into a logit.
       if (current && phase < 0.9) {
         const qp = { x: qCenter.x + (target.x - qCenter.x) * ease, y: qCenter.y + (target.y - qCenter.y) * ease };
         const kp = { x: target.x, y: ky + 15 + (target.y - (ky + 15)) * ease };
         chip(qp.x, qp.y, "Q", C.accent, 0.95);
         chip(kp.x, kp.y, "K", C.ok, 0.95);
       }
-
-      // The merge result replaces the red score dot.
-      if (done || attnStep >= 2 || (current && phase > 0.68)) {
+      if (attnStep === 1 && (done || (current && phase > 0.68))) {
         chip(target.x, target.y, "logit", C.warn, 1, 44, 20);
       }
 
-      // Softmax: logits grow into weights.
+      // Step 2: logits flow into a denominator, then normalize into weights.
+      if (attnStep === 2 && phase < 0.52) {
+        const mt = clamp01(phase / 0.52);
+        const me = 1 - Math.pow(1 - mt, 3);
+        chip(target.x + (360 - target.x) * me, sy + (190 - sy) * me, "logit", C.warn, 1, 44, 20);
+      }
       if (attnStep >= 2) {
+        const grow = attnStep === 2 ? clamp01((phase - 0.42) / 0.58) : 1;
         const widths = [28, 48, 58, 36];
-        const grow = attnStep === 2 ? ease : 1;
         const bw = Math.max(3, widths[i] * grow);
         art.appendChild(s("rect", { x: target.x - bw / 2, y: wy, width: bw, height: 10, rx: 5, fill: C.ok, "fill-opacity": 0.75, stroke: C.ok, "stroke-opacity": 0.8 }));
       }
 
-      // Weighted value contributions move into O.
+      // Step 3: each weight merges with its V, then the weighted values flow into O.
       if (attnStep >= 3) {
-        const start = i * 0.08;
-        const local = Math.max(0, Math.min(1, (phase - start) / (1 - start)));
-        const ce = 1 - Math.pow(1 - local, 3);
-        if (local > 0 && local < 1) {
-          chip(x + kw / 2 + (640 - (x + kw / 2)) * ce, vy + 15 + (317 - (vy + 15)) * ce, "w·V", C.purple, 1 - local, 34, 16);
+        const merge = clamp01(phase / 0.45);
+        const me = 1 - Math.pow(1 - merge, 3);
+        const vx = x + kw / 2;
+        if (merge < 0.98) {
+          chip(vx, wy + 10 + (vy + 15 - (wy + 10)) * me, "w", C.ok, 1, 22, 16);
+        }
+        if (merge > 0.55) {
+          chip(vx, vy + 15, "w·V", C.purple, 1, 34, 16);
+        }
+        const flow = clamp01((phase - 0.45 - i * 0.05) / 0.5);
+        if (flow > 0 && flow < 1) {
+          chip(vx + (640 - vx) * flow, vy + 15 + (317 - (vy + 15)) * flow, "w·V", C.purple, 1 - flow, 34, 16);
         }
       }
     });
 
-    if (attnStep >= 1) txt(170, sy - 5, "logits", { size: 8.5, fill: C.warn, anchor: "end" });
-    if (attnStep >= 2) txt(170, wy + 8, "weights", { size: 8.5, fill: C.ok, anchor: "end" });
+    // Step 2 denominator.
+    if (attnStep === 2) {
+      const op = clamp01((phase - 0.2) / 0.25);
+      chip(360, 190, "Σ", C.teal, op, 44, 24);
+      if (op > 0.2) txt(360, 214, "denominator", { anchor: "middle", size: 7.5, fill: C.teal });
+      const grow = clamp01((phase - 0.42) / 0.58);
+      if (grow > 0) {
+        txt(170, wy + 8, "weights", { size: 8.5, fill: C.ok, anchor: "end" });
+      }
+    } else if (attnStep === 1) {
+      txt(170, sy - 5, "logits", { size: 8.5, fill: C.warn, anchor: "end" });
+    }
 
-    // O for the active Q
     const oOn = attnStep >= 3;
     art.appendChild(s("rect", { x: 590, y: 292, width: 100, height: 50, rx: 8, fill: oOn ? C.purple : C.panel, "fill-opacity": oOn ? 0.16 : 0.55, stroke: oOn ? C.purple : C.line }));
     txt(640, 314, "O", { anchor: "middle", size: 13, weight: 700, fill: oOn ? C.fg : C.dim, mono: true });
     txt(640, 332, "for this Q", { anchor: "middle", size: 8, fill: C.dim });
 
-    if (oOn) {
+    if (oOn && phase > 0.55) {
       const loop = s("path", { d: "M 640 342 L 640 378 L 65 378 L 65 260", fill: "none", stroke: C.accent, "stroke-opacity": 0.5, "stroke-dasharray": "4 4", "marker-end": "url(#arw-def)" });
       art.appendChild(loop);
       txt(350, 394, "next Q", { anchor: "middle", size: 8.5, fill: C.accent });
@@ -475,8 +493,8 @@ const flash: SceneFactory = (host) => {
     const stage = [
       "",
       "1 · Pair the active Q with each K; each pair merges into a logit.",
-      "2 · Softmax the logits across K; one weight per key.",
-      "3 · Mix each weight with its V into O; then the next Q begins.",
+      "2 · Merge the logits into the softmax denominator; normalize them into weights.",
+      "3 · Merge each weight with its V; sum the weighted values into O. Then the next Q begins.",
     ][attnStep];
     txt(20, 424, stage, { size: 10, fill: C.fg });
 
