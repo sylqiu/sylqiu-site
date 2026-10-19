@@ -278,8 +278,13 @@ const VARIANTS: Array<{ title: string; color: string; detail: string }> = [
 
 const flash: SceneFactory = (host) => {
   let attnStep = 1;
-  let attnPlaying = false;
-  let attnTimer: number | null = null;
+  let attnPlaying = true;
+  let activeQ = 0;
+  let attnPhaseT = 0;
+  let attnPair = 0;
+  let attnRaf: number | null = null;
+  let attnLast = 0;
+  let attnSingle = false;
   let arch: "gpu" | "tpu" = "gpu";
   let tileStep = 0;
   let tilePlaying = false;
@@ -375,19 +380,19 @@ const flash: SceneFactory = (host) => {
     art.appendChild(marker("arw-def", C.dim));
     const qx = 30;
     const qw = 70;
-    const kx = 180;
-    const kw = 70;
-    const gap = 95;
     const ky = 70;
+    const kw = 70;
     const sy = 150;
     const wy = 212;
     const vy = 310;
     const qys = [80, 130, 180, 230];
-    const activeQ = 1;
     const kxs = [180, 275, 370, 465];
+    const phase = Math.min(1, Math.max(0, attnPhaseT));
+    const ease = 1 - Math.pow(1 - phase, 3);
+    const qCenter = { x: qx + qw / 2, y: qys[activeQ] + 15 };
 
     txt(20, 24, "one Q  →  every K  →  softmax  →  every V  →  one O", { size: 10, weight: 700, fill: C.fg });
-    txt(20, 40, "run the inner K/V loop for each Q; the same picture repeats for the next Q", { size: 8.5, fill: C.dim });
+    txt(20, 40, "each Q loops over the K/V tokens; the animation runs the loop for you", { size: 8.5, fill: C.dim });
 
     txt(qx, 58, "Q loop", { size: 9, weight: 700, fill: C.dim });
     qys.forEach((y, i) => {
@@ -397,55 +402,71 @@ const flash: SceneFactory = (host) => {
     });
     txt(qx, 272, "one Q at a time", { size: 8.5, fill: C.dim });
 
-    txt(kx, 58, "K loop · every key", { size: 9, weight: 700, fill: C.dim });
-    txt(kx, 296, "V loop · every value", { size: 9, weight: 700, fill: C.dim });
+    txt(180, 58, "K loop · every key", { size: 9, weight: 700, fill: C.dim });
+    txt(180, 296, "V loop · every value", { size: 9, weight: 700, fill: C.dim });
 
-    const qOutY = qys[activeQ] + 15;
+    const chip = (cx: number, cy: number, label: string, color: string, opacity: number, w = 32, h = 20): void => {
+      if (opacity <= 0.02) return;
+      art.appendChild(s("rect", { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 5, fill: color, "fill-opacity": 0.08 + 0.16 * opacity, stroke: color, "stroke-opacity": 0.6 * opacity }));
+      txt(cx, cy + 3.5, label, { anchor: "middle", size: 7.5, fill: color, mono: true });
+    };
+
     kxs.forEach((x, i) => {
+      const current = attnStep === 1 && i === attnPair;
+      const done = attnStep > 1 || (attnStep === 1 && i < attnPair);
+      const target = { x: x + kw / 2, y: sy };
+
       // K token
       art.appendChild(s("rect", { x, y: ky, width: kw, height: 30, rx: 6, fill: attnStep >= 1 ? C.ok : C.panel2, "fill-opacity": attnStep >= 1 ? 0.16 : 0.55, stroke: attnStep >= 1 ? C.ok : C.line }));
       txt(x + kw / 2, ky + 19, "K", { anchor: "middle", size: 11, weight: 700, fill: attnStep >= 1 ? C.fg : C.dim, mono: true });
 
       // V token
-      art.appendChild(s("rect", { x, y: vy, width: kw, height: 30, rx: 6, fill: attnStep >= 3 ? C.purple : C.panel2, "fill-opacity": attnStep >= 3 ? 0.16 : 0.55, stroke: attnStep >= 3 ? C.purple : C.line }));
-      txt(x + kw / 2, vy + 19, "V", { anchor: "middle", size: 11, weight: 700, fill: attnStep >= 3 ? C.fg : C.dim, mono: true });
+      const vOn = attnStep >= 3;
+      art.appendChild(s("rect", { x, y: vy, width: kw, height: 30, rx: 6, fill: vOn ? C.purple : C.panel2, "fill-opacity": vOn ? 0.16 : 0.55, stroke: vOn ? C.purple : C.line }));
+      txt(x + kw / 2, vy + 19, "V", { anchor: "middle", size: 11, weight: 700, fill: vOn ? C.fg : C.dim, mono: true });
 
-      // Q -> K pairing
-      if (attnStep >= 1) {
-        arrow(art, qx + qw, qOutY, x, ky + 15, C.accent, "arw-def");
-        arrow(art, x + kw / 2, ky + 30, x + kw / 2, sy - 8, C.ok, "arw-def");
+      // Q and K move into the logit position.
+      if (current && phase < 0.9) {
+        const qp = { x: qCenter.x + (target.x - qCenter.x) * ease, y: qCenter.y + (target.y - qCenter.y) * ease };
+        const kp = { x: target.x, y: ky + 15 + (target.y - (ky + 15)) * ease };
+        chip(qp.x, qp.y, "Q", C.accent, 0.95);
+        chip(kp.x, kp.y, "K", C.ok, 0.95);
       }
 
-      // score node
-      if (attnStep >= 1) {
-        art.appendChild(s("circle", { cx: x + kw / 2, cy: sy, r: 7, fill: C.bad, "fill-opacity": 0.2, stroke: C.bad, "stroke-opacity": 0.8 }));
-        art.appendChild(s("circle", { cx: x + kw / 2, cy: sy, r: 2, fill: C.bad }));
+      // The merge result replaces the red score dot.
+      if (done || attnStep >= 2 || (current && phase > 0.68)) {
+        chip(target.x, target.y, "logit", C.warn, 1, 44, 20);
       }
 
-      // softmax weight bar
+      // Softmax: logits grow into weights.
       if (attnStep >= 2) {
         const widths = [28, 48, 58, 36];
-        const bw = widths[i];
-        art.appendChild(s("rect", { x: x + kw / 2 - bw / 2, y: wy, width: bw, height: 10, rx: 5, fill: C.ok, "fill-opacity": 0.75, stroke: C.ok, "stroke-opacity": 0.8 }));
-        arrow(art, x + kw / 2, sy + 8, x + kw / 2, wy - 4, C.ok, "arw-def");
+        const grow = attnStep === 2 ? ease : 1;
+        const bw = Math.max(3, widths[i] * grow);
+        art.appendChild(s("rect", { x: target.x - bw / 2, y: wy, width: bw, height: 10, rx: 5, fill: C.ok, "fill-opacity": 0.75, stroke: C.ok, "stroke-opacity": 0.8 }));
       }
 
-      // weight -> V and V -> O
+      // Weighted value contributions move into O.
       if (attnStep >= 3) {
-        art.appendChild(s("line", { x1: x + kw / 2, y1: wy + 10, x2: x + kw / 2, y2: vy, stroke: C.purple, "stroke-opacity": 0.65, "stroke-dasharray": "3 3", "marker-end": "url(#arw-def)" }));
+        const start = i * 0.08;
+        const local = Math.max(0, Math.min(1, (phase - start) / (1 - start)));
+        const ce = 1 - Math.pow(1 - local, 3);
+        if (local > 0 && local < 1) {
+          chip(x + kw / 2 + (640 - (x + kw / 2)) * ce, vy + 15 + (317 - (vy + 15)) * ce, "w·V", C.purple, 1 - local, 34, 16);
+        }
       }
     });
 
-    // labels between the rows, kept clear of the Q column
-    if (attnStep >= 1) txt(170, sy - 5, "scores", { size: 8.5, fill: C.bad, anchor: "end" });
+    if (attnStep >= 1) txt(170, sy - 5, "logits", { size: 8.5, fill: C.warn, anchor: "end" });
     if (attnStep >= 2) txt(170, wy + 8, "weights", { size: 8.5, fill: C.ok, anchor: "end" });
 
     // O for the active Q
-    art.appendChild(s("rect", { x: 590, y: 292, width: 100, height: 50, rx: 8, fill: attnStep >= 3 ? C.purple : C.panel, "fill-opacity": attnStep >= 3 ? 0.16 : 0.55, stroke: attnStep >= 3 ? C.purple : C.line }));
-    txt(640, 314, "O", { anchor: "middle", size: 13, weight: 700, fill: attnStep >= 3 ? C.fg : C.dim, mono: true });
+    const oOn = attnStep >= 3;
+    art.appendChild(s("rect", { x: 590, y: 292, width: 100, height: 50, rx: 8, fill: oOn ? C.purple : C.panel, "fill-opacity": oOn ? 0.16 : 0.55, stroke: oOn ? C.purple : C.line }));
+    txt(640, 314, "O", { anchor: "middle", size: 13, weight: 700, fill: oOn ? C.fg : C.dim, mono: true });
     txt(640, 332, "for this Q", { anchor: "middle", size: 8, fill: C.dim });
-    if (attnStep >= 3) {
-      arrow(art, 535, 325, 590, 317, C.purple, "arw-def");
+
+    if (oOn) {
       const loop = s("path", { d: "M 640 342 L 640 378 L 65 378 L 65 260", fill: "none", stroke: C.accent, "stroke-opacity": 0.5, "stroke-dasharray": "4 4", "marker-end": "url(#arw-def)" });
       art.appendChild(loop);
       txt(350, 394, "next Q", { anchor: "middle", size: 8.5, fill: C.accent });
@@ -453,15 +474,15 @@ const flash: SceneFactory = (host) => {
 
     const stage = [
       "",
-      "1 · Pair the active Q with every K. Each pairing produces one score.",
-      "2 · Softmax the scores across all keys. One weight per key.",
-      "3 · Pair each weight with its V and sum. One O for this Q. Repeat for the next Q.",
+      "1 · Pair the active Q with each K; each pair merges into a logit.",
+      "2 · Softmax the logits across K; one weight per key.",
+      "3 · Mix each weight with its V into O; then the next Q begins.",
     ][attnStep];
     txt(20, 424, stage, { size: 10, fill: C.fg });
 
-    svgBtn(art, 20, 446, 82, "▶ Step", () => { stopAttn(); if (attnStep < 3) attnStep += 1; render(); });
+    svgBtn(art, 20, 446, 82, "▶ Step", () => { stepAttn(); });
     svgBtn(art, 110, 446, 92, attnPlaying ? "⏸ Pause" : "▶ Run", () => { toggleAttn(); });
-    svgBtn(art, 210, 446, 80, "↺ Reset", () => { stopAttn(); attnStep = 1; render(); });
+    svgBtn(art, 210, 446, 80, "↺ Reset", () => { resetAttn(); });
     txt(305, 464, "step " + attnStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
     txt(20, 492, "The inner loop is over K/V; the outer loop is over Q.", { size: 9, fill: C.dim });
   }
@@ -488,36 +509,108 @@ const flash: SceneFactory = (host) => {
     });
   }
 
+  function renderDefinition(): void {
+    const svg = secEls[0].svg;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    currentArt = svg;
+    drawDefinition(svg);
+    currentArt = null;
+  }
+
   function stopAttn(): void {
-    if (attnTimer !== null) {
-      window.clearTimeout(attnTimer);
-      attnTimer = null;
+    if (attnRaf !== null) {
+      window.cancelAnimationFrame(attnRaf);
+      attnRaf = null;
     }
     attnPlaying = false;
+  }
+
+  function startAttn(single = false): void {
+    if (attnRaf !== null) window.cancelAnimationFrame(attnRaf);
+    attnPlaying = true;
+    attnSingle = single;
+    attnLast = performance.now();
+    attnRaf = window.requestAnimationFrame(attnTick);
+  }
+
+  function attnTick(now: number): void {
+    if (!attnPlaying) return;
+    const dt = Math.min(0.05, (now - attnLast) / 1000);
+    attnLast = now;
+    const duration = attnStep === 1 ? 0.62 : attnStep === 2 ? 0.85 : 1.05;
+    attnPhaseT += dt / duration;
+
+    if (attnPhaseT >= 1) {
+      attnPhaseT = 0;
+      if (attnStep === 1) {
+        if (attnPair < 3) {
+          attnPair += 1;
+        } else if (attnSingle) {
+          attnPhaseT = 1;
+          stopAttn();
+          renderDefinition();
+          return;
+        } else {
+          attnStep = 2;
+          attnPair = 0;
+        }
+      } else if (attnStep === 2) {
+        if (attnSingle) {
+          attnPhaseT = 1;
+          stopAttn();
+          renderDefinition();
+          return;
+        }
+        attnStep = 3;
+      } else {
+        if (attnSingle) {
+          attnPhaseT = 1;
+          stopAttn();
+          renderDefinition();
+          return;
+        }
+        activeQ = (activeQ + 1) % 4;
+        attnStep = 1;
+        attnPair = 0;
+      }
+    }
+
+    renderDefinition();
+    attnRaf = window.requestAnimationFrame(attnTick);
+  }
+
+  function stepAttn(): void {
+    stopAttn();
+    if (attnStep === 1) {
+      attnStep = 2;
+      attnPair = 0;
+    } else if (attnStep === 2) {
+      attnStep = 3;
+    } else {
+      activeQ = (activeQ + 1) % 4;
+      attnStep = 1;
+      attnPair = 0;
+    }
+    attnPhaseT = 0;
+    startAttn(true);
   }
 
   function toggleAttn(): void {
     if (attnPlaying) {
       stopAttn();
-      render();
+      renderDefinition();
       return;
     }
-    if (attnStep >= 3) attnStep = 1;
-    attnPlaying = true;
-    const tick = (): void => {
-      if (!attnPlaying) return;
-      if (attnStep >= 3) {
-        attnPlaying = false;
-        attnTimer = null;
-        render();
-        return;
-      }
-      attnStep += 1;
-      render();
-      attnTimer = window.setTimeout(tick, 700);
-    };
-    attnTimer = window.setTimeout(tick, 420);
-    render();
+    startAttn(false);
+  }
+
+  function resetAttn(): void {
+    stopAttn();
+    activeQ = 0;
+    attnStep = 1;
+    attnPair = 0;
+    attnPhaseT = 0;
+    renderDefinition();
   }
 
   /* ------------------------------ section 2 ------------------------------ */
@@ -845,6 +938,7 @@ const flash: SceneFactory = (host) => {
   setCode(0);
 
   render();
+  startAttn(false);
   return {
     destroy(): void {
       stopAttn();
