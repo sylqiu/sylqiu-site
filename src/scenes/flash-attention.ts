@@ -89,7 +89,26 @@ function svgBtn(art: SVGSVGElement, x: number, y: number, w: number, label: stri
   const g = s("g", { cursor: on ? "pointer" : "default", class: "ill-svg-btn" });
   g.appendChild(s("rect", { x, y, width: w, height: 26, rx: 13, fill: color, "fill-opacity": on ? 0.12 : 0.06, stroke: color }));
   g.appendChild(txt(x + w / 2, y + 17, label, { anchor: "middle", size: 10.5, fill: color, weight: 600 }));
-  if (on) g.addEventListener("click", onClick);
+  if (on) {
+    let lastPointer = 0;
+    g.setAttribute("role", "button");
+    g.setAttribute("tabindex", "0");
+    g.addEventListener("pointerdown", (event) => {
+      lastPointer = Date.now();
+      event.preventDefault();
+      onClick();
+    });
+    g.addEventListener("click", () => {
+      if (Date.now() - lastPointer < 700) return;
+      onClick();
+    });
+    g.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onClick();
+      }
+    });
+  }
   art.appendChild(g);
 }
 
