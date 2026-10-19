@@ -129,8 +129,8 @@ const SECS: Sec[] = [
     id: "definition",
     title: "Attention, by definition",
     blurb:
-      "Attention starts with three projections, Q, K, and V. Every query compares itself with every key, softmax turns the scores into weights, and the weights mix the values. The N×N score matrix is the object every FlashAttention kernel is trying to avoid materializing.",
-    h: 470,
+      "Attention is a loop. Take one query Q, pair it with every key K, turn those scores into weights with a softmax, then pair each weight with its value V and sum. Repeat the inner K/V loop for every Q. FlashAttention is the same loop, staged through on-chip memory.",
+    h: 510,
   },
   {
     id: "memory",
@@ -277,7 +277,7 @@ const VARIANTS: Array<{ title: string; color: string; detail: string }> = [
 ];
 
 const flash: SceneFactory = (host) => {
-  let attnStep = 0;
+  let attnStep = 1;
   let attnPlaying = false;
   let attnTimer: number | null = null;
   let arch: "gpu" | "tpu" = "gpu";
@@ -373,49 +373,97 @@ const flash: SceneFactory = (host) => {
 
   function drawDefinition(art: SVGSVGElement): void {
     art.appendChild(marker("arw-def", C.dim));
-    const qx = 20;
-    const kx = 110;
-    const vx = 200;
-    const sx = 300;
-    const px = 420;
-    const ox = 540;
-    txt(qx, 56, "Q", { size: 13, weight: 700, fill: C.fg, mono: true });
-    txt(kx, 56, "K", { size: 13, weight: 700, fill: C.fg, mono: true });
-    txt(vx, 56, "V", { size: 13, weight: 700, fill: C.fg, mono: true });
-    txt(sx, 56, "S = QKᵀ / √d", { size: 11, weight: 700, fill: C.fg, mono: true });
-    txt(px, 56, "P = softmax(S)", { size: 11, weight: 700, fill: C.fg, mono: true });
-    txt(ox, 56, "O = PV", { size: 11, weight: 700, fill: C.fg, mono: true });
+    const qx = 30;
+    const qw = 70;
+    const kx = 180;
+    const kw = 70;
+    const gap = 95;
+    const ky = 70;
+    const sy = 150;
+    const wy = 212;
+    const vy = 310;
+    const qys = [80, 130, 180, 230];
+    const activeQ = 1;
+    const kxs = [180, 275, 370, 465];
 
-    drawMatrix(art, qx, 66, N, D, 20, QVALS, C.accent, attnStep >= 0, true);
-    drawMatrix(art, kx, 66, N, D, 20, KVALS, C.ok, attnStep >= 0, true);
-    drawMatrix(art, vx, 66, N, D, 20, VALUES, C.purple, attnStep >= 0, true);
-    drawMatrix(art, sx, 66, N, N, 22, SCORES, C.bad, attnStep >= 1, attnStep >= 1);
-    drawMatrix(art, px, 66, N, N, 22, softmaxRows(SCORES), C.ok, attnStep >= 2, attnStep >= 2);
-    drawMatrix(art, ox, 66, N, D, 22, outputVals(), C.purple, attnStep >= 3, attnStep >= 3);
+    txt(20, 24, "one Q  →  every K  →  softmax  →  every V  →  one O", { size: 10, weight: 700, fill: C.fg });
+    txt(20, 40, "run the inner K/V loop for each Q; the same picture repeats for the next Q", { size: 8.5, fill: C.dim });
 
-    arrow(art, qx + 82, 110, sx - 8, 110, C.accent, "arw-def");
-    arrow(art, kx + 82, 110, sx - 8, 122, C.ok, "arw-def");
-    arrow(art, sx + 90, 110, px - 8, 110, C.bad, "arw-def");
-    arrow(art, px + 90, 110, ox - 8, 100, C.ok, "arw-def");
-    arrow(art, vx + 82, 130, ox - 8, 130, C.purple, "arw-def");
+    txt(qx, 58, "Q loop", { size: 9, weight: 700, fill: C.dim });
+    qys.forEach((y, i) => {
+      const active = i === activeQ;
+      art.appendChild(s("rect", { x: qx, y, width: qw, height: 30, rx: 6, fill: active ? C.accent : C.panel2, "fill-opacity": active ? 0.18 : 0.55, stroke: active ? C.accent : C.line, "stroke-width": active ? 1.6 : 1 }));
+      txt(qx + qw / 2, y + 19, "Q", { anchor: "middle", size: 11, weight: 700, fill: active ? C.fg : C.dim, mono: true });
+    });
+    txt(qx, 272, "one Q at a time", { size: 8.5, fill: C.dim });
 
-    txt(20, 190, "N = 4 tokens · d = 3 channels", { size: 9, fill: C.dim, mono: true });
-    txt(20, 208, "S and P are N×N: this is the quadratic object.", { size: 9, fill: C.bad });
-    txt(20, 226, "The output is N×d: one vector per query.", { size: 9, fill: C.ok });
+    txt(kx, 58, "K loop · every key", { size: 9, weight: 700, fill: C.dim });
+    txt(kx, 296, "V loop · every value", { size: 9, weight: 700, fill: C.dim });
 
-    art.appendChild(s("rect", { x: 20, y: 246, width: 680, height: 62, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
-    txt(34, 268, "Attention(Q, K, V) = softmax(QKᵀ / √d) V", { size: 12, fill: C.fg, mono: true });
-    txt(34, 288, "FLOPs ≈ 4N²d  ·  score/probability memory = O(N²)", { size: 9, fill: C.dim, mono: true });
-    txt(34, 304, "Everything below is a way to compute this without writing S or P to HBM.", { size: 9, fill: C.ok });
+    const qOutY = qys[activeQ] + 15;
+    kxs.forEach((x, i) => {
+      // K token
+      art.appendChild(s("rect", { x, y: ky, width: kw, height: 30, rx: 6, fill: attnStep >= 1 ? C.ok : C.panel2, "fill-opacity": attnStep >= 1 ? 0.16 : 0.55, stroke: attnStep >= 1 ? C.ok : C.line }));
+      txt(x + kw / 2, ky + 19, "K", { anchor: "middle", size: 11, weight: 700, fill: attnStep >= 1 ? C.fg : C.dim, mono: true });
 
-    const stage = ["Q, K, V are projected.", "S = QKᵀ / √d: every query scores every key.", "Softmax each row: weights sum to 1.", "O = PV: weighted sum of values."][attnStep];
-    txt(20, 340, stage, { size: 10, fill: C.fg });
+      // V token
+      art.appendChild(s("rect", { x, y: vy, width: kw, height: 30, rx: 6, fill: attnStep >= 3 ? C.purple : C.panel2, "fill-opacity": attnStep >= 3 ? 0.16 : 0.55, stroke: attnStep >= 3 ? C.purple : C.line }));
+      txt(x + kw / 2, vy + 19, "V", { anchor: "middle", size: 11, weight: 700, fill: attnStep >= 3 ? C.fg : C.dim, mono: true });
 
-    svgBtn(art, 20, 362, 82, "▶ Step", () => { stopAttn(); if (attnStep < 3) attnStep += 1; render(); });
-    svgBtn(art, 110, 362, 92, attnPlaying ? "⏸ Pause" : "▶ Run", () => { toggleAttn(); });
-    svgBtn(art, 210, 362, 80, "↺ Reset", () => { stopAttn(); attnStep = 0; render(); });
-    txt(305, 380, "step " + attnStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
-    txt(20, 420, "The N×N matrix is the definition; the rest of the page is about not storing it.", { size: 9, fill: C.dim });
+      // Q -> K pairing
+      if (attnStep >= 1) {
+        arrow(art, qx + qw, qOutY, x, ky + 15, C.accent, "arw-def");
+        arrow(art, x + kw / 2, ky + 30, x + kw / 2, sy - 8, C.ok, "arw-def");
+      }
+
+      // score node
+      if (attnStep >= 1) {
+        art.appendChild(s("circle", { cx: x + kw / 2, cy: sy, r: 7, fill: C.bad, "fill-opacity": 0.2, stroke: C.bad, "stroke-opacity": 0.8 }));
+        art.appendChild(s("circle", { cx: x + kw / 2, cy: sy, r: 2, fill: C.bad }));
+      }
+
+      // softmax weight bar
+      if (attnStep >= 2) {
+        const widths = [28, 48, 58, 36];
+        const bw = widths[i];
+        art.appendChild(s("rect", { x: x + kw / 2 - bw / 2, y: wy, width: bw, height: 10, rx: 5, fill: C.ok, "fill-opacity": 0.75, stroke: C.ok, "stroke-opacity": 0.8 }));
+        arrow(art, x + kw / 2, sy + 8, x + kw / 2, wy - 4, C.ok, "arw-def");
+      }
+
+      // weight -> V and V -> O
+      if (attnStep >= 3) {
+        art.appendChild(s("line", { x1: x + kw / 2, y1: wy + 10, x2: x + kw / 2, y2: vy, stroke: C.purple, "stroke-opacity": 0.65, "stroke-dasharray": "3 3", "marker-end": "url(#arw-def)" }));
+      }
+    });
+
+    // labels between the rows, kept clear of the Q column
+    if (attnStep >= 1) txt(170, sy - 5, "scores", { size: 8.5, fill: C.bad, anchor: "end" });
+    if (attnStep >= 2) txt(170, wy + 8, "weights", { size: 8.5, fill: C.ok, anchor: "end" });
+
+    // O for the active Q
+    art.appendChild(s("rect", { x: 590, y: 292, width: 100, height: 50, rx: 8, fill: attnStep >= 3 ? C.purple : C.panel, "fill-opacity": attnStep >= 3 ? 0.16 : 0.55, stroke: attnStep >= 3 ? C.purple : C.line }));
+    txt(640, 314, "O", { anchor: "middle", size: 13, weight: 700, fill: attnStep >= 3 ? C.fg : C.dim, mono: true });
+    txt(640, 332, "for this Q", { anchor: "middle", size: 8, fill: C.dim });
+    if (attnStep >= 3) {
+      arrow(art, 535, 325, 590, 317, C.purple, "arw-def");
+      const loop = s("path", { d: "M 640 342 L 640 378 L 65 378 L 65 260", fill: "none", stroke: C.accent, "stroke-opacity": 0.5, "stroke-dasharray": "4 4", "marker-end": "url(#arw-def)" });
+      art.appendChild(loop);
+      txt(350, 394, "next Q", { anchor: "middle", size: 8.5, fill: C.accent });
+    }
+
+    const stage = [
+      "",
+      "1 · Pair the active Q with every K. Each pairing produces one score.",
+      "2 · Softmax the scores across all keys. One weight per key.",
+      "3 · Pair each weight with its V and sum. One O for this Q. Repeat for the next Q.",
+    ][attnStep];
+    txt(20, 424, stage, { size: 10, fill: C.fg });
+
+    svgBtn(art, 20, 446, 82, "▶ Step", () => { stopAttn(); if (attnStep < 3) attnStep += 1; render(); });
+    svgBtn(art, 110, 446, 92, attnPlaying ? "⏸ Pause" : "▶ Run", () => { toggleAttn(); });
+    svgBtn(art, 210, 446, 80, "↺ Reset", () => { stopAttn(); attnStep = 1; render(); });
+    txt(305, 464, "step " + attnStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
+    txt(20, 492, "The inner loop is over K/V; the outer loop is over Q.", { size: 9, fill: C.dim });
   }
 
   function softmaxRows(values: number[][]): number[][] {
@@ -454,7 +502,7 @@ const flash: SceneFactory = (host) => {
       render();
       return;
     }
-    if (attnStep >= 3) attnStep = 0;
+    if (attnStep >= 3) attnStep = 1;
     attnPlaying = true;
     const tick = (): void => {
       if (!attnPlaying) return;
