@@ -281,7 +281,6 @@ const flash: SceneFactory = (host) => {
   let attnPlaying = true;
   let activeQ = 0;
   let attnPhaseT = 0;
-  let attnPair = 0;
   let attnRaf: number | null = null;
   let attnLast = 0;
   let attnSingle = false;
@@ -414,8 +413,6 @@ const flash: SceneFactory = (host) => {
 
     kxs.forEach((x, i) => {
       const target = { x: x + kw / 2, y: sy };
-      const current = attnStep === 1 && i === attnPair;
-      const done = attnStep > 1 || (attnStep === 1 && i < attnPair);
 
       // K and V tokens.
       art.appendChild(s("rect", { x, y: ky, width: kw, height: 30, rx: 6, fill: attnStep >= 1 ? C.ok : C.panel2, "fill-opacity": attnStep >= 1 ? 0.16 : 0.55, stroke: attnStep >= 1 ? C.ok : C.line }));
@@ -424,14 +421,14 @@ const flash: SceneFactory = (host) => {
       art.appendChild(s("rect", { x, y: vy, width: kw, height: 30, rx: 6, fill: vOn ? C.purple : C.panel2, "fill-opacity": vOn ? 0.16 : 0.55, stroke: vOn ? C.purple : C.line }));
       txt(x + kw / 2, vy + 19, "V", { anchor: "middle", size: 11, weight: 700, fill: vOn ? C.fg : C.dim, mono: true });
 
-      // Step 1: Q and K merge into a logit.
-      if (current && phase < 0.9) {
+      // Step 1: all Q/K pairs merge in one pass.
+      if (attnStep === 1 && phase < 0.9) {
         const qp = { x: qCenter.x + (target.x - qCenter.x) * ease, y: qCenter.y + (target.y - qCenter.y) * ease };
         const kp = { x: target.x, y: ky + 15 + (target.y - (ky + 15)) * ease };
         chip(qp.x, qp.y, "Q", C.accent, 0.95);
         chip(kp.x, kp.y, "K", C.ok, 0.95);
       }
-      if (attnStep === 1 && (done || (current && phase > 0.68))) {
+      if (attnStep === 1 && phase > 0.68) {
         chip(target.x, target.y, "logit", C.warn, 1, 44, 20);
       }
 
@@ -492,7 +489,7 @@ const flash: SceneFactory = (host) => {
 
     const stage = [
       "",
-      "1 · Pair the active Q with each K; each pair merges into a logit.",
+      "1 · Merge the active Q with every K at once; each pair becomes a logit.",
       "2 · Merge the logits into the softmax denominator; normalize them into weights.",
       "3 · Merge each weight with its V; sum the weighted values into O. Then the next Q begins.",
     ][attnStep];
@@ -555,23 +552,19 @@ const flash: SceneFactory = (host) => {
     if (!attnPlaying) return;
     const dt = Math.min(0.05, (now - attnLast) / 1000);
     attnLast = now;
-    const duration = attnStep === 1 ? 0.62 : attnStep === 2 ? 0.85 : 1.05;
+    const duration = attnStep === 1 ? 0.9 : attnStep === 2 ? 0.85 : 1.05;
     attnPhaseT += dt / duration;
 
     if (attnPhaseT >= 1) {
       attnPhaseT = 0;
       if (attnStep === 1) {
-        if (attnPair < 3) {
-          attnPair += 1;
-        } else if (attnSingle) {
+        if (attnSingle) {
           attnPhaseT = 1;
           stopAttn();
           renderDefinition();
           return;
-        } else {
-          attnStep = 2;
-          attnPair = 0;
         }
+        attnStep = 2;
       } else if (attnStep === 2) {
         if (attnSingle) {
           attnPhaseT = 1;
@@ -589,7 +582,6 @@ const flash: SceneFactory = (host) => {
         }
         activeQ = (activeQ + 1) % 4;
         attnStep = 1;
-        attnPair = 0;
       }
     }
 
@@ -601,13 +593,11 @@ const flash: SceneFactory = (host) => {
     stopAttn();
     if (attnStep === 1) {
       attnStep = 2;
-      attnPair = 0;
     } else if (attnStep === 2) {
       attnStep = 3;
     } else {
       activeQ = (activeQ + 1) % 4;
       attnStep = 1;
-      attnPair = 0;
     }
     attnPhaseT = 0;
     startAttn(true);
@@ -626,7 +616,6 @@ const flash: SceneFactory = (host) => {
     stopAttn();
     activeQ = 0;
     attnStep = 1;
-    attnPair = 0;
     attnPhaseT = 0;
     renderDefinition();
   }
