@@ -1,16 +1,11 @@
 /**
- * Illustration: FlashAttention, v1 to v4.
+ * Illustration: FlashAttention, from the definition to kernels.
  *
- * One thesis: the algorithm stayed tiled and exact; each generation changed
- * how tiles are fed to the tensor cores and how the non-matmul work is hidden.
- *
- * Sections
- *  1  the memory wall: why materializing S and P is the problem
- *  2  tiling + online softmax: the invariant behind every version
- *  3  v1 -> v2: work partitioning and occupancy
- *  4  v2 -> v3: asynchrony and warp specialization on Hopper
- *  5  v3 -> v4: co-design for Blackwell's asymmetric scaling
- *  6  the four generations at a glance
+ * 1  attention by definition
+ * 2  GPU and TPU memory architectures
+ * 3  tiling + online softmax, focused on data movement
+ * 4  variants: masks, layouts, precision, platforms
+ * 5  code for PyTorch, CUDA/CUTLASS, Triton, and TPU/Pallas
  */
 import type { SceneFactory } from "../lib/registry.ts";
 
@@ -47,7 +42,6 @@ interface TxtOpts {
   size?: number;
   anchor?: "start" | "middle" | "end";
   mono?: boolean;
-  opacity?: number;
   weight?: number;
 }
 
@@ -60,7 +54,6 @@ function txt(x: number, y: number, content: string, o: TxtOpts = {}): SVGTextEle
     "text-anchor": o.anchor ?? "start",
     "font-family": o.mono === true ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "inherit",
   });
-  if (o.opacity !== undefined) t.setAttribute("opacity", String(o.opacity));
   if (o.weight !== undefined) t.setAttribute("font-weight", String(o.weight));
   t.textContent = content;
   if (currentArt) currentArt.appendChild(t);
@@ -85,24 +78,10 @@ function arrow(art: SVGSVGElement, x1: number, y1: number, x2: number, y2: numbe
   art.appendChild(s("line", { x1, y1, x2, y2, stroke: color, "stroke-width": width, "marker-end": "url(#" + id + ")" }));
 }
 
-function box(art: SVGSVGElement, x: number, y: number, w: number, h: number, title: string, sub: string, color: string): void {
-  art.appendChild(s("rect", { x, y, width: w, height: h, rx: 9, fill: C.panel, "fill-opacity": 0.7, stroke: color, "stroke-opacity": 0.7 }));
-  art.appendChild(txt(x + 12, y + 22, title, { size: 11, weight: 700, fill: color }));
+function box(art: SVGSVGElement, x: number, y: number, w: number, h: number, title: string, sub: string, color: string, dim = false): void {
+  art.appendChild(s("rect", { x, y, width: w, height: h, rx: 9, fill: C.panel, "fill-opacity": dim ? 0.3 : 0.7, stroke: color, "stroke-opacity": dim ? 0.3 : 0.7 }));
+  art.appendChild(txt(x + 12, y + 22, title, { size: 11, weight: 700, fill: dim ? C.dim : color }));
   art.appendChild(txt(x + 12, y + 41, sub, { size: 8.5, fill: C.dim }));
-}
-
-function fmt(x: number): string {
-  if (x >= 1e9) return (x / 1e9).toFixed(1) + "B";
-  if (x >= 1e6) return (x / 1e6).toFixed(1) + "M";
-  if (x >= 1e3) return (x / 1e3).toFixed(1) + "K";
-  return String(Math.round(x));
-}
-
-function bar(art: SVGSVGElement, x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void {
-  art.appendChild(txt(x, y - 6, label, { size: 9.5, fill: C.dim }));
-  art.appendChild(s("rect", { x, y, width: w, height: 12, rx: 6, fill: C.panel2, stroke: C.line }));
-  art.appendChild(s("rect", { x, y, width: Math.max(2, w * Math.min(1, frac)), height: 12, rx: 6, fill: color, "fill-opacity": 0.85 }));
-  art.appendChild(txt(x + w, y + 26, value, { anchor: "end", size: 9, fill: color, mono: true }));
 }
 
 function svgBtn(art: SVGSVGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
@@ -114,90 +93,205 @@ function svgBtn(art: SVGSVGElement, x: number, y: number, w: number, label: stri
   art.appendChild(g);
 }
 
+function wrapText(text: string, width: number): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? line + " " + word : word;
+    if (next.length > width && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function bar(art: SVGSVGElement, x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void {
+  art.appendChild(txt(x, y - 6, label, { size: 9.5, fill: C.dim }));
+  art.appendChild(s("rect", { x, y, width: w, height: 12, rx: 6, fill: C.panel2, stroke: C.line }));
+  art.appendChild(s("rect", { x, y, width: Math.max(2, w * Math.min(1, frac)), height: 12, rx: 6, fill: color, "fill-opacity": 0.85 }));
+  art.appendChild(txt(x + w, y + 26, value, { anchor: "end", size: 9, fill: color, mono: true }));
+}
+
 interface Sec {
   id: string;
   title: string;
   blurb: string;
   h: number;
-  top?: number;
-  prose?: string[];
 }
 
 const SECS: Sec[] = [
   {
-    id: "memory",
-    title: "The memory wall",
+    id: "definition",
+    title: "Attention, by definition",
     blurb:
-      "Standard attention computes S = QKᵀ and P = softmax(S), then writes both N×N matrices to HBM. The tensor cores are fast; HBM is not. FlashAttention's first move is to never materialize them.",
-    h: 360,
+      "Attention starts with three projections, Q, K, and V. Every query compares itself with every key, softmax turns the scores into weights, and the weights mix the values. The N×N score matrix is the object every FlashAttention kernel is trying to avoid materializing.",
+    h: 470,
+  },
+  {
+    id: "memory",
+    title: "GPU and TPU memory architectures",
+    blurb:
+      "The same math runs on very different memory hierarchies. A GPU gives each SM a small, explicitly managed shared memory and relies on caches; a TPU gives the compiler a large on-chip CMEM and a systolic MXU. FlashAttention is a schedule for that hierarchy.",
+    h: 520,
   },
   {
     id: "tiling",
-    title: "Tile the matrix, keep the softmax online",
+    title: "Tiling and online softmax: follow the bytes",
     blurb:
-      "A query tile walks over key/value tiles. Each tile updates a running max, denominator, and output accumulator in SRAM. The result is exact — no approximation — and the N×N matrix never exists in HBM.",
+      "Load one Q tile, stream K/V tiles through SRAM, and keep a running max, denominator, and output accumulator. The score and probability tiles are born and die in SRAM. Only Q, K, V, and the final O touch HBM.",
+    h: 620,
+  },
+  {
+    id: "variants",
+    title: "The variant landscape",
+    blurb:
+      "The tiled online-softmax loop is the invariant. Variants change the mask, the layout, the precision, or the hardware target: causal and sliding-window attention, GQA/MQA, paged/varlen batching, FP8/FP4, and CUDA, Triton, ROCm, or TPU/Pallas implementations.",
     h: 560,
   },
   {
-    id: "v2",
-    title: "v1 → v2: fill the GPU",
+    id: "code",
+    title: "Code across platforms",
     blurb:
-      "v1 was IO-aware but left the GPU underoccupied. v2 splits the query dimension across thread blocks and distributes work across warps, so a single head can use the whole GPU.",
-    h: 380,
+      "The same recurrence appears in PyTorch, a CUDA/CUTLASS kernel, a Triton kernel, and a TPU/Pallas kernel. What changes is how tiles are loaded, which matrix-multiply primitive is used, and who schedules the data movement.",
+    h: 280,
+  },
+];
+
+const N = 4;
+const D = 3;
+const QVALS = Array.from({ length: N }, (_, i) =>
+  Array.from({ length: D }, (_, j) => Math.sin((i + 1) * 0.7 + (j + 1) * 0.4)),
+);
+const KVALS = Array.from({ length: N }, (_, i) =>
+  Array.from({ length: D }, (_, j) => Math.cos((i + 1) * 0.5 + (j + 1) * 0.8)),
+);
+const VALUES = Array.from({ length: N }, (_, i) =>
+  Array.from({ length: D }, (_, j) => Math.cos(i * 1.1 + j * 0.7)),
+);
+const SCORES = QVALS.map((q) =>
+  KVALS.map((k) => q.reduce((sum, qv, idx) => sum + qv * k[idx], 0) / Math.sqrt(D)),
+);
+
+const CODE: Array<{ label: string; lang: string; lines: string[]; note: string }> = [
+  {
+    label: "PyTorch",
+    lang: "python",
+    note: "The dispatch layer picks a fused backend; you do not write the tiling loop.",
+    lines: [
+      "import torch",
+      "import torch.nn.functional as F",
+      "",
+      "q = torch.randn(2, 8, 4096, 64, device='cuda', dtype=torch.float16)",
+      "k = torch.randn_like(q)",
+      "v = torch.randn_like(q)",
+      "",
+      "# causal mask, fused attention kernel",
+      "out = F.scaled_dot_product_attention(q, k, v, is_causal=True)",
+      "",
+      "# FlashAttention / efficient attention is selected by the backend",
+    ],
   },
   {
-    id: "v3",
-    title: "v2 → v3: overlap everything",
-    blurb:
-      "Hopper added TMA and WGMMA. v3 warp-specializes the kernel: one group produces tiles, another runs matrix multiplies, and softmax overlaps both. FP8 adds another gear.",
-    h: 420,
+    label: "CUDA / CUTLASS",
+    lang: "cuda",
+    note: "One CTA owns one Q tile; TMA/WGMMA/TMEM are the Hopper/Blackwell primitives.",
+    lines: [
+      "// one CTA = one Q tile, BQ rows",
+      "extern __shared__ half smem[];",
+      "half* Qs = smem;              // BQ x D",
+      "half* Ks = Qs + BQ * D;       // BK x D",
+      "half* Vs = Ks + BK * D;",
+      "",
+      "for (int kt = 0; kt < num_k_tiles; ++kt) {",
+      "  cp_async(Ks, K + kt * BK * D, ...);",
+      "  cp_async(Vs, V + kt * BK * D, ...);",
+      "  wgmma(S, Qs, Ks);            // S = Q K^T",
+      "  online_softmax(S, m, l);     // row max, exp, rescale",
+      "  wgmma(O, P, Vs);             // O += P V",
+      "}",
+      "store(O, O_ptr + q_tile * BQ * D);",
+    ],
   },
   {
-    id: "v4",
-    title: "v3 → v4: co-design for Blackwell",
-    blurb:
-      "On Blackwell, tensor-core throughput doubled while shared-memory bandwidth and exponential units did not. v4 moves work off those slow units: bigger tiles, async MMA, tensor memory, 2-CTA MMA, and emulated exponentials.",
-    h: 420,
+    label: "Triton",
+    lang: "python",
+    note: "Triton expresses the tile loop directly; tl.dot maps to tensor cores.",
+    lines: [
+      "@triton.jit",
+      "def flash_fwd(Q, K, V, O, stride_q, stride_k, stride_v, N, D: tl.constexpr):",
+      "    q = tl.load(Q + ...)",
+      "    m = tl.full([BQ], -float('inf'), tl.float32)",
+      "    l = tl.zeros([BQ], tl.float32)",
+      "    acc = tl.zeros([BQ, D], tl.float32)",
+      "    for kt in range(0, N, BK):",
+      "        k = tl.load(K + kt * stride_k + ...)",
+      "        v = tl.load(V + kt * stride_v + ...)",
+      "        s = tl.dot(q, tl.trans(k))",
+      "        m_new = tl.maximum(m, tl.max(s, 1))",
+      "        p = tl.exp(s - m_new[:, None])",
+      "        l = l * tl.exp(m - m_new) + tl.sum(p, 1)",
+      "        acc = acc * tl.exp(m - m_new)[:, None] + tl.dot(p, v)",
+      "        m = m_new",
+      "    tl.store(O + ..., acc / l[:, None])",
+    ],
   },
   {
-    id: "timeline",
-    title: "Four generations, one idea",
-    blurb:
-      "Every version is exact tiled attention. What changes is the schedule: how blocks are partitioned, how tiles are loaded, and which unit is the bottleneck.",
-    h: 430,
-    prose: [
-      '<p class="ill-refs"><strong>Papers:</strong> <a href="https://arxiv.org/abs/2205.14135">FlashAttention (2022)</a> · <a href="https://arxiv.org/abs/2307.08691">FlashAttention-2 (2023)</a> · <a href="https://arxiv.org/abs/2407.08608">FlashAttention-3 (2024)</a> · <a href="https://arxiv.org/abs/2603.05451">FlashAttention-4 (2026)</a> · <a href="https://github.com/Dao-AILab/flash-attention">code</a></p>',
-      '<pre><code>for q_tile in Q_blocks:\n    m = -inf; l = 0; O = 0\n    for k_tile, v_tile in zip(K_blocks, V_blocks):\n        S = q_tile @ k_tile.T\n        m_new = max(m, rowmax(S))\n        P = exp(S - m_new)\n        l = l * exp(m - m_new) + rowsum(P)\n        O = O * exp(m - m_new) + P @ v_tile\n        m = m_new\n    O = O / l</code></pre>',
-      '<p class="ill-refs">The loop is the invariant. v1 made it IO-aware; v2 made it occupy the GPU; v3 overlapped its stages with Hopper’s asynchronous units; v4 rebalanced it for Blackwell.</p>',
+    label: "TPU / Pallas",
+    lang: "python",
+    note: "Pallas makes the tile shapes and DMA explicit; XLA maps them to CMEM and the MXU.",
+    lines: [
+      "def flash_attention(q, k, v, BQ=128, BK=128):",
+      "    m = jnp.full((BQ,), -jnp.inf)",
+      "    l = jnp.zeros((BQ,))",
+      "    o = jnp.zeros((BQ, D))",
+      "    for kt in range(0, N, BK):",
+      "        k_tile = pl.load(k, (kt, 0), (BK, D))",
+      "        v_tile = pl.load(v, (kt, 0), (BK, D))",
+      "        s = pl.dot(q_tile, k_tile.T)",
+      "        m_new = jnp.maximum(m, jnp.max(s, axis=1))",
+      "        p = jnp.exp(s - m_new[:, None])",
+      "        l = l * jnp.exp(m - m_new) + jnp.sum(p, axis=1)",
+      "        o = o * jnp.exp(m - m_new)[:, None] + pl.dot(p, v_tile)",
+      "        m = m_new",
+      "    pl.store(o / l[:, None], ...)",
     ],
   },
 ];
 
-const N = 8;
-const BLOCK = 4;
-const SCORES = Array.from({ length: N }, (_, i) =>
-  Array.from({ length: N }, (_, j) => Math.sin((i + 1) * 1.7 + (j + 1) * 0.9)),
-);
-const VALUES = Array.from({ length: N }, (_, i) =>
-  Array.from({ length: N }, (_, j) => Math.cos(i * 1.1 + j * 0.7)),
-);
+const VARIANTS: Array<{ title: string; color: string; detail: string }> = [
+  { title: "Causal", color: C.accent, detail: "Mask S where key > query. Whole tiles above the diagonal are skipped; diagonal tiles apply the mask before the online update." },
+  { title: "Sliding window", color: C.ok, detail: "Only K/V tiles within a window of the query tile are loaded. Traffic scales with the window, not the full sequence." },
+  { title: "Block-sparse", color: C.warn, detail: "Load only selected K/V blocks. The inner kernel is unchanged; the scheduler decides which blocks exist." },
+  { title: "GQA / MQA", color: C.purple, detail: "Several query heads share one K/V head. Reuse the K/V tile across query heads to cut bandwidth and increase arithmetic intensity." },
+  { title: "Varlen / paged", color: C.teal, detail: "Sequences are ragged or stored in blocks. The kernel reads per-sequence offsets and block tables; the tile loop stays the same." },
+  { title: "CUDA / CUTLASS", color: C.accent, detail: "CuTe layouts, TMA, WGMMA, and TMEM. This is the lowest-level and usually fastest path on NVIDIA GPUs." },
+  { title: "Triton / ROCm", color: C.ok, detail: "Triton expresses tiles in Python; AMD CDNA uses Composable Kernel or Triton. The matrix-core instructions differ." },
+  { title: "TPU / Pallas", color: C.purple, detail: "The compiler manages CMEM and DMA; the MXU is a systolic array. Block shapes and masks are explicit in Pallas." },
+  { title: "FP8 / FP4", color: C.warn, detail: "Quantize operands with per-block scales. Softmax and the running denominator stay in higher precision to protect accuracy." },
+  { title: "v1 → v4", color: C.teal, detail: "The math is fixed; the schedule evolves from IO-aware tiling to work partitioning, Hopper asynchrony, and Blackwell co-design." },
+];
 
-const kvFlash: SceneFactory = (host) => {
-  let n = 4096;
+const flash: SceneFactory = (host) => {
+  let attnStep = 0;
+  let attnPlaying = false;
+  let attnTimer: number | null = null;
+  let arch: "gpu" | "tpu" = "gpu";
   let tileStep = 0;
   let tilePlaying = false;
   let tileTimer: number | null = null;
   let causal = false;
-  let mode: "v1" | "v2" = "v2";
-  let pipeMode: "v2" | "v3" = "v3";
-  let pipeStep = 0;
-  let pipeTimer: number | null = null;
-  let gen = 0;
+  let variant = 0;
+  let codeTab = 0;
 
   const root = document.createElement("div");
   root.className = "ill";
 
-  const secEls: Array<{ svg: SVGSVGElement; ctl: HTMLElement }> = [];
+  const secEls: Array<{ svg: SVGSVGElement; ctl: HTMLElement; section: HTMLElement }> = [];
   SECS.forEach((sec, secIndex) => {
     const section = document.createElement("section");
     section.className = "ill-sec";
@@ -215,43 +309,18 @@ const kvFlash: SceneFactory = (host) => {
     const fig = document.createElement("div");
     fig.className = "ill-fig";
     const svg = s("svg", {
-      viewBox: "0 -" + (sec.top || 0) + " " + VB_W + " " + (sec.h + (sec.top || 0)),
+      viewBox: "0 0 " + VB_W + " " + sec.h,
       role: "img",
       "aria-label": sec.title,
     });
     fig.appendChild(svg);
     section.append(head, blurb, fig);
-    if (sec.prose) {
-      const prose = document.createElement("div");
-      prose.className = "ill-prose";
-      prose.innerHTML = sec.prose.map((p) => (p.trim().startsWith("<") ? p : "<p>" + p + "</p>")).join("");
-      section.appendChild(prose);
-    }
     root.appendChild(section);
-    secEls.push({ svg, ctl });
+    secEls.push({ svg, ctl, section });
   });
   host.appendChild(root);
 
-  // Section 1 control: sequence length drives the HBM-traffic bars.
-  const nCtl = document.createElement("label");
-  nCtl.className = "ill-ctl";
-  const nLabel = document.createElement("span");
-  nLabel.textContent = "N = " + n.toLocaleString();
-  const nInput = document.createElement("input");
-  nInput.type = "range";
-  nInput.min = "1024";
-  nInput.max = "16384";
-  nInput.step = "1024";
-  nInput.value = String(n);
-  nInput.addEventListener("input", () => {
-    n = Number(nInput.value);
-    nLabel.textContent = "N = " + n.toLocaleString();
-    render();
-  });
-  nCtl.append(nLabel, nInput);
-  secEls[0].ctl.append(nCtl);
-
-  const draws = [drawMemory, drawTiling, drawV2, drawV3, drawV4, drawTimeline];
+  const draws = [drawDefinition, drawMemory, drawTiling, drawVariants, drawCode];
 
   function render(): void {
     for (let i = 0; i < secEls.length; i++) {
@@ -265,60 +334,218 @@ const kvFlash: SceneFactory = (host) => {
 
   /* ------------------------------ section 1 ------------------------------ */
 
-  function drawMemory(art: SVGSVGElement): void {
-    art.appendChild(marker("arw", C.dim));
-
-    box(art, 20, 40, 340, 74, "HBM", "Q K V O · S · P", C.bad);
-    // tiny N×N matrix in HBM
-    for (let i = 0; i < 6; i++) {
-      for (let j = 0; j < 6; j++) {
+  function drawMatrix(
+    art: SVGSVGElement,
+    x: number,
+    y: number,
+    rows: number,
+    cols: number,
+    cell: number,
+    values: number[][],
+    color: string,
+    active: boolean,
+    showValues: boolean,
+  ): void {
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const v = values[i]?.[j] ?? 0;
+        const m = Math.min(1, Math.abs(v));
+        const fill = active ? color : C.panel2;
         art.appendChild(
           s("rect", {
-            x: 250 + j * 10,
-            y: 58 + i * 8,
-            width: 7,
-            height: 6,
-            rx: 1,
-            fill: i === j ? C.bad : C.warn,
-            "fill-opacity": 0.18 + 0.06 * ((i + j) % 5),
+            x: x + j * cell,
+            y: y + i * cell,
+            width: cell - 2,
+            height: cell - 2,
+            rx: 2,
+            fill,
+            "fill-opacity": active ? 0.12 + 0.55 * m : 0.5,
+            stroke: active ? color : C.line,
+            "stroke-opacity": active ? 0.7 : 0.5,
           }),
         );
+        if (showValues) {
+          art.appendChild(txt(x + j * cell + 5, y + i * cell + 12, v.toFixed(1), { size: 6.5, mono: true, fill: active ? C.fg : C.dim }));
+        }
       }
     }
-    box(art, 90, 150, 200, 62, "SRAM", "one Q tile + K/V tiles + O tile", C.ok);
-    box(art, 110, 250, 160, 52, "Tensor cores", "tile-wise matmul", C.accent);
+  }
 
-    arrow(art, 190, 114, 190, 150, C.dim, "arw");
-    arrow(art, 190, 212, 190, 250, C.dim, "arw");
-    arrow(art, 270, 250, 270, 212, C.dim, "arw");
-    txt(282, 235, "partial O", { size: 8.5, fill: C.ok });
-    arrow(art, 290, 150, 290, 114, C.dim, "arw");
-    txt(302, 135, "write back once", { size: 8.5, fill: C.ok });
+  function drawDefinition(art: SVGSVGElement): void {
+    art.appendChild(marker("arw-def", C.dim));
+    const qx = 20;
+    const kx = 110;
+    const vx = 200;
+    const sx = 300;
+    const px = 420;
+    const ox = 540;
+    txt(qx, 56, "Q", { size: 13, weight: 700, fill: C.fg, mono: true });
+    txt(kx, 56, "K", { size: 13, weight: 700, fill: C.fg, mono: true });
+    txt(vx, 56, "V", { size: 13, weight: 700, fill: C.fg, mono: true });
+    txt(sx, 56, "S = QKᵀ / √d", { size: 11, weight: 700, fill: C.fg, mono: true });
+    txt(px, 56, "P = softmax(S)", { size: 11, weight: 700, fill: C.fg, mono: true });
+    txt(ox, 56, "O = PV", { size: 11, weight: 700, fill: C.fg, mono: true });
 
-    txt(420, 40, "HBM elements moved · schematic", { size: 9.5, weight: 700, fill: C.dim });
-    const d = 64;
-    const sram = 32768;
-    const std = n * n + 4 * n * d;
-    const flash = 4 * n * d + (n * n * d * d) / sram;
-    bar(art, 430, 78, 220, 1, C.bad, "standard attention", fmt(std));
-    bar(art, 430, 130, 220, flash / std, C.ok, "FlashAttention", fmt(flash));
-    txt(430, 184, "N = " + n.toLocaleString() + " · d = 64 · SRAM = 64 KB", { size: 8.5, fill: C.dim, mono: true });
-    txt(430, 206, "ratio " + (std / Math.max(1, flash)).toFixed(1) + "× less HBM traffic", { size: 10, fill: C.ok, weight: 700 });
-    txt(430, 238, "standard:  Θ(N² + Nd)", { size: 10, fill: C.fg, mono: true });
-    txt(430, 256, "tiled:        Θ(N²d² / M + Nd)", { size: 10, fill: C.fg, mono: true });
-    txt(430, 284, "The score matrix is the problem:", { size: 9.5, fill: C.dim });
-    txt(430, 300, "N² elements written and read.", { size: 9.5, fill: C.dim });
-    txt(430, 326, "Tiling turns that into a streaming pass.", { size: 9.5, fill: C.ok });
+    drawMatrix(art, qx, 66, N, D, 20, QVALS, C.accent, attnStep >= 0, true);
+    drawMatrix(art, kx, 66, N, D, 20, KVALS, C.ok, attnStep >= 0, true);
+    drawMatrix(art, vx, 66, N, D, 20, VALUES, C.purple, attnStep >= 0, true);
+    drawMatrix(art, sx, 66, N, N, 22, SCORES, C.bad, attnStep >= 1, attnStep >= 1);
+    drawMatrix(art, px, 66, N, N, 22, softmaxRows(SCORES), C.ok, attnStep >= 2, attnStep >= 2);
+    drawMatrix(art, ox, 66, N, D, 22, outputVals(), C.purple, attnStep >= 3, attnStep >= 3);
+
+    arrow(art, qx + 82, 110, sx - 8, 110, C.accent, "arw-def");
+    arrow(art, kx + 82, 110, sx - 8, 122, C.ok, "arw-def");
+    arrow(art, sx + 90, 110, px - 8, 110, C.bad, "arw-def");
+    arrow(art, px + 90, 110, ox - 8, 100, C.ok, "arw-def");
+    arrow(art, vx + 82, 130, ox - 8, 130, C.purple, "arw-def");
+
+    txt(20, 190, "N = 4 tokens · d = 3 channels", { size: 9, fill: C.dim, mono: true });
+    txt(20, 208, "S and P are N×N: this is the quadratic object.", { size: 9, fill: C.bad });
+    txt(20, 226, "The output is N×d: one vector per query.", { size: 9, fill: C.ok });
+
+    art.appendChild(s("rect", { x: 20, y: 246, width: 680, height: 62, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+    txt(34, 268, "Attention(Q, K, V) = softmax(QKᵀ / √d) V", { size: 12, fill: C.fg, mono: true });
+    txt(34, 288, "FLOPs ≈ 4N²d  ·  score/probability memory = O(N²)", { size: 9, fill: C.dim, mono: true });
+    txt(34, 304, "Everything below is a way to compute this without writing S or P to HBM.", { size: 9, fill: C.ok });
+
+    const stage = ["Q, K, V are projected.", "S = QKᵀ / √d: every query scores every key.", "Softmax each row: weights sum to 1.", "O = PV: weighted sum of values."][attnStep];
+    txt(20, 340, stage, { size: 10, fill: C.fg });
+
+    svgBtn(art, 20, 362, 82, "▶ Step", () => { stopAttn(); if (attnStep < 3) attnStep += 1; render(); });
+    svgBtn(art, 110, 362, 92, attnPlaying ? "⏸ Pause" : "▶ Run", () => { toggleAttn(); });
+    svgBtn(art, 210, 362, 80, "↺ Reset", () => { stopAttn(); attnStep = 0; render(); });
+    txt(305, 380, "step " + attnStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
+    txt(20, 420, "The N×N matrix is the definition; the rest of the page is about not storing it.", { size: 9, fill: C.dim });
+  }
+
+  function softmaxRows(values: number[][]): number[][] {
+    return values.map((row) => {
+      const m = Math.max(...row);
+      const e = row.map((v) => Math.exp(v - m));
+      const sum = e.reduce((a, b) => a + b, 0);
+      return e.map((v) => v / sum);
+    });
+  }
+
+  function outputVals(): number[][] {
+    const p = softmaxRows(SCORES);
+    return p.map((row) => {
+      const out: number[] = [];
+      for (let j = 0; j < D; j++) {
+        let sum = 0;
+        for (let k = 0; k < N; k++) sum += row[k] * VALUES[k][j];
+        out.push(sum);
+      }
+      return out;
+    });
+  }
+
+  function stopAttn(): void {
+    if (attnTimer !== null) {
+      window.clearTimeout(attnTimer);
+      attnTimer = null;
+    }
+    attnPlaying = false;
+  }
+
+  function toggleAttn(): void {
+    if (attnPlaying) {
+      stopAttn();
+      render();
+      return;
+    }
+    if (attnStep >= 3) attnStep = 0;
+    attnPlaying = true;
+    const tick = (): void => {
+      if (!attnPlaying) return;
+      if (attnStep >= 3) {
+        attnPlaying = false;
+        attnTimer = null;
+        render();
+        return;
+      }
+      attnStep += 1;
+      render();
+      attnTimer = window.setTimeout(tick, 700);
+    };
+    attnTimer = window.setTimeout(tick, 420);
+    render();
   }
 
   /* ------------------------------ section 2 ------------------------------ */
 
-  function order(): Array<[number, number]> {
-    return causal ? [[0, 0], [1, 0], [1, 1]] : [[0, 0], [0, 1], [1, 0], [1, 1]];
+  function drawMemory(art: SVGSVGElement): void {
+    art.appendChild(marker("arw-mem", C.dim));
+    const gpuOn = arch === "gpu";
+    const tpuOn = arch === "tpu";
+
+    txt(20, 30, "GPU", { size: 14, weight: 700, fill: gpuOn ? C.accent : C.dim });
+    box(art, 20, 44, 310, 60, "HBM", "80 GB · ~3.35 TB/s (H100)", C.accent, !gpuOn);
+    box(art, 70, 124, 210, 38, "L2 cache", "50 MB · shared by all SMs", C.teal, !gpuOn);
+    art.appendChild(s("rect", { x: 45, y: 184, width: 260, height: 150, rx: 9, fill: C.panel, "fill-opacity": gpuOn ? 0.55 : 0.25, stroke: C.accent, "stroke-opacity": gpuOn ? 0.6 : 0.25 }));
+    txt(58, 204, "streaming multiprocessor", { size: 9, fill: C.dim, weight: 700 });
+    txt(58, 224, "SMEM 228 KB", { size: 8.5, fill: C.fg, mono: true });
+    txt(58, 240, "registers", { size: 8.5, fill: C.fg, mono: true });
+    txt(58, 256, "tensor cores", { size: 8.5, fill: C.accent, mono: true });
+    txt(58, 286, "132 SMs · explicit tiling", { size: 8.5, fill: C.dim });
+    txt(58, 302, "caches decide what stays", { size: 8.5, fill: C.warn });
+    arrow(art, 175, 104, 175, 124, C.dim, "arw-mem");
+    arrow(art, 175, 162, 175, 184, C.dim, "arw-mem");
+    arrow(art, 275, 184, 275, 162, C.dim, "arw-mem");
+    arrow(art, 275, 124, 275, 104, C.dim, "arw-mem");
+
+    txt(390, 30, "TPU", { size: 14, weight: 700, fill: tpuOn ? C.purple : C.dim });
+    box(art, 390, 44, 310, 60, "HBM", "95 GB · ~2.76 TB/s (v5p)", C.purple, !tpuOn);
+    box(art, 430, 124, 230, 38, "CMEM", "on-chip SRAM · compiler-managed", C.teal, !tpuOn);
+    art.appendChild(s("rect", { x: 410, y: 184, width: 120, height: 150, rx: 9, fill: C.panel, "fill-opacity": tpuOn ? 0.55 : 0.25, stroke: C.purple, "stroke-opacity": tpuOn ? 0.6 : 0.25 }));
+    txt(422, 204, "MXU", { size: 9, fill: C.dim, weight: 700 });
+    txt(422, 224, "systolic", { size: 8.5, fill: C.purple, mono: true });
+    txt(422, 240, "array", { size: 8.5, fill: C.purple, mono: true });
+    txt(422, 270, "regular", { size: 8.5, fill: C.dim });
+    txt(422, 286, "matmul", { size: 8.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 550, y: 184, width: 120, height: 150, rx: 9, fill: C.panel, "fill-opacity": tpuOn ? 0.55 : 0.25, stroke: C.purple, "stroke-opacity": tpuOn ? 0.6 : 0.25 }));
+    txt(562, 204, "vector unit", { size: 9, fill: C.dim, weight: 700 });
+    txt(562, 224, "softmax", { size: 8.5, fill: C.fg, mono: true });
+    txt(562, 240, "rescaling", { size: 8.5, fill: C.fg, mono: true });
+    txt(562, 270, "DMA", { size: 8.5, fill: C.teal, mono: true });
+    txt(562, 286, "scheduled", { size: 8.5, fill: C.dim });
+    arrow(art, 545, 104, 545, 124, C.dim, "arw-mem");
+    arrow(art, 545, 162, 545, 184, C.dim, "arw-mem");
+    arrow(art, 470, 184, 470, 162, C.dim, "arw-mem");
+    arrow(art, 470, 124, 470, 104, C.dim, "arw-mem");
+
+    art.appendChild(s("rect", { x: 20, y: 360, width: 680, height: 92, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: arch === "gpu" ? C.accent : C.purple, "stroke-opacity": 0.6 }));
+    const detail = arch === "gpu"
+      ? "GPU: many SMs, each with a small shared-memory scratchpad. You (or the compiler) explicitly stage Q/K/V tiles; caches help but do not replace tiling."
+      : "TPU: a systolic MXU fed from CMEM. The compiler schedules DMA and keeps tiles on chip; the programming model exposes block shapes rather than per-SM caches.";
+    txt(34, 384, arch === "gpu" ? "GPU: explicit scratchpads" : "TPU: compiler-managed staging", { size: 11, weight: 700, fill: arch === "gpu" ? C.accent : C.purple });
+    const detailLines = wrapText(detail, 92);
+    txt(34, 404, detailLines[0] ?? "", { size: 9, fill: C.fg });
+    txt(34, 420, detailLines[1] ?? "", { size: 9, fill: C.fg });
+    txt(34, 438, "Representative H100 / TPU v5p numbers; generations differ.", { size: 8, fill: C.dim });
+
+    svgBtn(art, 20, 470, 90, "GPU", () => { arch = "gpu"; render(); });
+    svgBtn(art, 118, 470, 90, "TPU", () => { arch = "tpu"; render(); });
+    txt(220, 488, "click a target to compare the data path", { size: 8.5, fill: C.dim });
   }
 
-  function tileTotal(): number {
-    return order().length;
+  /* ------------------------------ section 3 ------------------------------ */
+
+  function tileStats(kMax: number): { m: number; l: number; o: number } {
+    let m = -Infinity;
+    let l = 0;
+    let o = 0;
+    for (let j = 0; j <= kMax; j++) {
+      if (causal && j > 0) continue;
+      const score = SCORES[0][j];
+      const mNew = Math.max(m, score);
+      const scale = m === -Infinity ? 0 : Math.exp(m - mNew);
+      const p = Math.exp(score - mNew);
+      l = l * scale + p;
+      o = o * scale + p * VALUES[j][0];
+      m = mNew;
+    }
+    return { m, l, o };
   }
 
   function stopTile(): void {
@@ -335,11 +562,11 @@ const kvFlash: SceneFactory = (host) => {
       render();
       return;
     }
-    if (tileStep >= tileTotal()) tileStep = 0;
+    if (tileStep >= 3) tileStep = 0;
     tilePlaying = true;
     const tick = (): void => {
       if (!tilePlaying) return;
-      if (tileStep >= tileTotal()) {
+      if (tileStep >= 3) {
         tilePlaying = false;
         tileTimer = null;
         render();
@@ -347,385 +574,235 @@ const kvFlash: SceneFactory = (host) => {
       }
       tileStep += 1;
       render();
-      tileTimer = window.setTimeout(tick, 720);
+      tileTimer = window.setTimeout(tick, 850);
     };
     tileTimer = window.setTimeout(tick, 420);
     render();
   }
 
-  function tileStats(cur: [number, number] | null): { m: number; l: number; o: number; row: number; kMax: number } {
-    if (!cur) return { m: -Infinity, l: 0, o: 0, row: 0, kMax: -1 };
-    const row = cur[0] * BLOCK;
-    const kMax = cur[1];
-    let m = -Infinity;
-    let l = 0;
-    let o = 0;
-    for (let t = 0; t <= kMax; t++) {
-      for (let j = t * BLOCK; j < t * BLOCK + BLOCK; j++) {
-        if (causal && j > row) continue;
-        const score = SCORES[row][j];
-        const mNew = Math.max(m, score);
-        const scale = m === -Infinity ? 0 : Math.exp(m - mNew);
-        const p = Math.exp(score - mNew);
-        l = l * scale + p;
-        o = o * scale + p * VALUES[row][j];
-        m = mNew;
-      }
-    }
-    return { m, l, o, row, kMax };
-  }
-
   function drawTiling(art: SVGSVGElement): void {
-    art.appendChild(marker("arw-t", C.dim));
-    const gx = 20;
-    const gy = 44;
-    const cell = 31;
-    const ord = order();
-    const active = tileStep > 0 ? ord[tileStep - 1] : null;
-    const done = ord.slice(0, Math.max(0, tileStep - (active ? 1 : 0)));
+    art.appendChild(marker("arw-tile", C.dim));
+    const kMax = tileStep >= 2 ? 1 : 0;
+    const stats = tileStats(kMax);
 
-    txt(gx, 24, "S = QKᵀ", { size: 11, weight: 700, fill: C.fg, mono: true });
-    txt(gx + 82, 24, "a tile at a time", { size: 9.5, fill: C.dim });
-    txt(gx + 8, 41, "K →", { size: 8.5, fill: C.dim });
-    txt(gx - 10, gy + 18, "Q", { size: 8.5, fill: C.dim, anchor: "end" });
-
-    for (let i = 0; i < N; i++) {
-      for (let j = 0; j < N; j++) {
-        const ti = Math.floor(i / BLOCK);
-        const tj = Math.floor(j / BLOCK);
-        const isActive = active !== null && active[0] === ti && active[1] === tj;
-        const isDone = done.some(([a, b]) => a === ti && b === tj);
-        const masked = causal && j > i;
-        let fill = masked ? C.line : C.panel2;
-        let op = masked ? 0.55 : 0.9;
-        let stroke = C.line;
-        let sw = 1;
-        if (isDone) {
-          fill = C.ok;
-          op = 0.18;
-          stroke = C.ok;
-        }
-        if (isActive) {
-          fill = C.accent;
-          op = 0.28;
-          stroke = C.accent;
-          sw = 2;
-        }
-        art.appendChild(
-          s("rect", {
-            x: gx + j * cell,
-            y: gy + i * cell,
-            width: cell - 2,
-            height: cell - 2,
-            rx: 3,
-            fill,
-            "fill-opacity": op,
-            stroke,
-            "stroke-width": sw,
-          }),
-        );
-        if (!masked) {
-          const v = SCORES[i][j];
-          art.appendChild(
-            txt(gx + j * cell + (cell - 2) / 2, gy + i * cell + 18, v.toFixed(1), {
-              anchor: "middle",
-              size: 7.5,
-              mono: true,
-              fill: isActive ? C.fg : C.dim,
-            }),
-          );
-        }
-      }
-    }
-    for (let k = 0; k <= N; k += BLOCK) {
-      art.appendChild(s("line", { x1: gx + k * cell, y1: gy, x2: gx + k * cell, y2: gy + N * cell, stroke: C.fg, "stroke-opacity": 0.28, "stroke-width": 1.5 }));
-      art.appendChild(s("line", { x1: gx, y1: gy + k * cell, x2: gx + N * cell, y2: gy + k * cell, stroke: C.fg, "stroke-opacity": 0.28, "stroke-width": 1.5 }));
-    }
-
-    const stats = tileStats(active);
-    const px = 310;
-    txt(px, 52, "online softmax", { size: 11, weight: 700, fill: C.fg });
-    txt(px, 70, "one row of the active Q tile", { size: 9, fill: C.dim });
-    txt(px, 96, "m = " + (stats.m === -Infinity ? "−∞" : stats.m.toFixed(2)), { size: 11, fill: C.accent, mono: true });
-    txt(px + 110, 96, "ℓ = " + stats.l.toFixed(2), { size: 11, fill: C.ok, mono: true });
-    txt(px, 120, "O = " + (stats.l > 0 ? (stats.o / stats.l).toFixed(2) : "—"), { size: 11, fill: C.purple, mono: true });
-    txt(px, 142, "row " + stats.row + " · K/V tile " + (stats.kMax < 0 ? "—" : stats.kMax), { size: 8.5, fill: C.dim, mono: true });
-
-    txt(px, 176, "m′ = max(m, rowmax(S))", { size: 9.5, fill: C.fg, mono: true });
-    txt(px, 194, "ℓ′ = e^{m−m′}ℓ + rowsum(e^{S−m′})", { size: 9.5, fill: C.fg, mono: true });
-    txt(px, 212, "O′ = e^{m−m′}O + e^{S−m′}V", { size: 9.5, fill: C.fg, mono: true });
-    txt(px, 236, "No N×N matrix leaves SRAM.", { size: 9, fill: C.ok });
-
-    art.appendChild(s("rect", { x: px, y: 254, width: 390, height: 86, rx: 9, fill: C.panel, "fill-opacity": 0.6, stroke: C.line }));
-    txt(px + 12, 274, "on-chip working set", { size: 9, weight: 700, fill: C.dim });
-    ["Q tile", "K tile", "V tile", "O tile"].forEach((label, i) => {
-      const bx = px + 12 + (i % 2) * 150;
-      const by = 286 + Math.floor(i / 2) * 24;
-      art.appendChild(s("rect", { x: bx, y: by, width: 132, height: 17, rx: 5, fill: i === 3 ? C.purple : C.accent, "fill-opacity": 0.14, stroke: i === 3 ? C.purple : C.accent, "stroke-opacity": 0.7 }));
-      txt(bx + 8, by + 12, label, { size: 8.5, fill: C.fg, mono: true });
+    // HBM
+    art.appendChild(s("rect", { x: 20, y: 44, width: 180, height: 430, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.bad, "stroke-opacity": 0.6 }));
+    txt(34, 68, "HBM", { size: 11, weight: 700, fill: C.bad });
+    txt(34, 84, "Q, K, V, O", { size: 8.5, fill: C.dim, mono: true });
+    const blocks = [
+      { y: 108, label: "Q tile", on: tileStep >= 1, color: C.accent },
+      { y: 162, label: "K0", on: tileStep >= 1, color: C.ok },
+      { y: 206, label: "V0", on: tileStep >= 1, color: C.ok },
+      { y: 250, label: "K1", on: tileStep >= 2, color: C.ok },
+      { y: 294, label: "V1", on: tileStep >= 2, color: C.ok },
+      { y: 338, label: "O tile", on: tileStep >= 3, color: C.purple },
+    ];
+    blocks.forEach((b) => {
+      art.appendChild(s("rect", { x: 34, y: b.y, width: 110, height: 30, rx: 6, fill: b.on ? b.color : C.panel2, "fill-opacity": b.on ? 0.2 : 0.5, stroke: b.on ? b.color : C.line }));
+      txt(44, b.y + 19, b.label, { size: 9, fill: b.on ? C.fg : C.dim, mono: true });
     });
-    txt(px + 310, 274, "SRAM", { size: 8.5, fill: C.dim, anchor: "end" });
+    txt(34, 394, "streamed once", { size: 8.5, fill: C.dim });
+    txt(34, 410, "S/P never written here", { size: 8.5, fill: C.ok });
 
-    svgBtn(art, 310, 370, 82, "▶ Step", () => { stopTile(); if (tileStep < tileTotal()) tileStep += 1; render(); });
-    svgBtn(art, 400, 370, 92, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
-    svgBtn(art, 500, 370, 80, "↺ Reset", () => { stopTile(); tileStep = 0; render(); });
-    svgBtn(art, 588, 370, 100, causal ? "Causal: on" : "Causal: off", () => { stopTile(); causal = !causal; tileStep = Math.min(tileStep, tileTotal()); render(); }, true);
+    // SRAM
+    art.appendChild(s("rect", { x: 240, y: 44, width: 260, height: 430, rx: 10, fill: C.panel, "fill-opacity": 0.6, stroke: C.accent, "stroke-opacity": 0.6 }));
+    txt(254, 68, "SRAM / on-chip", { size: 11, weight: 700, fill: C.accent });
+    txt(254, 84, "Q tile + K/V tile + O accumulator", { size: 8.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 254, y: 100, width: 100, height: 34, rx: 5, fill: C.accent, "fill-opacity": 0.16, stroke: C.accent }));
+    txt(264, 121, "Q tile 4×64", { size: 8.5, fill: C.fg, mono: true });
+    art.appendChild(s("rect", { x: 366, y: 100, width: 120, height: 34, rx: 5, fill: C.ok, "fill-opacity": 0.14, stroke: C.ok }));
+    txt(376, 121, "K/V tile " + (tileStep >= 2 ? "1" : "0"), { size: 8.5, fill: C.fg, mono: true });
 
-    txt(20, 405, "Each block updates the running statistics; the tile is discarded after use.", { size: 8.5, fill: C.dim });
-    txt(20, 423, "Only Q, K, V, O stream through HBM.", { size: 8.5, fill: C.ok });
-    txt(20, 452, "step " + tileStep + " / " + tileTotal(), { size: 9.5, fill: C.dim, mono: true });
-  }
-
-  /* ------------------------------ section 3 ------------------------------ */
-
-  function drawV2(art: SVGSVGElement): void {
-    art.appendChild(marker("arw-v2", C.dim));
-    const gx = 20;
-    const gy = 48;
-    const bw = 64;
-    const bh = 48;
-    const gap = 9;
-    txt(gx, 30, "thread blocks", { size: 9.5, weight: 700, fill: C.dim });
-    txt(gx + 150, 30, mode === "v1" ? "one CTA per (batch, head)" : "Q split across CTAs", { size: 9, fill: mode === "v1" ? C.warn : C.ok });
-
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        const active = mode === "v2" || r === 0;
-        const x = gx + c * (bw + gap);
-        const y = gy + r * (bh + gap);
-        const color = active ? (mode === "v1" ? C.warn : C.accent) : C.dim;
-        art.appendChild(s("rect", { x, y, width: bw, height: bh, rx: 7, fill: active ? color : C.panel, "fill-opacity": active ? 0.16 : 0.4, stroke: color, "stroke-opacity": active ? 0.8 : 0.3 }));
-        art.appendChild(txt(x + 10, y + 19, mode === "v1" ? "batch " + (r + 1) : "Q" + (r + 1), { size: 9, fill: active ? C.fg : C.dim, mono: true, weight: 700 }));
-        art.appendChild(txt(x + 10, y + 35, "head " + (c + 1), { size: 8, fill: C.dim, mono: true }));
+    // S/P tile heatmap
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        const on = tileStep >= 1 && (j < 4);
+        const masked = causal && j > 0;
+        const v = SCORES[i][j];
+        art.appendChild(s("rect", { x: 254 + j * 26, y: 150 + i * 26, width: 24, height: 24, rx: 3, fill: masked ? C.line : on ? C.bad : C.panel2, "fill-opacity": masked ? 0.5 : on ? 0.25 : 0.6, stroke: masked ? C.line : on ? C.bad : C.line }));
+        if (on && !masked) txt(258 + j * 26, 167 + i * 26, v.toFixed(1), { size: 6.5, fill: C.fg, mono: true });
       }
     }
-    txt(gx, 286, mode === "v1" ? "4 CTAs active · occupancy 25–40%" : "16 CTAs active · occupancy 50–73%", { size: 9.5, fill: mode === "v1" ? C.warn : C.ok });
-
-    // small warp fan-out
-    const wx = 330;
-    txt(wx, 52, "within one CTA", { size: 9.5, weight: 700, fill: C.dim });
-    for (let w = 0; w < 4; w++) {
-      const y = 72 + w * 28;
-      art.appendChild(s("rect", { x: wx, y, width: 88, height: 20, rx: 5, fill: C.panel2, stroke: C.line }));
-      txt(wx + 8, y + 13, "warp " + w, { size: 8.5, fill: C.fg, mono: true });
-      art.appendChild(s("line", { x1: wx + 88, y1: y + 10, x2: wx + 130, y2: y + 10, stroke: C.accent, "stroke-opacity": 0.7 }));
-      txt(wx + 138, y + 13, "Q part", { size: 8.5, fill: C.accent });
+    txt(254, 278, "S tile 4×4", { size: 8.5, fill: C.bad, mono: true });
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        const masked = causal && j > 0;
+        const p = masked ? 0 : Math.exp(SCORES[i][j] - Math.max(...SCORES[i]));
+        art.appendChild(s("rect", { x: 366 + j * 26, y: 150 + i * 26, width: 24, height: 24, rx: 3, fill: masked ? C.line : tileStep >= 1 ? C.ok : C.panel2, "fill-opacity": masked ? 0.5 : tileStep >= 1 ? 0.16 + 0.5 * Math.min(1, p) : 0.6, stroke: masked ? C.line : tileStep >= 1 ? C.ok : C.line }));
+      }
     }
-    txt(wx, 200, "warps split Q; K/V stay shared", { size: 9, fill: C.dim });
-    txt(wx, 220, "less shared-memory traffic", { size: 9, fill: C.ok });
+    txt(366, 278, "P tile (softmax)", { size: 8.5, fill: C.ok, mono: true });
 
-    bar(art, 520, 78, 160, mode === "v1" ? 0.32 : 0.62, mode === "v1" ? C.warn : C.ok, "A100 utilization", mode === "v1" ? "25–40%" : "50–73%");
-    txt(520, 132, "v1 → v2", { size: 11, weight: 700, fill: C.fg });
-    txt(520, 152, "≈ 2× faster", { size: 16, fill: C.ok, weight: 700 });
-    txt(520, 174, "up to 225 TFLOPs/s", { size: 9.5, fill: C.fg, mono: true });
-    txt(520, 190, "72% MFU on A100", { size: 9, fill: C.dim });
-    txt(520, 214, "Fewer non-matmul FLOPs,", { size: 8.5, fill: C.dim });
-    txt(520, 228, "more blocks, less SMEM churn.", { size: 8.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 254, y: 298, width: 232, height: 66, rx: 8, fill: C.panel2, "fill-opacity": 0.6, stroke: C.line }));
+    txt(266, 318, "running state", { size: 8.5, weight: 700, fill: C.dim });
+    txt(266, 336, "m = " + (stats.m === -Infinity ? "−∞" : stats.m.toFixed(2)) + "   ℓ = " + stats.l.toFixed(2), { size: 9, fill: C.accent, mono: true });
+    txt(266, 354, "O = " + (stats.l > 0 ? (stats.o / stats.l).toFixed(2) : "—"), { size: 9, fill: C.purple, mono: true });
 
-    svgBtn(art, 20, 320, 90, "v1", () => { mode = "v1"; render(); }, true);
-    svgBtn(art, 118, 320, 90, "v2", () => { mode = "v2"; render(); }, true);
-    txt(220, 338, "toggle the block schedule", { size: 8.5, fill: C.dim });
+    // compute
+    art.appendChild(s("rect", { x: 530, y: 44, width: 170, height: 180, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.purple, "stroke-opacity": 0.6 }));
+    txt(544, 68, "compute", { size: 11, weight: 700, fill: C.purple });
+    txt(544, 92, "S = Q Kᵀ", { size: 9.5, fill: C.fg, mono: true });
+    txt(544, 112, "online softmax", { size: 9.5, fill: C.fg, mono: true });
+    txt(544, 132, "O += P V", { size: 9.5, fill: C.fg, mono: true });
+    txt(544, 160, "tensor cores", { size: 8.5, fill: C.dim });
+    txt(544, 176, "exp / rescale", { size: 8.5, fill: C.dim });
+    txt(544, 200, "no N×N write", { size: 8.5, fill: C.ok });
+
+    arrow(art, 150, 123, 240, 123, C.accent, "arw-tile");
+    arrow(art, 150, 177, 240, 160, C.ok, "arw-tile");
+    arrow(art, 150, 265, 240, 190, C.ok, "arw-tile");
+    arrow(art, 500, 190, 530, 190, C.purple, "arw-tile");
+    arrow(art, 530, 120, 500, 120, C.purple, "arw-tile");
+
+    // transfer ledger
+    art.appendChild(s("rect", { x: 20, y: 490, width: 680, height: 70, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+    const ledger = tileStep === 0
+      ? "waiting: load Q tile, then K/V tiles"
+      : tileStep === 1
+        ? "load Q0 + K0 + V0 → SRAM · compute S0, update m/ℓ/O"
+        : tileStep === 2
+          ? "load K1 + V1 → SRAM · update m/ℓ/O · discard K/V tile"
+          : "write O0 → HBM · next Q tile repeats the loop";
+    txt(34, 512, "transfer ledger", { size: 9, weight: 700, fill: C.dim });
+    txt(34, 532, ledger, { size: 9.5, fill: C.fg, mono: true });
+    txt(34, 550, "S/P HBM writes: 0 B · Q/O tile: 512 B · K/V pair: 1 KB", { size: 8.5, fill: C.ok, mono: true });
+
+    svgBtn(art, 20, 574, 82, "▶ Step", () => { stopTile(); if (tileStep < 3) tileStep += 1; render(); });
+    svgBtn(art, 110, 574, 92, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
+    svgBtn(art, 210, 574, 80, "↺ Reset", () => { stopTile(); tileStep = 0; render(); });
+    svgBtn(art, 298, 574, 100, causal ? "Causal: on" : "Causal: off", () => { stopTile(); causal = !causal; render(); });
+    txt(412, 592, "step " + tileStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
   }
 
   /* ------------------------------ section 4 ------------------------------ */
 
-  function stopPipe(): void {
-    if (pipeTimer !== null) {
-      window.clearTimeout(pipeTimer);
-      pipeTimer = null;
-    }
-  }
+  function drawVariants(art: SVGSVGElement): void {
+    txt(20, 26, "same core, different constraints", { size: 9.5, weight: 700, fill: C.dim });
+    txt(260, 26, "click a variant", { size: 9, fill: C.dim });
 
-  function togglePipe(): void {
-    if (pipeTimer !== null) {
-      stopPipe();
-      render();
-      return;
-    }
-    if (pipeStep >= 12) pipeStep = 0;
-    const tick = (): void => {
-      if (pipeStep >= 12) {
-        stopPipe();
-        render();
-        return;
-      }
-      pipeStep += 1;
-      render();
-      pipeTimer = window.setTimeout(tick, 260);
-    };
-    pipeTimer = window.setTimeout(tick, 260);
-    render();
-  }
-
-  function blockRow(art: SVGSVGElement, y: number, label: string, spans: Array<[number, number, string]>, color: string): void {
-    txt(20, y + 14, label, { size: 8.5, fill: C.dim, mono: true });
-    for (const [start, len, text] of spans) {
-      art.appendChild(s("rect", { x: 100 + start * 48, y, width: len * 48 - 3, height: 22, rx: 5, fill: color, "fill-opacity": 0.2, stroke: color, "stroke-opacity": 0.75 }));
-      txt(100 + start * 48 + 6, y + 15, text, { size: 7.5, fill: C.fg, mono: true });
-    }
-  }
-
-  function drawV3(art: SVGSVGElement): void {
-    txt(20, 26, "iteration timeline", { size: 9.5, weight: 700, fill: C.dim });
-    txt(170, 26, pipeMode === "v2" ? "v2: stages run in sequence" : "v3: producer / consumer overlap", { size: 9, fill: pipeMode === "v2" ? C.warn : C.ok });
-
-    if (pipeMode === "v2") {
-      blockRow(art, 46, "load", [[0, 3, "TMA"], [4, 3, "TMA"], [8, 3, "TMA"]], C.accent);
-      blockRow(art, 82, "MMA", [[3, 2, "WGMMA"], [7, 2, "WGMMA"], [11, 1, "WGMMA"]], C.purple);
-      blockRow(art, 118, "softmax", [[5, 2, "exp"], [9, 2, "exp"]], C.warn);
-      blockRow(art, 154, "correction", [[6, 1, "rescale"], [10, 1, "rescale"]], C.bad);
-    } else {
-      blockRow(art, 46, "load", [[0, 2, "TMA"], [3, 2, "TMA"], [6, 2, "TMA"], [9, 2, "TMA"]], C.accent);
-      blockRow(art, 82, "MMA", [[2, 2, "WGMMA"], [5, 2, "WGMMA"], [8, 2, "WGMMA"], [11, 1, "WGMMA"]], C.purple);
-      blockRow(art, 118, "softmax", [[3, 2, "exp"], [6, 2, "exp"], [9, 2, "exp"]], C.warn);
-      blockRow(art, 154, "correction", [[4, 1, "rescale"], [7, 1, "rescale"], [10, 1, "rescale"]], C.bad);
-      txt(100, 196, "producer warps keep TMA busy; consumer warps never wait on a full tile.", { size: 8.5, fill: C.ok });
-    }
-
-    if (pipeStep > 0) {
-      const x = 100 + (pipeStep % 12) * 48;
-      art.appendChild(s("line", { x1: x, y1: 38, x2: x, y2: 190, stroke: C.fg, "stroke-opacity": 0.55, "stroke-dasharray": "3 3" }));
-    }
-
-    const facts: Array<[string, string]> = [
-      ["1.5–2×", "faster than v2"],
-      ["740 TFLOPs/s", "FP16 · 75% of H100"],
-      ["~1.2 PFLOPs/s", "FP8 · 2.6× lower error"],
-    ];
-    facts.forEach(([big, small], i) => {
-      const x = 20 + i * 227;
-      art.appendChild(s("rect", { x, y: 206, width: 215, height: 56, rx: 9, fill: C.panel, "fill-opacity": 0.6, stroke: C.line }));
-      txt(x + 12, 228, big, { size: 13, weight: 700, fill: C.ok, mono: true });
-      txt(x + 12, 246, small, { size: 8.5, fill: C.dim });
+    VARIANTS.forEach((v, i) => {
+      const x = 20 + (i % 5) * 136;
+      const y = 48 + Math.floor(i / 5) * 104;
+      const on = i === variant;
+      const g = s("g", { cursor: "pointer" });
+      g.addEventListener("click", () => { variant = i; render(); });
+      g.appendChild(s("rect", { x, y, width: 126, height: 88, rx: 8, fill: on ? v.color : C.panel, "fill-opacity": on ? 0.14 : 0.55, stroke: on ? v.color : C.line, "stroke-width": on ? 1.6 : 1 }));
+      g.appendChild(txt(x + 10, y + 20, v.title.slice(0, 15), { size: 9.5, weight: 700, fill: on ? v.color : C.fg }));
+      const words = v.title.split(" ");
+      if (words.length > 2) g.appendChild(txt(x + 10, y + 36, words.slice(2).join(" "), { size: 8, fill: C.dim }));
+      g.appendChild(txt(x + 10, y + 74, on ? "selected" : "click", { size: 8, fill: on ? v.color : C.dim, mono: true }));
+      art.appendChild(g);
     });
 
-    svgBtn(art, 20, 290, 90, "v2", () => { stopPipe(); pipeMode = "v2"; pipeStep = 0; render(); }, true);
-    svgBtn(art, 118, 290, 90, "v3", () => { stopPipe(); pipeMode = "v3"; pipeStep = 0; render(); }, true);
-    svgBtn(art, 216, 290, 96, pipeTimer !== null ? "⏸ Pause" : "▶ Play", () => { togglePipe(); }, true);
-    svgBtn(art, 320, 290, 80, "↺ Reset", () => { stopPipe(); pipeStep = 0; render(); }, true);
-    txt(410, 308, "playhead moves one pipeline slot at a time", { size: 8.5, fill: C.dim });
-    txt(20, 350, "TMA: bulk async copy · WGMMA: warp-group matrix multiply · softmax: exp + rescale", { size: 8.5, fill: C.dim });
+    const v = VARIANTS[variant];
+    art.appendChild(s("rect", { x: 20, y: 268, width: 680, height: 110, rx: 10, fill: C.panel, "fill-opacity": 0.6, stroke: v.color, "stroke-opacity": 0.65 }));
+    txt(34, 292, v.title, { size: 12, weight: 700, fill: v.color });
+    const words = v.detail.split(" ");
+    const line1 = words.slice(0, 14).join(" ");
+    const line2 = words.slice(14, 28).join(" ");
+    const line3 = words.slice(28).join(" ");
+    txt(34, 314, line1, { size: 9.5, fill: C.fg });
+    txt(34, 332, line2, { size: 9.5, fill: C.fg });
+    txt(34, 350, line3, { size: 9.5, fill: C.fg });
+    txt(34, 368, "The tiled online-softmax recurrence does not change.", { size: 8.5, fill: C.ok });
+
+    txt(20, 410, "Algorithmic variants", { size: 8.5, weight: 700, fill: C.dim });
+    txt(20, 426, "causal · sliding window · block-sparse · GQA/MQA · varlen/paged", { size: 8.5, fill: C.dim, mono: true });
+    txt(20, 446, "Platform variants", { size: 8.5, weight: 700, fill: C.dim });
+    txt(20, 462, "CUDA/CUTLASS · Triton · ROCm/CK · TPU/Pallas · inference engines", { size: 8.5, fill: C.dim, mono: true });
+    txt(20, 486, "Precision variants", { size: 8.5, weight: 700, fill: C.dim });
+    txt(20, 502, "FP16/BF16 · FP8 · FP4/mixed · higher-precision softmax", { size: 8.5, fill: C.dim, mono: true });
+    txt(430, 486, "Generation sweep", { size: 8.5, weight: 700, fill: C.dim });
+    txt(430, 502, "v1 IO-aware → v2 partitioning → v3 Hopper → v4 Blackwell", { size: 8.5, fill: C.dim, mono: true });
   }
 
   /* ------------------------------ section 5 ------------------------------ */
 
-  function drawV4(art: SVGSVGElement): void {
-    art.appendChild(marker("arw-v4", C.teal));
-    txt(20, 28, "Blackwell: asymmetric scaling", { size: 9.5, weight: 700, fill: C.dim });
-    bar(art, 20, 58, 220, 1, C.accent, "tensor-core throughput", "2×");
-    bar(art, 20, 110, 220, 0.5, C.dim, "shared-memory bandwidth", "1×");
-    bar(art, 20, 162, 220, 0.5, C.bad, "exp / softmax units", "1×");
-    txt(20, 214, "The matmuls got faster; the softmax path did not.", { size: 9, fill: C.dim });
-    txt(20, 230, "v4 moves work off the slow units.", { size: 9, fill: C.ok });
-
-    txt(280, 56, "v4 techniques", { size: 9.5, weight: 700, fill: C.dim });
-    const chips = ["fully async MMA", "larger tiles", "software exp", "conditional rescale", "tensor memory", "2-CTA MMA"];
-    chips.forEach((chip, i) => {
-      const x = 280;
-      const y = 72 + i * 28;
-      art.appendChild(s("rect", { x, y, width: 180, height: 21, rx: 5, fill: C.purple, "fill-opacity": 0.12, stroke: C.purple, "stroke-opacity": 0.55 }));
-      txt(x + 8, y + 14, chip, { size: 8.5, fill: C.fg, mono: true });
+  function drawCode(art: SVGSVGElement): void {
+    txt(20, 26, "same recurrence, four idioms", { size: 9.5, weight: 700, fill: C.dim });
+    const platforms = [
+      { label: "PyTorch", sub: "dispatch", color: C.accent, x: 20 },
+      { label: "CUDA / CUTLASS", sub: "TMA · WGMMA", color: C.ok, x: 190 },
+      { label: "Triton", sub: "tl.dot", color: C.purple, x: 360 },
+      { label: "TPU / Pallas", sub: "MXU · CMEM", color: C.teal, x: 530 },
+    ];
+    platforms.forEach((p, i) => {
+      const on = i === codeTab;
+      art.appendChild(s("rect", { x: p.x, y: 48, width: 150, height: 74, rx: 8, fill: p.color, "fill-opacity": on ? 0.14 : 0.55, stroke: p.color, "stroke-opacity": on ? 0.9 : 0.4, "stroke-width": on ? 1.8 : 1 }));
+      art.appendChild(txt(p.x + 12, 72, p.label, { size: 10.5, weight: 700, fill: p.color }));
+      art.appendChild(txt(p.x + 12, 92, p.sub, { size: 8.5, fill: C.dim, mono: true }));
+      art.appendChild(txt(p.x + 12, 110, "tile + softmax", { size: 8, fill: C.fg }));
     });
-    // 2-CTA sketch
-    art.appendChild(s("rect", { x: 280, y: 250, width: 90, height: 42, rx: 7, fill: C.panel, stroke: C.teal }));
-    art.appendChild(txt(325, 268, "CTA 0", { anchor: "middle", size: 9, fill: C.teal, weight: 700 }));
-    art.appendChild(txt(325, 283, "TMEM", { anchor: "middle", size: 8, fill: C.dim, mono: true }));
-    art.appendChild(s("rect", { x: 390, y: 250, width: 90, height: 42, rx: 7, fill: C.panel, stroke: C.teal }));
-    art.appendChild(txt(435, 268, "CTA 1", { anchor: "middle", size: 9, fill: C.teal, weight: 700 }));
-    art.appendChild(txt(435, 283, "TMEM", { anchor: "middle", size: 8, fill: C.dim, mono: true }));
-    art.appendChild(s("line", { x1: 370, y1: 271, x2: 390, y2: 271, stroke: C.teal, "stroke-width": 1.5, "marker-end": "url(#arw-v4)" }));
-    txt(380, 244, "2-CTA MMA", { anchor: "middle", size: 8, fill: C.teal });
-
-    txt(540, 56, "reported on B200 / GB200", { size: 9.5, weight: 700, fill: C.dim });
-    txt(540, 82, "1.3×", { size: 18, fill: C.ok, weight: 700 });
-    txt(595, 82, "vs cuDNN 9.13", { size: 9, fill: C.dim });
-    txt(540, 108, "2.7×", { size: 18, fill: C.ok, weight: 700 });
-    txt(595, 108, "vs Triton", { size: 9, fill: C.dim });
-    txt(540, 134, "1613 TFLOPs/s", { size: 11, fill: C.fg, mono: true });
-    txt(540, 150, "BF16 · 71% utilization", { size: 8.5, fill: C.dim });
-    txt(540, 174, "20–30× faster compile", { size: 8.5, fill: C.purple });
-    txt(540, 188, "CuTe-DSL in Python", { size: 8.5, fill: C.dim });
-
-    txt(20, 330, "v3 → v4 is not a bigger tile alone: it is a different balance of GEMM, softmax, and data movement.", { size: 9, fill: C.fg });
-    txt(20, 348, "The kernel keeps the same exact online-softmax recurrence.", { size: 9, fill: C.ok });
+    art.appendChild(s("rect", { x: 250, y: 150, width: 220, height: 40, rx: 20, fill: C.panel2, stroke: C.accent, "stroke-opacity": 0.6 }));
+    txt(360, 175, "same online-softmax loop", { anchor: "middle", size: 10, fill: C.accent, weight: 700 });
+    [95, 265, 435, 605].forEach((x) => arrow(art, x, 122, x, 150, C.dim, "arw-code"));
+    txt(20, 220, "The platform decides how tiles move and which matrix-multiply primitive runs.", { size: 9, fill: C.dim });
+    txt(20, 238, "The loop below is the invariant; the tabs show the same steps in each language.", { size: 9, fill: C.ok });
+    art.appendChild(marker("arw-code", C.dim));
   }
 
-  /* ------------------------------ section 6 ------------------------------ */
+  /* ------------------------------ code panel ------------------------------ */
 
-  const GENS = [
-    {
-      v: "v1",
-      year: "2022",
-      hw: "A100",
-      idea: "IO-aware tiling",
-      detail: "Tiling + online softmax + recomputation. Exact attention without an N×N matrix in HBM. 2–4× over optimized baselines.",
-      color: C.accent,
-    },
-    {
-      v: "v2",
-      year: "2023",
-      hw: "A100",
-      idea: "Work partitioning",
-      detail: "Parallelize over sequence length; split warps; reduce non-matmul FLOPs. ≈2× over v1, 50–73% of A100 peak.",
-      color: C.ok,
-    },
-    {
-      v: "v3",
-      year: "2024",
-      hw: "H100",
-      idea: "Asynchrony + FP8",
-      detail: "TMA, WGMMA, warp specialization, interleaved matmul/softmax. 1.5–2× over v2, 75% of H100 peak; FP8 near 1.2 PFLOPs/s.",
-      color: C.purple,
-    },
-    {
-      v: "v4",
-      year: "2026",
-      hw: "B200",
-      idea: "Blackwell co-design",
-      detail: "Fully async MMA, larger tiles, TMEM, 2-CTA MMA, emulated exp. 1.3× over cuDNN, 2.7× over Triton, 71% of B200 peak.",
-      color: C.teal,
-    },
-  ];
+  const codeSection = secEls[4].section;
+  const codeWrap = document.createElement("div");
+  codeWrap.className = "ill-prose";
+  const tabs = document.createElement("div");
+  tabs.style.display = "flex";
+  tabs.style.flexWrap = "wrap";
+  tabs.style.gap = "6px";
+  tabs.style.margin = "14px 0 8px";
+  const codeCard = document.createElement("div");
+  codeCard.className = "code-card";
+  const codeHead = document.createElement("div");
+  codeHead.className = "code-head";
+  const codeDots = document.createElement("div");
+  codeDots.className = "code-dots";
+  codeDots.innerHTML = "<i></i><i></i><i></i>";
+  const codeTitle = document.createElement("span");
+  codeTitle.className = "code-title";
+  const codeLang = document.createElement("span");
+  codeLang.className = "code-lang";
+  codeHead.append(codeDots, codeTitle, codeLang);
+  const pre = document.createElement("pre");
+  pre.style.padding = "12px 16px";
+  const codeEl = document.createElement("code");
+  codeEl.style.display = "block";
+  pre.appendChild(codeEl);
+  codeCard.append(codeHead, pre);
+  codeWrap.append(tabs, codeCard);
+  codeSection.appendChild(codeWrap);
 
-  function drawTimeline(art: SVGSVGElement): void {
-    art.appendChild(marker("arw-gen", C.dim));
-    art.appendChild(s("line", { x1: 30, y1: 38, x2: 690, y2: 38, stroke: C.line, "stroke-width": 2 }));
-    GENS.forEach((g, i) => {
-      const x = 20 + i * 172;
-      const on = i === gen;
-      const y = 54;
-      const w = 158;
-      const h = 188;
-      const gEl = s("g", { cursor: "pointer" });
-      gEl.addEventListener("click", () => { gen = i; render(); });
-      gEl.appendChild(s("rect", { x, y, width: w, height: h, rx: 10, fill: on ? g.color : C.panel, "fill-opacity": on ? 0.14 : 0.55, stroke: on ? g.color : C.line, "stroke-width": on ? 1.8 : 1 }));
-      gEl.appendChild(txt(x + 12, y + 24, g.v, { size: 16, weight: 700, fill: on ? g.color : C.fg }));
-      gEl.appendChild(txt(x + w - 12, y + 24, g.year, { size: 9, anchor: "end", fill: C.dim, mono: true }));
-      gEl.appendChild(txt(x + 12, y + 48, g.hw, { size: 8.5, fill: C.dim, mono: true }));
-      gEl.appendChild(txt(x + 12, y + 78, g.idea, { size: 9.5, fill: on ? C.fg : C.dim, weight: on ? 700 : 400 }));
-      for (let k = 0; k < 3; k++) {
-        gEl.appendChild(s("rect", { x: x + 12, y: y + 96 + k * 20, width: w - 24 - k * 18, height: 7, rx: 3, fill: g.color, "fill-opacity": 0.18 + k * 0.12 }));
-      }
-      gEl.appendChild(txt(x + 12, y + h - 12, on ? "selected" : "click", { size: 8, fill: on ? g.color : C.dim, mono: true }));
-      art.appendChild(gEl);
-    });
-
-    const d = GENS[gen];
-    art.appendChild(s("rect", { x: 20, y: 264, width: 680, height: 92, rx: 10, fill: C.panel, "fill-opacity": 0.65, stroke: d.color, "stroke-opacity": 0.6 }));
-    art.appendChild(txt(34, 288, d.v + " · " + d.hw + " · " + d.year, { size: 11, weight: 700, fill: d.color }));
-    art.appendChild(txt(34, 310, d.detail.slice(0, 96), { size: 9.5, fill: C.fg }));
-    art.appendChild(txt(34, 328, d.detail.slice(96), { size: 9.5, fill: C.fg }));
-    art.appendChild(txt(34, 346, "Same loop: tile, online softmax, exact attention.", { size: 8.5, fill: C.dim }));
-    txt(20, 386, "Click a generation to compare the changes.", { size: 8.5, fill: C.dim });
-
-    svgBtn(art, 20, 400, 74, "v1", () => { gen = 0; render(); });
-    svgBtn(art, 102, 400, 74, "v2", () => { gen = 1; render(); });
-    svgBtn(art, 184, 400, 74, "v3", () => { gen = 2; render(); });
-    svgBtn(art, 266, 400, 74, "v4", () => { gen = 3; render(); });
+  const tabEls: HTMLButtonElement[] = [];
+  function setCode(i: number): void {
+    codeTab = i;
+    tabEls.forEach((b, k) => b.classList.toggle("on", k === i));
+    codeTitle.textContent = CODE[i].label;
+    codeLang.textContent = CODE[i].lang;
+    codeEl.textContent = CODE[i].lines.join("\n");
+    noteEl.textContent = CODE[i].note;
   }
+  const noteEl = document.createElement("p");
+  noteEl.className = "ill-refs";
+  codeWrap.appendChild(noteEl);
+
+  CODE.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ill-stage";
+    b.innerHTML = '<span class="n">' + (i + 1) + "</span>" + c.label;
+    b.addEventListener("click", () => { setCode(i); render(); });
+    tabs.appendChild(b);
+    tabEls.push(b);
+  });
+  setCode(0);
 
   render();
-  return { destroy(): void { stopTile(); stopPipe(); } };
+  return {
+    destroy(): void {
+      stopAttn();
+      stopTile();
+    },
+  };
 };
 
-export default kvFlash;
+export default flash;

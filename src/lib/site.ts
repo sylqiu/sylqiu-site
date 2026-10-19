@@ -266,9 +266,9 @@ export interface Illustration {
 export const illustrations: Illustration[] = [
   {
     id: 'flash-attention',
-    title: 'FlashAttention: The Evolution of the Attention Kernel',
+    title: 'FlashAttention: From Attention to Kernels',
     blurb:
-      'Why attention is memory-bound, how tiling and online softmax avoid the N×N matrix, and what changed from FlashAttention v1 to v4 — work partitioning, Hopper asynchrony, and Blackwell co-design.',
+      'Attention by definition, the GPU and TPU memory hierarchies, tiling and online softmax with a focus on data movement, the variant landscape, and kernel code for PyTorch, CUDA, Triton, and TPU/Pallas.',
     scene: 'flash-attention',
   },
   {
