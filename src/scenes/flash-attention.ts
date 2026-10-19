@@ -155,8 +155,8 @@ const SECS: Sec[] = [
     id: "memory",
     title: "GPU and TPU memory architectures",
     blurb:
-      "The same math runs on very different memory hierarchies. A GPU gives each SM a small, explicitly managed shared memory and relies on caches; a TPU gives the compiler a large on-chip CMEM and a systolic MXU. FlashAttention is a schedule for that hierarchy.",
-    h: 520,
+      "The CPU orchestrates; the GPU streams HBM through L2 into per-SM shared memory, while the TPU streams HBM into compiler-managed CMEM for its MXU. Compare the bandwidth ladder and compute peaks: attention usually waits on HBM. Unified memory removes copies, but not the HBM wall.",
+    h: 640,
   },
   {
     id: "tiling",
@@ -654,54 +654,85 @@ const flash: SceneFactory = (host) => {
     const gpuOn = arch === "gpu";
     const tpuOn = arch === "tpu";
 
-    txt(20, 30, "GPU", { size: 14, weight: 700, fill: gpuOn ? C.accent : C.dim });
-    box(art, 20, 44, 310, 60, "HBM", "80 GB · ~3.35 TB/s (H100)", C.accent, !gpuOn);
-    box(art, 70, 124, 210, 38, "L2 cache", "50 MB · shared by all SMs", C.teal, !gpuOn);
-    art.appendChild(s("rect", { x: 45, y: 184, width: 260, height: 150, rx: 9, fill: C.panel, "fill-opacity": gpuOn ? 0.55 : 0.25, stroke: C.accent, "stroke-opacity": gpuOn ? 0.6 : 0.25 }));
-    txt(58, 204, "streaming multiprocessor", { size: 9, fill: C.dim, weight: 700 });
-    txt(58, 224, "SMEM 228 KB", { size: 8.5, fill: C.fg, mono: true });
-    txt(58, 240, "registers", { size: 8.5, fill: C.fg, mono: true });
-    txt(58, 256, "tensor cores", { size: 8.5, fill: C.accent, mono: true });
-    txt(58, 286, "132 SMs · explicit tiling", { size: 8.5, fill: C.dim });
-    txt(58, 302, "caches decide what stays", { size: 8.5, fill: C.warn });
-    arrow(art, 175, 104, 175, 124, C.dim, "arw-mem");
-    arrow(art, 175, 162, 175, 184, C.dim, "arw-mem");
-    arrow(art, 275, 184, 275, 162, C.dim, "arw-mem");
-    arrow(art, 275, 124, 275, 104, C.dim, "arw-mem");
+    const memBox = (x: number, y: number, w: number, h: number, title: string, sub: string, color: string, dim = false): void => {
+      art.appendChild(s("rect", { x, y, width: w, height: h, rx: 7, fill: C.panel, "fill-opacity": dim ? 0.3 : 0.7, stroke: color, "stroke-opacity": dim ? 0.28 : 0.7 }));
+      txt(x + 12, y + 16, title, { size: 10, weight: 700, fill: dim ? C.dim : color });
+      txt(x + 12, y + h - 8, sub, { size: 8, fill: C.dim });
+    };
+    const speedBar = (x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void => {
+      txt(x, y + 8, label, { size: 8.5, fill: C.dim });
+      art.appendChild(s("rect", { x, y: y + 12, width: w, height: 9, rx: 4.5, fill: C.panel2, stroke: C.line }));
+      art.appendChild(s("rect", { x, y: y + 12, width: Math.max(2, w * Math.min(1, frac)), height: 9, rx: 4.5, fill: color, "fill-opacity": 0.85 }));
+      txt(x + w, y + 8, value, { anchor: "end", size: 8.5, fill: color, mono: true });
+    };
 
-    txt(390, 30, "TPU", { size: 14, weight: 700, fill: tpuOn ? C.purple : C.dim });
-    box(art, 390, 44, 310, 60, "HBM", "95 GB · ~2.76 TB/s (v5p)", C.purple, !tpuOn);
-    box(art, 430, 124, 230, 38, "CMEM", "on-chip SRAM · compiler-managed", C.teal, !tpuOn);
-    art.appendChild(s("rect", { x: 410, y: 184, width: 120, height: 150, rx: 9, fill: C.panel, "fill-opacity": tpuOn ? 0.55 : 0.25, stroke: C.purple, "stroke-opacity": tpuOn ? 0.6 : 0.25 }));
-    txt(422, 204, "MXU", { size: 9, fill: C.dim, weight: 700 });
-    txt(422, 224, "systolic", { size: 8.5, fill: C.purple, mono: true });
-    txt(422, 240, "array", { size: 8.5, fill: C.purple, mono: true });
-    txt(422, 270, "regular", { size: 8.5, fill: C.dim });
-    txt(422, 286, "matmul", { size: 8.5, fill: C.dim });
-    art.appendChild(s("rect", { x: 550, y: 184, width: 120, height: 150, rx: 9, fill: C.panel, "fill-opacity": tpuOn ? 0.55 : 0.25, stroke: C.purple, "stroke-opacity": tpuOn ? 0.6 : 0.25 }));
-    txt(562, 204, "vector unit", { size: 9, fill: C.dim, weight: 700 });
-    txt(562, 224, "softmax", { size: 8.5, fill: C.fg, mono: true });
-    txt(562, 240, "rescaling", { size: 8.5, fill: C.fg, mono: true });
-    txt(562, 270, "DMA", { size: 8.5, fill: C.teal, mono: true });
-    txt(562, 286, "scheduled", { size: 8.5, fill: C.dim });
-    arrow(art, 545, 104, 545, 124, C.dim, "arw-mem");
-    arrow(art, 545, 162, 545, 184, C.dim, "arw-mem");
-    arrow(art, 470, 184, 470, 162, C.dim, "arw-mem");
-    arrow(art, 470, 124, 470, 104, C.dim, "arw-mem");
+    // Host control plane.
+    art.appendChild(s("rect", { x: 20, y: 20, width: 680, height: 52, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+    txt(34, 40, "CPU host", { size: 11, weight: 700, fill: C.fg });
+    txt(34, 56, "launches kernels · schedules DMA · owns page tables / coherence", { size: 8.5, fill: C.dim });
+    txt(688, 40, "control plane", { size: 8, fill: C.dim, anchor: "end" });
+    arrow(art, 185, 72, 185, 126, C.dim, "arw-mem");
+    arrow(art, 535, 72, 535, 126, C.dim, "arw-mem");
+    txt(195, 94, "launch / DMA", { size: 8, fill: C.dim });
+    txt(545, 94, "launch / DMA", { size: 8, fill: C.dim });
 
-    art.appendChild(s("rect", { x: 20, y: 360, width: 680, height: 92, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: arch === "gpu" ? C.accent : C.purple, "stroke-opacity": 0.6 }));
-    const detail = arch === "gpu"
-      ? "GPU: many SMs, each with a small shared-memory scratchpad. You (or the compiler) explicitly stage Q/K/V tiles; caches help but do not replace tiling."
-      : "TPU: a systolic MXU fed from CMEM. The compiler schedules DMA and keeps tiles on chip; the programming model exposes block shapes rather than per-SM caches.";
-    txt(34, 384, arch === "gpu" ? "GPU: explicit scratchpads" : "TPU: compiler-managed staging", { size: 11, weight: 700, fill: arch === "gpu" ? C.accent : C.purple });
-    const detailLines = wrapText(detail, 92);
-    txt(34, 404, detailLines[0] ?? "", { size: 9, fill: C.fg });
-    txt(34, 420, detailLines[1] ?? "", { size: 9, fill: C.fg });
-    txt(34, 438, "Representative H100 / TPU v5p numbers; generations differ.", { size: 8, fill: C.dim });
+    // GPU hierarchy.
+    art.appendChild(s("rect", { x: 20, y: 100, width: 330, height: 240, rx: 10, fill: C.panel, "fill-opacity": gpuOn ? 0.4 : 0.18, stroke: C.accent, "stroke-opacity": gpuOn ? 0.55 : 0.2 }));
+    txt(34, 118, "GPU", { size: 13, weight: 700, fill: gpuOn ? C.accent : C.dim });
+    memBox(35, 128, 300, 42, "HBM3", "80 GB · 3.35 TB/s", C.accent, !gpuOn);
+    memBox(95, 188, 180, 32, "L2 cache", "50 MB · shared by SMs", C.teal, !gpuOn);
+    art.appendChild(s("rect", { x: 35, y: 238, width: 300, height: 86, rx: 8, fill: C.panel, "fill-opacity": gpuOn ? 0.55 : 0.25, stroke: C.accent, "stroke-opacity": gpuOn ? 0.5 : 0.2 }));
+    txt(47, 256, "SM · streaming multiprocessor", { size: 9, weight: 700, fill: C.dim });
+    txt(47, 274, "SMEM 228 KB · tensor cores", { size: 8.5, fill: C.fg, mono: true });
+    txt(47, 292, "explicit Q/K/V tiles", { size: 8.5, fill: C.fg });
+    txt(47, 308, "caches help; tiling decides", { size: 8.5, fill: C.warn });
+    arrow(art, 185, 170, 185, 188, C.dim, "arw-mem");
+    arrow(art, 185, 220, 185, 238, C.dim, "arw-mem");
+    arrow(art, 210, 238, 210, 220, C.dim, "arw-mem");
+    arrow(art, 210, 188, 210, 170, C.dim, "arw-mem");
+    txt(220, 182, "3.35 TB/s", { size: 8, fill: C.accent, mono: true });
+    txt(220, 232, "on-chip", { size: 8, fill: C.dim });
 
-    svgBtn(art, 20, 470, 90, "GPU", () => { arch = "gpu"; render(); });
-    svgBtn(art, 118, 470, 90, "TPU", () => { arch = "tpu"; render(); });
-    txt(220, 488, "click a target to compare the data path", { size: 8.5, fill: C.dim });
+    // TPU hierarchy.
+    art.appendChild(s("rect", { x: 370, y: 100, width: 330, height: 240, rx: 10, fill: C.panel, "fill-opacity": tpuOn ? 0.4 : 0.18, stroke: C.purple, "stroke-opacity": tpuOn ? 0.55 : 0.2 }));
+    txt(384, 118, "TPU", { size: 13, weight: 700, fill: tpuOn ? C.purple : C.dim });
+    memBox(385, 128, 300, 42, "HBM", "95 GB · 2.76 TB/s", C.purple, !tpuOn);
+    memBox(445, 188, 180, 32, "CMEM", "compiler-managed SRAM", C.teal, !tpuOn);
+    art.appendChild(s("rect", { x: 385, y: 238, width: 300, height: 86, rx: 8, fill: C.panel, "fill-opacity": tpuOn ? 0.55 : 0.25, stroke: C.purple, "stroke-opacity": tpuOn ? 0.5 : 0.2 }));
+    txt(397, 256, "MXU + vector unit", { size: 9, weight: 700, fill: C.dim });
+    txt(397, 274, "systolic array · softmax", { size: 8.5, fill: C.purple, mono: true });
+    txt(397, 292, "compiler-scheduled DMA", { size: 8.5, fill: C.fg });
+    txt(397, 308, "block shapes, not caches", { size: 8.5, fill: C.warn });
+    arrow(art, 535, 170, 535, 188, C.dim, "arw-mem");
+    arrow(art, 535, 220, 535, 238, C.dim, "arw-mem");
+    arrow(art, 560, 238, 560, 220, C.dim, "arw-mem");
+    arrow(art, 560, 188, 560, 170, C.dim, "arw-mem");
+    txt(570, 182, "2.76 TB/s", { size: 8, fill: C.purple, mono: true });
+    txt(570, 232, "on-chip", { size: 8, fill: C.dim });
+
+    // Bandwidth ladder and compute peaks.
+    art.appendChild(s("rect", { x: 20, y: 356, width: 680, height: 150, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+    txt(34, 378, "data movement vs compute", { size: 11, weight: 700, fill: C.fg });
+    speedBar(34, 390, 300, 1, C.accent, "HBM3 · GPU", "3.35 TB/s");
+    speedBar(34, 422, 300, 0.27, C.teal, "NVLink · host ↔ GPU", "0.9 TB/s");
+    speedBar(34, 454, 300, 0.02, C.dim, "PCIe · host ↔ GPU", "64 GB/s");
+    txt(34, 492, "HBM on TPU: 2.76 TB/s · widths are schematic", { size: 8, fill: C.dim });
+
+    txt(400, 378, "compute · peak", { size: 9, weight: 700, fill: C.dim });
+    speedBar(400, 390, 260, 1, C.ok, "GPU tensor", "~1 PFLOPS sparse");
+    speedBar(400, 422, 260, 0.46, C.purple, "TPU MXU", "459 TFLOPS BF16");
+    txt(400, 456, "math is fast; feeding it is not.", { size: 9, fill: C.bad });
+    txt(400, 476, "bottleneck: HBM bandwidth", { size: 9, fill: C.bad, weight: 700 });
+
+    // Unified memory case.
+    art.appendChild(s("rect", { x: 20, y: 520, width: 680, height: 70, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.45 }));
+    txt(34, 540, "Unified memory · what it buys", { size: 10.5, weight: 700, fill: C.teal });
+    txt(34, 558, "one address space · no explicit H2D/D2H copies", { size: 8.5, fill: C.fg });
+    txt(34, 574, "same HBM bandwidth; capacity and coherence are the trade-offs", { size: 8.5, fill: C.warn });
+
+    svgBtn(art, 20, 604, 90, "GPU", () => { arch = "gpu"; render(); });
+    svgBtn(art, 118, 604, 90, "TPU", () => { arch = "tpu"; render(); });
+    txt(220, 622, "click a target to compare the data path", { size: 8.5, fill: C.dim });
   }
 
   /* ------------------------------ section 3 ------------------------------ */
