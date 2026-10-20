@@ -98,6 +98,7 @@ function viewHome() {
 /* ----------------------------- illustrations ------------------------------ */
 
 let illustrationHost: SceneHost | null = null;
+let lastRoutedHash = "";
 
 function viewIllustrations() {
   // Index page: one row per illustration, each linking to its own page.
@@ -605,20 +606,31 @@ async function viewLesson(id: string) {
 
 function teardown() {
   for (const [section, handle] of activeScenes) {
-    handle.narration.stop();
-    handle.host?.destroy();
-    section.replaceWith(section.cloneNode(false));
+    try {
+      handle.narration.stop();
+      handle.host?.destroy();
+      section.replaceWith(section.cloneNode(false));
+    } catch (error) {
+      console.warn("scene teardown failed", error);
+    }
   }
   activeScenes.clear();
-  illustrationHost?.destroy();
-  illustrationHost = null;
+  try {
+    illustrationHost?.destroy();
+  } catch (error) {
+    console.warn("illustration teardown failed", error);
+  } finally {
+    illustrationHost = null;
+  }
 }
 
 function route() {
   const hash = location.hash || '#/';
+  window.scrollTo(0, 0);
+  if (hash === lastRoutedHash) return;
+  lastRoutedHash = hash;
   teardown();
   markActiveNav(hash);
-  window.scrollTo(0, 0);
 
   const post = hash.match(/^#\/blog\/(.+)$/);
   if (post) return void viewPost(post[1]);
@@ -651,8 +663,12 @@ async function boot() {
     const href = anchor.getAttribute('href');
     if (!href) return;
     event.preventDefault();
-    if (location.hash === href) route();
-    else location.hash = href;
+    if (location.hash === href) {
+      route();
+    } else {
+      location.hash = href;
+      route();
+    }
   });
   window.addEventListener('hashchange', route);
   route();
