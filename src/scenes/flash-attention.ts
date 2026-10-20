@@ -162,8 +162,8 @@ const SECS: Sec[] = [
     id: "naive",
     title: "Naive attention: the obvious trace",
     blurb:
-      "The textbook implementation launches a sequence of kernels and materializes the N×N score and probability matrices in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory bill that motivates FlashAttention.",
-    h: 560,
+      "The textbook implementation launches a sequence of kernels and materializes the N×N score and probability matrices in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory bill that motivates FlashAttention. A real fused-SDPA trace on the same T4 is shown for comparison.",
+    h: 600,
   },
   {
     id: "tiling",
@@ -867,10 +867,18 @@ const flash: SceneFactory = (host) => {
     const playhead = naiveStep > 0 ? X(T.steps[naiveStep - 1].gpu[1]) : X(0);
     art.appendChild(s("line", { x1: playhead, y1: 50, x2: playhead, y2: 270, stroke: C.accent, "stroke-opacity": 0.7, "stroke-dasharray": "3 3" }));
 
-    svgBtn(art, 20, 500, 100, naivePlaying ? "⏸ Pause" : "▶ Play", () => { toggleNaive(); });
-    svgBtn(art, 130, 500, 90, "▶ Step", () => { stepNaive(); });
-    svgBtn(art, 230, 500, 90, "↺ Reset", () => { resetNaive(); });
-    txt(340, 518, "step " + naiveStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
+    art.appendChild(s("rect", { x: 20, y: 432, width: 680, height: 94, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.5 }));
+    txt(34, 452, "fused SDPA · same workload · T4", { size: 10, weight: 700, fill: C.teal });
+    txt(34, 470, "18.9 ms GPU · 1 kernel · no S/P materialization", { size: 8.5, fill: C.fg });
+    txt(34, 488, "derived HBM ≥64 MiB · ~3× faster wall-clock", { size: 8.5, fill: C.fg });
+    txt(34, 506, "PyTorch efficient attention (SM75) — not FlashAttention", { size: 8, fill: C.warn });
+    txt(688, 452, "18.9 ms", { size: 16, weight: 700, fill: C.teal, anchor: "end" });
+    txt(688, 470, "vs 61.3 ms naive", { size: 8, fill: C.dim, anchor: "end" });
+
+    svgBtn(art, 20, 548, 100, naivePlaying ? "⏸ Pause" : "▶ Play", () => { toggleNaive(); });
+    svgBtn(art, 130, 548, 90, "▶ Step", () => { stepNaive(); });
+    svgBtn(art, 230, 548, 90, "↺ Reset", () => { resetNaive(); });
+    txt(340, 566, "step " + naiveStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
   }
 
   function tileStats(kMax: number): { m: number; l: number; o: number } {
