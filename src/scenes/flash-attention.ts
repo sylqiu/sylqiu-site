@@ -162,8 +162,15 @@ const SECS: Sec[] = [
     id: "naive",
     title: "Naive attention: the obvious trace",
     blurb:
-      "The textbook implementation launches a sequence of kernels and materializes the N×N score and probability matrices in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory bill that motivates FlashAttention. A real fused-SDPA trace on the same T4 is shown for comparison.",
-    h: 600,
+      "The textbook implementation launches a sequence of kernels and materializes the N×N score and probability matrices in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory bill that motivates FlashAttention.",
+    h: 560,
+  },
+  {
+    id: "fused",
+    title: "Fused attention: one kernel, no intermediates",
+    blurb:
+      "The same workload through PyTorch's fused SDPA. One kernel reads Q/K/V and writes O; S and P never exist as whole tensors. This is the memory-efficient SM75 path, not FlashAttention, but it shows exactly what removing the intermediates buys.",
+    h: 500,
   },
   {
     id: "tiling",
@@ -354,7 +361,7 @@ const flash: SceneFactory = (host) => {
   });
   host.appendChild(root);
 
-  const draws = [drawMemory, drawDefinition, drawNaive, drawTiling, drawVariants, drawCode];
+  const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling, drawVariants, drawCode];
 
   function render(): void {
     for (let i = 0; i < secEls.length; i++) {
@@ -867,18 +874,63 @@ const flash: SceneFactory = (host) => {
     const playhead = naiveStep > 0 ? X(T.steps[naiveStep - 1].gpu[1]) : X(0);
     art.appendChild(s("line", { x1: playhead, y1: 50, x2: playhead, y2: 270, stroke: C.accent, "stroke-opacity": 0.7, "stroke-dasharray": "3 3" }));
 
-    art.appendChild(s("rect", { x: 20, y: 432, width: 680, height: 94, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.5 }));
-    txt(34, 452, "fused SDPA · same workload · T4", { size: 10, weight: 700, fill: C.teal });
-    txt(34, 470, "18.9 ms GPU · 1 kernel · no S/P materialization", { size: 8.5, fill: C.fg });
-    txt(34, 488, "peak 64 MiB · HBM ≥64 MiB · ~3× faster wall", { size: 8.5, fill: C.fg });
-    txt(34, 506, "PyTorch efficient attention (SM75) — not FlashAttention", { size: 8, fill: C.warn });
-    txt(688, 452, "18.9 ms", { size: 16, weight: 700, fill: C.teal, anchor: "end" });
-    txt(688, 470, "vs 61.3 ms naive", { size: 8, fill: C.dim, anchor: "end" });
+    svgBtn(art, 20, 500, 100, naivePlaying ? "⏸ Pause" : "▶ Play", () => { toggleNaive(); });
+    svgBtn(art, 130, 500, 90, "▶ Step", () => { stepNaive(); });
+    svgBtn(art, 230, 500, 90, "↺ Reset", () => { resetNaive(); });
+    txt(340, 518, "step " + naiveStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
+  }
 
-    svgBtn(art, 20, 548, 100, naivePlaying ? "⏸ Pause" : "▶ Play", () => { toggleNaive(); });
-    svgBtn(art, 130, 548, 90, "▶ Step", () => { stepNaive(); });
-    svgBtn(art, 230, 548, 90, "↺ Reset", () => { resetNaive(); });
-    txt(340, 566, "step " + naiveStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
+  function drawFused(art: SVGSVGElement): void {
+    const total = 27.1;
+    const x0 = 150;
+    const x1 = 680;
+    const X = (ms: number): number => x0 + (ms / total) * (x1 - x0);
+    const W = (ms: number): number => (ms / total) * (x1 - x0);
+    const band = (x: number, y: number, w: number, color: string, label: string, h = 16): void => {
+      art.appendChild(s("rect", { x, y, width: w, height: h, rx: 3, fill: color, "fill-opacity": 0.24, stroke: color, "stroke-opacity": 0.85 }));
+      txt(x + 5, y + h - 5, label, { size: 6.5, fill: color, mono: true });
+    };
+
+    txt(20, 24, "fused attention · real trace", { size: 11, weight: 700, fill: C.fg });
+    txt(20, 42, "Tesla T4 · torch 2.11.0+cu130 · B=4 H=8 N=4096 D=64 · FP16", { size: 8, fill: C.dim });
+    txt(688, 24, "18.9 ms GPU · 64 MiB peak", { size: 8, fill: C.teal, anchor: "end" });
+    txt(688, 42, "1 kernel · no S/P", { size: 8, fill: C.fg, anchor: "end" });
+
+    txt(20, 70, "CPU", { size: 8.5, weight: 700, fill: C.dim });
+    band(X(0), 56, W(8.41), C.dim, "launch / setup", 14);
+    art.appendChild(s("rect", { x: X(8.52), y: 74, width: W(18.6), height: 6, rx: 3, fill: C.panel2, stroke: C.line }));
+    txt(X(8.52) + 4, 90, "CPU waits on GPU", { size: 7, fill: C.dim });
+
+    txt(20, 118, "GPU stream", { size: 8.5, weight: 700, fill: C.dim });
+    band(X(8.21), 104, W(18.9), C.teal, "fused SDPA · 18.9 ms", 20);
+    txt(X(8.21) + 4, 138, "one kernel", { size: 6.5, fill: C.dim });
+
+    txt(20, 160, "HBM traffic", { size: 8.5, weight: 700, fill: C.dim });
+    band(X(8.21), 146, W(18.9), C.accent, "read Q/K/V · 48 MiB", 10);
+    band(X(8.21), 158, W(18.9), C.bad, "write O · 16 MiB", 10);
+
+    txt(20, 190, "compute active", { size: 8.5, weight: 700, fill: C.dim });
+    band(X(8.21), 176, W(18.9), C.teal, "1 fused kernel", 10);
+
+    txt(20, 218, "HBM buffers", { size: 8.5, weight: 700, fill: C.dim });
+    const buf = (x: number, w: number, label: string, sub: string, color: string, dashed = false): void => {
+      art.appendChild(s("rect", { x, y: 228, width: w, height: 26, rx: 5, fill: dashed ? "none" : color, "fill-opacity": 0.16, stroke: color, "stroke-opacity": 0.7, "stroke-dasharray": dashed ? "4 3" : "0" }));
+      txt(x + 6, 245, label, { size: 8.5, fill: dashed ? C.dim : C.fg, mono: true });
+      txt(x + w - 6, 245, sub, { size: 6.5, fill: color, anchor: "end", mono: true });
+    };
+    buf(150, 42, "Q", "16 MiB", C.accent);
+    buf(198, 42, "K", "16 MiB", C.accent);
+    buf(246, 42, "V", "16 MiB", C.accent);
+    buf(294, 110, "S / P", "not materialized", C.bad, true);
+    buf(410, 44, "O", "16 MiB", C.ok);
+
+    art.appendChild(s("rect", { x: 20, y: 274, width: 680, height: 112, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.teal, "stroke-opacity": 0.5 }));
+    txt(34, 296, "what the fused kernel buys", { size: 10.5, weight: 700, fill: C.teal });
+    txt(34, 314, "naive: 55.4 ms GPU · 2.22 GB peak · ~6.1 GiB HBM traffic", { size: 8.5, fill: C.dim });
+    txt(34, 332, "fused: 18.9 ms GPU · 64 MiB peak · ~64 MiB HBM traffic", { size: 8.5, fill: C.fg });
+    txt(34, 350, "2.9× less GPU time · 34× lower peak · ~97× less traffic", { size: 9, weight: 700, fill: C.ok });
+    txt(34, 368, "PyTorch efficient attention on SM75 — not FlashAttention; true FA needs SM80+.", { size: 8, fill: C.warn });
+    txt(20, 412, "The full N×N scores and probabilities never exist; the kernel keeps tiles on chip.", { size: 8, fill: C.dim });
   }
 
   function tileStats(kMax: number): { m: number; l: number; o: number } {
@@ -1093,7 +1145,7 @@ const flash: SceneFactory = (host) => {
 
   /* ------------------------------ code panel ------------------------------ */
 
-  const codeSection = secEls[5].section;
+  const codeSection = secEls[6].section;
   const codeWrap = document.createElement("div");
   codeWrap.className = "ill-prose";
   const tabs = document.createElement("div");
