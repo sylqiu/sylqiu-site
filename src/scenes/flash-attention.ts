@@ -179,20 +179,7 @@ const SECS: Sec[] = [
       "A new K/V pair changes the softmax denominator for the query. Merge Q with the new K, compute its logit, rescale the old weights, add the new weight, and update every O component — without rereading the old K/V pairs.",
     h: 620,
   },
-  {
-    id: "variants",
-    title: "The variant landscape",
-    blurb:
-      "The tiled online-softmax loop is the invariant. Variants change the mask, the layout, the precision, or the hardware target: causal and sliding-window attention, GQA/MQA, paged/varlen batching, FP8/FP4, and CUDA, Triton, ROCm, or TPU/Pallas implementations.",
-    h: 560,
-  },
-  {
-    id: "code",
-    title: "Code across platforms",
-    blurb:
-      "The same recurrence appears in PyTorch, a CUDA/CUTLASS kernel, a Triton kernel, and a TPU/Pallas kernel. What changes is how tiles are loaded, which matrix-multiply primitive is used, and who schedules the data movement.",
-    h: 280,
-  },
+
 ];
 
 const N = 4;
@@ -325,9 +312,12 @@ const flash: SceneFactory = (host) => {
   let tileStep = 0;
   let tilePlaying = false;
   let tileTimer: number | null = null;
+  let tileQ = 0;
+  const tileDone = [false, false, false, false];
+  let tilePhase = 1;
+  let tileRaf: number | null = null;
+  let tileLast = 0;
   let causal = false;
-  let variant = 0;
-  let codeTab = 0;
 
   const root = document.createElement("div");
   root.className = "ill";
@@ -361,7 +351,7 @@ const flash: SceneFactory = (host) => {
   });
   host.appendChild(root);
 
-  const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling, drawVariants, drawCode];
+  const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling];
 
   function render(): void {
     for (let i = 0; i < secEls.length; i++) {
@@ -955,7 +945,36 @@ const flash: SceneFactory = (host) => {
       window.clearTimeout(tileTimer);
       tileTimer = null;
     }
+    if (tileRaf !== null) {
+      window.cancelAnimationFrame(tileRaf);
+      tileRaf = null;
+    }
     tilePlaying = false;
+  }
+
+  function tickTile(now: number): void {
+    tileRaf = null;
+    if (!tilePlaying) return;
+    const dt = Math.min(0.05, (now - tileLast) / 1000);
+    tileLast = now;
+    tilePhase = Math.min(1, tilePhase + dt / 0.9);
+    if (tilePhase >= 1) {
+      if (tileStep < 3) {
+        tileStep += 1;
+        tilePhase = 0;
+      } else {
+        tileDone[tileQ] = true;
+        if (tileQ < 3) {
+          tileQ += 1;
+          tileStep = 1;
+          tilePhase = 0;
+        } else {
+          tilePlaying = false;
+        }
+      }
+    }
+    render();
+    if (tilePlaying) tileRaf = window.requestAnimationFrame(tickTile);
   }
 
   function toggleTile(): void {
@@ -964,21 +983,16 @@ const flash: SceneFactory = (host) => {
       render();
       return;
     }
-    if (tileStep >= 3) tileStep = 0;
+    if (tileStep >= 3 && tileQ >= 3) {
+      tileQ = 0;
+      tileDone.fill(false);
+      tileStep = 0;
+    }
+    if (tileStep === 0) tileStep = 1;
+    tilePhase = 0;
     tilePlaying = true;
-    const tick = (): void => {
-      if (!tilePlaying) return;
-      if (tileStep >= 3) {
-        tilePlaying = false;
-        tileTimer = null;
-        render();
-        return;
-      }
-      tileStep += 1;
-      render();
-      tileTimer = window.setTimeout(tick, 850);
-    };
-    tileTimer = window.setTimeout(tick, 420);
+    tileLast = performance.now();
+    tileRaf = window.requestAnimationFrame(tickTile);
     render();
   }
 
@@ -1094,126 +1108,6 @@ const flash: SceneFactory = (host) => {
     svgBtn(art, 218, 570, 82, "↺ Reset", () => { stopTile(); tileStep = 0; render(); });
     txt(318, 588, "step " + tileStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
   }
-
-  function drawVariants(art: SVGSVGElement): void {
-    txt(20, 26, "same core, different constraints", { size: 9.5, weight: 700, fill: C.dim });
-    txt(260, 26, "click a variant", { size: 9, fill: C.dim });
-
-    VARIANTS.forEach((v, i) => {
-      const x = 20 + (i % 5) * 136;
-      const y = 48 + Math.floor(i / 5) * 104;
-      const on = i === variant;
-      const g = s("g", { cursor: "pointer" });
-      g.addEventListener("click", () => { variant = i; render(); });
-      g.appendChild(s("rect", { x, y, width: 126, height: 88, rx: 8, fill: on ? v.color : C.panel, "fill-opacity": on ? 0.14 : 0.55, stroke: on ? v.color : C.line, "stroke-width": on ? 1.6 : 1 }));
-      g.appendChild(txt(x + 10, y + 20, v.title.slice(0, 15), { size: 9.5, weight: 700, fill: on ? v.color : C.fg }));
-      const words = v.title.split(" ");
-      if (words.length > 2) g.appendChild(txt(x + 10, y + 36, words.slice(2).join(" "), { size: 8, fill: C.dim }));
-      g.appendChild(txt(x + 10, y + 74, on ? "selected" : "click", { size: 8, fill: on ? v.color : C.dim, mono: true }));
-      art.appendChild(g);
-    });
-
-    const v = VARIANTS[variant];
-    art.appendChild(s("rect", { x: 20, y: 268, width: 680, height: 110, rx: 10, fill: C.panel, "fill-opacity": 0.6, stroke: v.color, "stroke-opacity": 0.65 }));
-    txt(34, 292, v.title, { size: 12, weight: 700, fill: v.color });
-    const words = v.detail.split(" ");
-    const line1 = words.slice(0, 14).join(" ");
-    const line2 = words.slice(14, 28).join(" ");
-    const line3 = words.slice(28).join(" ");
-    txt(34, 314, line1, { size: 9.5, fill: C.fg });
-    txt(34, 332, line2, { size: 9.5, fill: C.fg });
-    txt(34, 350, line3, { size: 9.5, fill: C.fg });
-    txt(34, 368, "The tiled online-softmax recurrence does not change.", { size: 8.5, fill: C.ok });
-
-    txt(20, 410, "Algorithmic variants", { size: 8.5, weight: 700, fill: C.dim });
-    txt(20, 426, "causal · sliding window · block-sparse · GQA/MQA · varlen/paged", { size: 8.5, fill: C.dim, mono: true });
-    txt(20, 446, "Platform variants", { size: 8.5, weight: 700, fill: C.dim });
-    txt(20, 462, "CUDA/CUTLASS · Triton · ROCm/CK · TPU/Pallas · inference engines", { size: 8.5, fill: C.dim, mono: true });
-    txt(20, 486, "Precision variants", { size: 8.5, weight: 700, fill: C.dim });
-    txt(20, 502, "FP16/BF16 · FP8 · FP4/mixed · higher-precision softmax", { size: 8.5, fill: C.dim, mono: true });
-    txt(430, 486, "Generation sweep", { size: 8.5, weight: 700, fill: C.dim });
-    txt(430, 502, "v1 IO-aware → v2 partitioning → v3 Hopper → v4 Blackwell", { size: 8.5, fill: C.dim, mono: true });
-  }
-
-  /* ------------------------------ section 5 ------------------------------ */
-
-  function drawCode(art: SVGSVGElement): void {
-    txt(20, 26, "same recurrence, four idioms", { size: 9.5, weight: 700, fill: C.dim });
-    const platforms = [
-      { label: "PyTorch", sub: "dispatch", color: C.accent, x: 20 },
-      { label: "CUDA / CUTLASS", sub: "TMA · WGMMA", color: C.ok, x: 190 },
-      { label: "Triton", sub: "tl.dot", color: C.purple, x: 360 },
-      { label: "TPU / Pallas", sub: "MXU · CMEM", color: C.teal, x: 530 },
-    ];
-    platforms.forEach((p, i) => {
-      const on = i === codeTab;
-      art.appendChild(s("rect", { x: p.x, y: 48, width: 150, height: 74, rx: 8, fill: p.color, "fill-opacity": on ? 0.14 : 0.55, stroke: p.color, "stroke-opacity": on ? 0.9 : 0.4, "stroke-width": on ? 1.8 : 1 }));
-      art.appendChild(txt(p.x + 12, 72, p.label, { size: 10.5, weight: 700, fill: p.color }));
-      art.appendChild(txt(p.x + 12, 92, p.sub, { size: 8.5, fill: C.dim, mono: true }));
-      art.appendChild(txt(p.x + 12, 110, "tile + softmax", { size: 8, fill: C.fg }));
-    });
-    art.appendChild(s("rect", { x: 250, y: 150, width: 220, height: 40, rx: 20, fill: C.panel2, stroke: C.accent, "stroke-opacity": 0.6 }));
-    txt(360, 175, "same online-softmax loop", { anchor: "middle", size: 10, fill: C.accent, weight: 700 });
-    [95, 265, 435, 605].forEach((x) => arrow(art, x, 122, x, 150, C.dim, "arw-code"));
-    txt(20, 220, "The platform decides how tiles move and which matrix-multiply primitive runs.", { size: 9, fill: C.dim });
-    txt(20, 238, "The loop below is the invariant; the tabs show the same steps in each language.", { size: 9, fill: C.ok });
-    art.appendChild(marker("arw-code", C.dim));
-  }
-
-  /* ------------------------------ code panel ------------------------------ */
-
-  const codeSection = secEls[6].section;
-  const codeWrap = document.createElement("div");
-  codeWrap.className = "ill-prose";
-  const tabs = document.createElement("div");
-  tabs.style.display = "flex";
-  tabs.style.flexWrap = "wrap";
-  tabs.style.gap = "6px";
-  tabs.style.margin = "14px 0 8px";
-  const codeCard = document.createElement("div");
-  codeCard.className = "code-card";
-  const codeHead = document.createElement("div");
-  codeHead.className = "code-head";
-  const codeDots = document.createElement("div");
-  codeDots.className = "code-dots";
-  codeDots.innerHTML = "<i></i><i></i><i></i>";
-  const codeTitle = document.createElement("span");
-  codeTitle.className = "code-title";
-  const codeLang = document.createElement("span");
-  codeLang.className = "code-lang";
-  codeHead.append(codeDots, codeTitle, codeLang);
-  const pre = document.createElement("pre");
-  pre.style.padding = "12px 16px";
-  const codeEl = document.createElement("code");
-  codeEl.style.display = "block";
-  pre.appendChild(codeEl);
-  codeCard.append(codeHead, pre);
-  codeWrap.append(tabs, codeCard);
-  codeSection.appendChild(codeWrap);
-
-  const tabEls: HTMLButtonElement[] = [];
-  function setCode(i: number): void {
-    codeTab = i;
-    tabEls.forEach((b, k) => b.classList.toggle("on", k === i));
-    codeTitle.textContent = CODE[i].label;
-    codeLang.textContent = CODE[i].lang;
-    codeEl.textContent = CODE[i].lines.join("\n");
-    noteEl.textContent = CODE[i].note;
-  }
-  const noteEl = document.createElement("p");
-  noteEl.className = "ill-refs";
-  codeWrap.appendChild(noteEl);
-
-  CODE.forEach((c, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "ill-stage";
-    b.innerHTML = '<span class="n">' + (i + 1) + "</span>" + c.label;
-    b.addEventListener("click", () => { setCode(i); render(); });
-    tabs.appendChild(b);
-    tabEls.push(b);
-  });
-  setCode(0);
 
   render();
   startAttn(false);
