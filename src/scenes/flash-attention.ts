@@ -780,64 +780,92 @@ const flash: SceneFactory = (host) => {
   }
 
   function drawNaive(art: SVGSVGElement): void {
-    txt(20, 24, "naive eager attention · one head", { size: 11, weight: 700, fill: C.fg });
-    txt(20, 42, "example: B=8 · H=16 · N=4096 · d=64", { size: 8.5, fill: C.dim });
-
-    const block = (x: number, y: number, w: number, step: number, color: string, label: string): void => {
-      const done = naiveStep > step;
-      const active = naiveStep === step;
-      art.appendChild(s("rect", { x, y, width: w, height: 18, rx: 4, fill: color, "fill-opacity": done ? 0.18 : active ? 0.28 : 0.04, stroke: color, "stroke-opacity": done ? 0.55 : active ? 0.95 : 0.18 }));
-      txt(x + 5, y + 12, label, { size: 6.5, fill: done || active ? color : C.dim, mono: true });
+    const T = {
+      total: 61.3,
+      steps: [
+        { label: "QKᵀ", cpu: [0.46, 6.06], gpu: [5.86, 15.61], kind: "tensor", kernel: "turing_fp16_s1688gemm", read: "Q, K", write: "S", readBytes: "32 MiB", writeBytes: "1 GiB", color: C.ok },
+        { label: "scale/mask", cpu: [6.16, 6.34], gpu: [15.61, 24.38], kind: "vector", kernel: "vectorized_elementwise", read: "S", write: "S", readBytes: "1 GiB", writeBytes: "1 GiB", color: C.warn },
+        { label: "softmax", cpu: [6.36, 10.33], gpu: [24.38, 54.11], kind: "vector", kernel: "cunn_SoftMaxForward", read: "S", write: "P", readBytes: "1 GiB", writeBytes: "1 GiB", color: C.warn },
+        { label: "PV", cpu: [10.35, 10.60], gpu: [54.11, 61.25], kind: "tensor", kernel: "turing_fp16_s1688gemm", read: "P, V", write: "O", readBytes: "1.01 GiB", writeBytes: "16 MiB", color: C.ok },
+      ],
+    };
+    const x0 = 150;
+    const x1 = 680;
+    const X = (ms: number): number => x0 + (ms / T.total) * (x1 - x0);
+    const W = (ms: number): number => (ms / T.total) * (x1 - x0);
+    const active = (i: number): boolean => naiveStep === i + 1;
+    const done = (i: number): boolean => naiveStep > i + 1;
+    const band = (x: number, y: number, w: number, color: string, label: string, on: boolean, h = 18): void => {
+      art.appendChild(s("rect", { x, y, width: Math.max(2, w), height: h, rx: 3, fill: color, "fill-opacity": on ? 0.28 : 0.07, stroke: color, "stroke-opacity": on ? 0.95 : 0.22 }));
+      if (w > 36) txt(x + 5, y + h - 5, label, { size: 6.5, fill: on ? color : C.dim, mono: true });
     };
 
-    txt(20, 64, "CPU launch queue", { size: 8.5, weight: 700, fill: C.dim });
-    block(150, 52, 70, 1, C.dim, "QKᵀ");
-    block(226, 52, 84, 2, C.dim, "scale/mask");
-    block(316, 52, 70, 3, C.dim, "softmax");
-    block(392, 52, 50, 4, C.dim, "PV");
-    txt(20, 84, "one launch per op; no per-tile CPU dispatch", { size: 7.5, fill: C.dim });
+    txt(20, 24, "naive attention · real trace", { size: 11, weight: 700, fill: C.fg });
+    txt(20, 42, "Tesla T4 · torch 2.11.0+cu130 · B=4 H=8 N=4096 D=64 · FP16", { size: 8, fill: C.dim });
+    txt(688, 24, "wall 61.3 ms · GPU active 55.4 ms", { size: 8, fill: C.dim, anchor: "end" });
+    txt(688, 42, "peak 2.22 GB", { size: 8, fill: C.warn, anchor: "end" });
 
-    txt(20, 112, "HBM traffic", { size: 8.5, weight: 700, fill: C.dim });
-    block(150, 98, 70, 1, C.accent, "Q/K read");
-    block(226, 98, 64, 1, C.bad, "S write");
-    block(294, 98, 78, 2, C.bad, "S read/write");
-    block(376, 98, 62, 3, C.accent, "S read");
-    block(442, 98, 64, 3, C.purple, "P write");
-    block(510, 98, 70, 4, C.accent, "P/V read");
-    block(584, 98, 60, 4, C.purple, "O write");
+    txt(20, 70, "CPU", { size: 8.5, weight: 700, fill: C.dim });
+    T.steps.forEach((st, i) => {
+      const on = active(i) || done(i);
+      band(X(st.cpu[0]), 56, W(st.cpu[1] - st.cpu[0]), C.dim, st.label, on, 14);
+    });
+    art.appendChild(s("rect", { x: X(10.68), y: 74, width: W(61.27 - 10.68), height: 6, rx: 3, fill: C.panel2, stroke: C.line }));
+    txt(X(10.68) + 4, 90, "CPU waits on GPU", { size: 7, fill: C.dim });
 
-    txt(20, 150, "tensor cores", { size: 8.5, weight: 700, fill: C.dim });
-    block(170, 136, 70, 1, C.ok, "QKᵀ");
-    block(520, 136, 60, 4, C.ok, "PV");
+    txt(20, 116, "GPU stream", { size: 8.5, weight: 700, fill: C.dim });
+    T.steps.forEach((st, i) => {
+      const on = active(i) || done(i);
+      band(X(st.gpu[0]), 102, W(st.gpu[1] - st.gpu[0]), st.color, st.label + " " + (st.gpu[1] - st.gpu[0]).toFixed(1) + " ms", on);
+    });
+    txt(X(0) + 4, 134, "idle / launch", { size: 6.5, fill: C.bad });
 
-    txt(20, 184, "vector / SFU", { size: 8.5, weight: 700, fill: C.dim });
-    block(300, 170, 58, 2, C.warn, "scale/mask");
-    block(430, 170, 58, 3, C.warn, "softmax");
+    txt(20, 160, "HBM traffic", { size: 8.5, weight: 700, fill: C.dim });
+    T.steps.forEach((st, i) => {
+      const on = active(i) || done(i);
+      const x = X(st.gpu[0]);
+      const w = W(st.gpu[1] - st.gpu[0]);
+      band(x, 146, w, st.kind === "tensor" ? C.ok : C.warn, "read " + st.read, on, 10);
+      band(x, 158, w, C.bad, "write " + st.write, on, 10);
+    });
 
-    txt(20, 218, "compute active", { size: 8.5, weight: 700, fill: C.dim });
-    block(170, 206, 70, 1, C.ok, "active");
-    block(300, 206, 58, 2, C.ok, "active");
-    block(430, 206, 58, 3, C.ok, "active");
-    block(520, 206, 60, 4, C.ok, "active");
-    txt(248, 220, "idle", { size: 6.5, fill: C.bad });
-    txt(462, 220, "idle", { size: 6.5, fill: C.bad });
+    txt(20, 190, "compute active", { size: 8.5, weight: 700, fill: C.dim });
+    T.steps.forEach((st, i) => {
+      const on = active(i) || done(i);
+      band(X(st.gpu[0]), 176, W(st.gpu[1] - st.gpu[0]), st.kind === "tensor" ? C.ok : C.warn, st.kind, on, 10);
+    });
 
-    txt(20, 260, "HBM buffers", { size: 8.5, weight: 700, fill: C.dim });
+    txt(20, 224, "HBM buffers", { size: 8.5, weight: 700, fill: C.dim });
     const alloc = (x: number, w: number, label: string, on: boolean, color: string, sub: string): void => {
-      art.appendChild(s("rect", { x, y: 274, width: w, height: 26, rx: 5, fill: on ? color : C.panel2, "fill-opacity": on ? 0.18 : 0.5, stroke: on ? color : C.line }));
-      txt(x + 6, 291, label, { size: 8.5, fill: on ? C.fg : C.dim, mono: true });
-      txt(x + w - 6, 291, sub, { size: 6.5, fill: on ? color : C.dim, anchor: "end", mono: true });
+      art.appendChild(s("rect", { x, y: 234, width: w, height: 26, rx: 5, fill: on ? color : C.panel2, "fill-opacity": on ? 0.18 : 0.45, stroke: on ? color : C.line }));
+      txt(x + 6, 251, label, { size: 8.5, fill: on ? C.fg : C.dim, mono: true });
+      txt(x + w - 6, 251, sub, { size: 6.5, fill: on ? color : C.dim, anchor: "end", mono: true });
     };
-    alloc(150, 50, "Q", true, C.accent, "N×d");
-    alloc(206, 50, "K", true, C.accent, "N×d");
-    alloc(262, 50, "V", true, C.accent, "N×d");
-    alloc(318, 96, "S", naiveStep >= 1, C.bad, "N×N");
-    alloc(420, 96, "P", naiveStep >= 3, C.purple, "N×N");
-    alloc(522, 60, "O", naiveStep >= 4, C.ok, "N×d");
-    txt(20, 322, naiveStep >= 3 ? "peak: S + P ≈ 16 GiB" : "peak grows when S and P appear", { size: 9, fill: C.bad, weight: 700 });
-    txt(20, 344, "S/P are N×N; every kernel round-trips them through HBM.", { size: 8, fill: C.fg });
-    txt(20, 362, "Kernel launch gaps are real; at long N, HBM traffic dominates.", { size: 8, fill: C.dim });
-    txt(20, 380, "Q/K/V/O are N×d; S and P are the memory bill.", { size: 8, fill: C.dim });
+    alloc(150, 42, "Q", true, C.accent, "16 MiB");
+    alloc(198, 42, "K", true, C.accent, "16 MiB");
+    alloc(246, 42, "V", true, C.accent, "16 MiB");
+    alloc(294, 88, "S", naiveStep >= 1, C.bad, "1 GiB");
+    alloc(388, 88, "P", naiveStep >= 3, C.purple, "1 GiB");
+    alloc(482, 44, "O", naiveStep >= 4, C.ok, "16 MiB");
+    txt(540, 251, naiveStep >= 3 ? "peak: S + P" : "S/P not yet live", { size: 7.5, fill: C.bad });
+
+    const cur = naiveStep > 0 ? T.steps[naiveStep - 1] : null;
+    art.appendChild(s("rect", { x: 20, y: 280, width: 680, height: 96, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: cur ? cur.color : C.line, "stroke-opacity": 0.55 }));
+    if (!cur) {
+      txt(34, 302, "baseline · Q/K/V resident in HBM", { size: 10, weight: 700, fill: C.accent });
+      txt(34, 320, "Press Play or Step to advance through the captured trace.", { size: 8.5, fill: C.fg });
+      txt(34, 338, "CPU launches; GPU work is serialized on one stream.", { size: 8.5, fill: C.dim });
+    } else {
+      txt(34, 302, cur.label + " · " + (cur.gpu[1] - cur.gpu[0]).toFixed(2) + " ms GPU", { size: 10.5, weight: 700, fill: cur.color });
+      txt(34, 320, "kernel: " + cur.kernel, { size: 8, fill: C.fg, mono: true });
+      txt(34, 338, "HBM: read " + cur.readBytes + " · write " + cur.writeBytes, { size: 8.5, fill: C.fg });
+      txt(34, 356, "buffers: " + (naiveStep >= 3 ? "S and P live" : naiveStep >= 1 ? "S live" : "Q/K/V live"), { size: 8.5, fill: C.warn });
+    }
+    txt(20, 398, "CPU enqueues all four kernels by 10.6 ms; the GPU spends 55.4 ms executing.", { size: 8, fill: C.dim });
+    txt(20, 414, "HBM bytes are derived from tensor shapes; timing comes from the captured T4 profile.", { size: 8, fill: C.dim });
+
+    const playhead = naiveStep > 0 ? X(T.steps[naiveStep - 1].gpu[1]) : X(0);
+    art.appendChild(s("line", { x1: playhead, y1: 50, x2: playhead, y2: 270, stroke: C.accent, "stroke-opacity": 0.7, "stroke-dasharray": "3 3" }));
 
     svgBtn(art, 20, 500, 100, naivePlaying ? "⏸ Pause" : "▶ Play", () => { toggleNaive(); });
     svgBtn(art, 130, 500, 90, "▶ Step", () => { stepNaive(); });
