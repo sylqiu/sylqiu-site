@@ -149,7 +149,7 @@ const SECS: Sec[] = [
     title: "GPU and TPU memory architectures",
     blurb:
       "The CPU orchestrates; the GPU and TPU expose very different memory hierarchies. GPU programs stage tiles explicitly through SMEM and rely on caches; TPU programs hand tiles to the compiler, which schedules CMEM and the MXU. Unified memory removes explicit copies, but not HBM bandwidth.",
-    h: 480,
+    h: 590,
   },
   {
     id: "definition",
@@ -719,15 +719,32 @@ const flash: SceneFactory = (host) => {
     txt(570, 182, "2.76 TB/s", { size: 8, fill: C.purple, mono: true });
     txt(570, 232, "on-chip", { size: 8, fill: C.dim });
 
-    // Unified memory case.
-    art.appendChild(s("rect", { x: 20, y: 356, width: 680, height: 70, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.45 }));
-    txt(34, 376, "Unified memory · the case", { size: 10.5, weight: 700, fill: C.teal });
-    txt(34, 394, "CPU and accelerator share one address space; no explicit H2D/D2H copies", { size: 8.5, fill: C.fg });
-    txt(34, 410, "still HBM-bound; coherence and capacity are the trade-offs", { size: 8.5, fill: C.warn });
+    // Bandwidth ladder: transfer bandwidth, not compute throughput.
+    art.appendChild(s("rect", { x: 20, y: 352, width: 680, height: 94, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.teal, "stroke-opacity": 0.45 }));
+    txt(34, 372, "bandwidth ladder · H100-class · approximate", { size: 9.5, weight: 700, fill: C.teal });
+    const bwRows = [
+      { label: "HBM", value: "3.35 TB/s", frac: 3.35 / 30, color: C.accent },
+      { label: "L2 / on-chip path", value: "~10 TB/s", frac: 10 / 30, color: C.teal },
+      { label: "SMEM → RF", value: "~30 TB/s agg.", frac: 1, color: C.ok },
+    ];
+    bwRows.forEach((row, i) => {
+      const y = 386 + i * 18;
+      txt(34, y + 8, row.label, { size: 8, fill: C.dim });
+      art.appendChild(s("rect", { x: 150, y, width: 290, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
+      art.appendChild(s("rect", { x: 150, y, width: Math.max(2, 290 * row.frac), height: 8, rx: 4, fill: row.color, "fill-opacity": 0.85 }));
+      txt(455, y + 8, row.value, { size: 8, fill: row.color, mono: true });
+    });
+    txt(34, 438, "TB/s, approximate; compute FLOP/s is a separate axis", { size: 7.5, fill: C.dim });
 
-    svgBtn(art, 20, 440, 90, gpuOn ? "✓ GPU" : "GPU", () => { arch = "gpu"; render(); });
-    svgBtn(art, 118, 440, 90, tpuOn ? "✓ TPU" : "TPU", () => { arch = "tpu"; render(); });
-    txt(220, 458, "toggle target: architectures and scheduling differ", { size: 8.5, fill: C.dim });
+    // Unified memory case.
+    art.appendChild(s("rect", { x: 20, y: 462, width: 680, height: 70, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.45 }));
+    txt(34, 482, "Unified memory · the case", { size: 10.5, weight: 700, fill: C.teal });
+    txt(34, 500, "CPU and accelerator share one address space; no explicit H2D/D2H copies", { size: 8.5, fill: C.fg });
+    txt(34, 516, "still HBM-bound; coherence and capacity are the trade-offs", { size: 8.5, fill: C.warn });
+
+    svgBtn(art, 20, 548, 90, gpuOn ? "✓ GPU" : "GPU", () => { arch = "gpu"; render(); });
+    svgBtn(art, 118, 548, 90, tpuOn ? "✓ TPU" : "TPU", () => { arch = "tpu"; render(); });
+    txt(220, 566, "toggle target: architectures and scheduling differ", { size: 8.5, fill: C.dim });
   }
 
   /* ------------------------------ section 3 ------------------------------ */
