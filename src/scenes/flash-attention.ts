@@ -174,9 +174,9 @@ const SECS: Sec[] = [
   },
   {
     id: "tiling",
-    title: "One new K/V: renormalize and update O",
+    title: "One new K/V: denominator and O correction",
     blurb:
-      "A new K/V pair changes the softmax denominator for the query. Merge Q with the new K, compute its logit, rescale the old weights, add the new weight, and update every O component — without rereading the old K/V pairs.",
+      "A new K/V pair changes the softmax denominator. Merge Q with the new K into one logit, update ℓ, form the new weight with the new V, then correct the old O by ℓ_old·scale/ℓ_new and add the new contribution. Old logits and old Vs are intentionally hidden.",
     h: 620,
   },
 
@@ -1040,20 +1040,20 @@ const flash: SceneFactory = (host) => {
     const old = stats(1);
     const cur = stats(2);
     const scale = Math.exp(old.m - cur.m);
-    const oldP = (j: number): number => Math.exp(scores[j] - old.m) / old.l;
-    const newP = (j: number): number => Math.exp(scores[j] - cur.m) / cur.l;
+    const newW = Math.exp(scores[2] - cur.m);
+    const pNew = newW / cur.l;
+    const ratio = (old.l * scale) / cur.l;
     const phase = Math.min(1, Math.max(0, tilePhase));
     const ease = 1 - Math.pow(1 - phase, 3);
-    const showNew = tileStep >= 1 || tileQ > 0 || tileDone.some(Boolean);
     const qy = 78 + q * 50;
-    const chip = (cx: number, cy: number, label: string, color: string, opacity = 1, w = 42, h = 20): void => {
+    const chip = (cx: number, cy: number, label: string, color: string, opacity = 1, w = 44, h = 20): void => {
       if (opacity <= 0.02) return;
       art.appendChild(s("rect", { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 5, fill: color, "fill-opacity": 0.1 + 0.16 * opacity, stroke: color, "stroke-opacity": 0.7 * opacity }));
       txt(cx, cy + 3.5, label, { anchor: "middle", size: 7.2, fill: color, mono: true });
     };
 
-    txt(20, 24, "one new K/V · loop over Q · update every O", { size: 10.5, weight: 700, fill: C.fg });
-    txt(20, 42, "Q and the new K merge into one logit; old weights and O are rescaled; each Q writes a new O", { size: 8, fill: C.dim });
+    txt(20, 24, "one new K/V · denominator update · correct O", { size: 10.5, weight: 700, fill: C.fg });
+    txt(20, 42, "old logits and old Vs are hidden; only the new pair and the running O are needed", { size: 8, fill: C.dim });
 
     for (let i = 0; i < 4; i++) {
       const active = i === q;
@@ -1065,75 +1065,53 @@ const flash: SceneFactory = (host) => {
       art.appendChild(s("rect", { x: 590, y, width: 100, height: 30, rx: 6, fill: done || (active && tileStep >= 3) ? C.purple : C.panel2, "fill-opacity": done ? 0.3 : active && tileStep >= 3 ? 0.1 + 0.2 * ease : 0.5, stroke: done || (active && tileStep >= 3) ? C.purple : C.line, "stroke-width": active ? 1.5 : 1 }));
       txt(640, y + 19, done ? "O ✓" : "O", { anchor: "middle", size: 10, weight: 700, fill: done || (active && tileStep >= 3) ? C.fg : C.dim, mono: true });
     }
-    txt(30, 267, "query loop · one Q at a time", { size: 7.8, fill: C.dim });
+    txt(30, 267, "one Q at a time · loop over Q", { size: 7.8, fill: C.dim });
     txt(590, 267, "O has no numbers", { size: 7.8, fill: C.dim });
 
-    const xs = [180, 275, 370];
-    xs.forEach((x, j) => {
-      const isNew = j === 2;
-      const on = !isNew || showNew;
-      art.appendChild(s("rect", { x, y: 62, width: 70, height: 30, rx: 6, fill: on ? C.ok : C.panel2, "fill-opacity": on ? 0.18 : 0.55, stroke: on ? C.ok : C.line }));
-      txt(x + 35, 81, "K" + j, { anchor: "middle", size: 10, weight: 700, fill: on ? C.fg : C.dim, mono: true });
-      art.appendChild(s("rect", { x, y: 350, width: 70, height: 30, rx: 6, fill: on ? C.purple : C.panel2, "fill-opacity": on ? 0.18 : 0.55, stroke: on ? C.purple : C.line }));
-      txt(x + 35, 369, "V" + j, { anchor: "middle", size: 10, weight: 700, fill: on ? C.fg : C.dim, mono: true });
-      if (isNew && showNew) txt(x + 35, 54, "new", { anchor: "middle", size: 7, fill: C.warn });
-    });
-    txt(180, 54, "K · keys", { size: 8.5, weight: 700, fill: C.dim });
-    txt(180, 400, "V · values", { size: 8.5, weight: 700, fill: C.dim });
-
-    xs.forEach((x, j) => {
-      const on = j < 2 || showNew;
-      // Keep the merge lane clear: old logits are hidden while Q/K move.
-      if (on && tileStep !== 1) chip(x + 35, 150, "s " + scores[j].toFixed(2), C.warn, 1, 54);
-    });
+    // Only the new K/V pair is shown.
+    const showNew = tileStep >= 1 || tileQ > 0 || tileDone.some(Boolean);
+    art.appendChild(s("rect", { x: 350, y: 62, width: 90, height: 30, rx: 6, fill: showNew ? C.ok : C.panel2, "fill-opacity": showNew ? 0.18 : 0.55, stroke: showNew ? C.ok : C.line }));
+    txt(395, 81, "K new", { anchor: "middle", size: 10, weight: 700, fill: showNew ? C.fg : C.dim, mono: true });
+    art.appendChild(s("rect", { x: 350, y: 350, width: 90, height: 30, rx: 6, fill: showNew ? C.purple : C.panel2, "fill-opacity": showNew ? 0.18 : 0.55, stroke: showNew ? C.purple : C.line }));
+    txt(395, 369, "V new", { anchor: "middle", size: 10, weight: 700, fill: showNew ? C.fg : C.dim, mono: true });
+    txt(395, 54, "new K/V", { anchor: "middle", size: 7, fill: C.warn });
 
     if (tileStep === 1) {
       if (phase < 0.92) {
         const qS = { x: 65, y: qy + 15 };
-        const qp = { x: qS.x + (360 - qS.x) * ease, y: qS.y + (150 - qS.y) * ease };
+        const qp = { x: qS.x + (395 - qS.x) * ease, y: qS.y + (150 - qS.y) * ease };
         chip(qp.x, qp.y, "Q", C.accent, 0.95, 30, 18);
-        const kp = { x: 405 + (380 - 405) * ease, y: 85 + (150 - 85) * ease };
+        const kp = { x: 395, y: 85 + (145 - 85) * ease };
         chip(kp.x, kp.y, "K", C.ok, 0.95, 30, 18);
       }
       if (phase > 0.55) {
-        chip(470, 150, "new logit", C.warn, 1, 62);
-        art.appendChild(s("line", { x1: 370, y1: 150, x2: 440, y2: 150, stroke: C.warn, "stroke-opacity": 0.45, "stroke-dasharray": "3 3" }));
+        chip(500, 150, "new logit", C.warn, 1, 64);
+        art.appendChild(s("line", { x1: 395, y1: 150, x2: 468, y2: 150, stroke: C.warn, "stroke-opacity": 0.45, "stroke-dasharray": "3 3" }));
       }
     }
 
-    const weightPhase = tileStep >= 2 ? (tileStep === 2 ? ease : 1) : 0;
-    xs.forEach((x, j) => {
-      const op = j < 2 ? oldP(j) : 0;
-      const np = newP(j);
-      const w = op + (np - op) * weightPhase;
-      if (j < 2 || showNew) {
-        const oldW = Math.max(2, 54 * op);
-        const newW = Math.max(2, 54 * w);
-        art.appendChild(s("rect", { x: x + 35 - oldW / 2, y: 228, width: oldW, height: 12, rx: 5, fill: "none", stroke: C.ok, "stroke-opacity": 0.35 }));
-        art.appendChild(s("rect", { x: x + 35 - newW / 2, y: 229, width: newW, height: 10, rx: 5, fill: C.ok, "fill-opacity": 0.7, stroke: C.ok, "stroke-opacity": 0.8 }));
-        txt(x + 35, 256, "p " + w.toFixed(3), { anchor: "middle", size: 7.2, fill: C.ok, mono: true });
-      }
-    });
-    txt(180, 278, "old weights × scale → new probabilities", { size: 7.8, fill: C.dim });
-
     if (tileStep >= 2) {
-      chip(470, 150, "Σ", C.teal, 1, 44, 24);
-      txt(470, 168, "denominator", { anchor: "middle", size: 7.2, fill: C.teal });
-      art.appendChild(s("rect", { x: 20, y: 290, width: 330, height: 44, rx: 7, fill: C.panel, "fill-opacity": 0.55, stroke: C.teal, "stroke-opacity": 0.4 }));
-      txt(32, 307, "m " + old.m.toFixed(2) + " → " + cur.m.toFixed(2) + " · scale " + scale.toFixed(3), { size: 8, fill: C.warn, mono: true });
-      txt(32, 323, "ℓ " + old.l.toFixed(3) + " → " + cur.l.toFixed(3) + " · O_old × " + scale.toFixed(3), { size: 8, fill: C.fg, mono: true });
+      chip(500, 150, "Σ", C.teal, 1, 44, 24);
+      txt(500, 168, "denominator", { anchor: "middle", size: 7.2, fill: C.teal });
+      art.appendChild(s("rect", { x: 20, y: 282, width: 330, height: 58, rx: 7, fill: C.panel, "fill-opacity": 0.55, stroke: C.teal, "stroke-opacity": 0.4 }));
+      txt(32, 300, "ℓ " + old.l.toFixed(3) + " → " + cur.l.toFixed(3) + " · scale " + scale.toFixed(3), { size: 8, fill: C.warn, mono: true });
+      txt(32, 317, "p_new " + pNew.toFixed(3) + " · O_old × " + ratio.toFixed(3), { size: 8, fill: C.fg, mono: true });
+      chip(500, 198, "p_new", C.ok, 1, 50);
+      chip(395, 390, "p_new·V_new", C.purple, 1, 66);
     }
 
     if (tileStep >= 3) {
-      xs.forEach((x, j) => chip(x + 35, 390, "w" + j + "·V" + j, C.purple, 1, 56));
-      txt(180, 412, "sum weighted values → write O", { size: 8, fill: C.purple });
+      art.appendChild(s("rect", { x: 20, y: 450, width: 680, height: 88, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.purple, "stroke-opacity": 0.45 }));
+      txt(34, 472, "write every O", { size: 9, weight: 700, fill: C.purple });
+      txt(34, 492, "O ← O_old × (ℓ_old·scale/ℓ_new) + p_new·V_new", { size: 8.2, fill: C.fg, mono: true });
+      txt(34, 510, "old K/V and old Vs are not reread; they are not shown", { size: 8, fill: C.dim });
+    } else {
+      art.appendChild(s("rect", { x: 20, y: 450, width: 680, height: 88, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+      txt(34, 472, "new state", { size: 9, weight: 700, fill: C.dim });
+      txt(34, 492, "ℓ_new = ℓ_old·scale + exp(s_new − m_new)", { size: 8.2, fill: C.fg, mono: true });
+      txt(34, 510, "p_new = exp(s_new − m_new)/ℓ_new", { size: 8.2, fill: C.fg, mono: true });
+      txt(34, 528, "old logits and old Vs stay hidden", { size: 8, fill: C.ok });
     }
-
-    art.appendChild(s("rect", { x: 20, y: 450, width: 680, height: 92, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
-    txt(34, 472, "new state", { size: 9, weight: 700, fill: C.dim });
-    txt(34, 492, "p_new = exp(s_new − m_new)/ℓ_new · old p × (ℓ_old·scale/ℓ_new)", { size: 8, fill: C.fg, mono: true });
-    txt(34, 510, "O = O_old·scale + p_new·V_new · normalize every O", { size: 8, fill: C.fg, mono: true });
-    txt(34, 528, "old K/V not reread · loop Q=0…3", { size: 8, fill: C.ok });
 
     svgBtn(art, 20, 566, 82, "▶ Step", () => {
       stopTile();
