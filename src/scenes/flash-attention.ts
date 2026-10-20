@@ -870,7 +870,7 @@ const flash: SceneFactory = (host) => {
     art.appendChild(s("rect", { x: 20, y: 432, width: 680, height: 94, rx: 9, fill: C.panel, "fill-opacity": 0.5, stroke: C.teal, "stroke-opacity": 0.5 }));
     txt(34, 452, "fused SDPA · same workload · T4", { size: 10, weight: 700, fill: C.teal });
     txt(34, 470, "18.9 ms GPU · 1 kernel · no S/P materialization", { size: 8.5, fill: C.fg });
-    txt(34, 488, "derived HBM ≥64 MiB · ~3× faster wall-clock", { size: 8.5, fill: C.fg });
+    txt(34, 488, "peak 64 MiB · HBM ≥64 MiB · ~3× faster wall", { size: 8.5, fill: C.fg });
     txt(34, 506, "PyTorch efficient attention (SM75) — not FlashAttention", { size: 8, fill: C.warn });
     txt(688, 452, "18.9 ms", { size: 16, weight: 700, fill: C.teal, anchor: "end" });
     txt(688, 470, "vs 61.3 ms naive", { size: 8, fill: C.dim, anchor: "end" });
