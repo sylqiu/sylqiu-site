@@ -174,9 +174,9 @@ const SECS: Sec[] = [
   },
   {
     id: "tiling",
-    title: "Extending KV: online softmax without recomputation",
+    title: "One new K/V: renormalize and update O",
     blurb:
-      "Attention can be grown one K/V pair at a time. Keep the running max m, the denominator ℓ = Σ exp(s − m), and an unnormalized output accumulator O. A new K/V pair produces one new logit; rescale the old state, add the new weight, and normalize only at the end.",
+      "A new K/V pair changes the softmax denominator for the query. Merge Q with the new K, compute its logit, rescale the old weights, add the new weight, and update every O component — without rereading the old K/V pairs.",
     h: 620,
   },
   {
@@ -964,11 +964,11 @@ const flash: SceneFactory = (host) => {
       render();
       return;
     }
-    if (tileStep >= 4) tileStep = 0;
+    if (tileStep >= 3) tileStep = 0;
     tilePlaying = true;
     const tick = (): void => {
       if (!tilePlaying) return;
-      if (tileStep >= 4) {
+      if (tileStep >= 3) {
         tilePlaying = false;
         tileTimer = null;
         render();
@@ -983,95 +983,116 @@ const flash: SceneFactory = (host) => {
   }
 
   function drawTiling(art: SVGSVGElement): void {
-    const scores = [-0.68, 0.34, -1.14, -0.42];
-    const values = VALUES;
-    const kMax = tileStep - 1;
-    const stats = (n: number): { m: number; l: number; o: number } => {
+    const scores = [-0.68, -1.14, 0.34];
+    const vals = VALUES.slice(0, 3);
+    const stats = (n: number): { m: number; l: number; o: number[] } => {
       let m = -Infinity;
       let l = 0;
-      let o = 0;
+      const o = [0, 0, 0];
       for (let j = 0; j <= n; j++) {
-        const s = scores[j];
-        const mNew = Math.max(m, s);
+        const mNew = Math.max(m, scores[j]);
         const scale = m === -Infinity ? 0 : Math.exp(m - mNew);
-        const w = Math.exp(s - mNew);
+        const w = Math.exp(scores[j] - mNew);
         l = l * scale + w;
-        o = o * scale + w * values[j][0];
+        for (let d = 0; d < 3; d++) o[d] = o[d] * scale + w * vals[j][d];
         m = mNew;
       }
       return { m, l, o };
     };
-    const cur = kMax >= 0 ? stats(kMax) : { m: -Infinity, l: 0, o: 0 };
-    const prev = kMax > 0 ? stats(kMax - 1) : null;
-    const scale = prev && prev.m !== -Infinity ? Math.exp(prev.m - cur.m) : 1;
-    const newLogit = kMax >= 0 ? scores[kMax] : 0;
-    const newWeight = kMax >= 0 ? Math.exp(newLogit - cur.m) : 0;
-    const p = (j: number): number => (j <= kMax && cur.l > 0 ? Math.exp(scores[j] - cur.m) / cur.l : 0);
-    const out = cur.l > 0 ? cur.o / cur.l : 0;
+    const old = stats(1);
+    const cur = stats(2);
+    const scale = Math.exp(old.m - cur.m);
+    const oldP = (j: number): number => Math.exp(scores[j] - old.m) / old.l;
+    const newP = (j: number): number => Math.exp(scores[j] - cur.m) / cur.l;
+    const oldO = old.o.map((v) => v / old.l);
+    const newO = cur.o.map((v) => v / cur.l);
+    const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+    const chip = (cx: number, cy: number, label: string, color: string, opacity = 1, w = 42, h = 20): void => {
+      if (opacity <= 0.02) return;
+      art.appendChild(s("rect", { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 5, fill: color, "fill-opacity": 0.1 + 0.16 * opacity, stroke: color, "stroke-opacity": 0.7 * opacity }));
+      txt(cx, cy + 3.5, label, { anchor: "middle", size: 7.2, fill: color, mono: true });
+    };
 
-    txt(20, 24, "online softmax · extend one query's KV", { size: 11, weight: 700, fill: C.fg });
-    txt(20, 42, "illustrative logits · old K/V pairs are never reread; only the running state is rescaled", { size: 8, fill: C.dim });
+    txt(20, 24, "one new K/V · same Q · update every O", { size: 10.5, weight: 700, fill: C.fg });
+    txt(20, 42, "the old K/V pairs are not reread; only the weights and O are renormalized", { size: 8.2, fill: C.dim });
 
-    // KV stream
-    art.appendChild(s("rect", { x: 20, y: 60, width: 210, height: 380, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
-    txt(34, 82, "KV stream", { size: 10.5, weight: 700, fill: C.ok });
-    txt(34, 98, "one query Q · K/V pairs arrive", { size: 7.5, fill: C.dim });
-    for (let j = 0; j < 4; j++) {
-      const on = tileStep >= j + 1;
-      const active = tileStep === j + 1;
-      const y = 112 + j * 62;
-      art.appendChild(s("rect", { x: 34, y, width: 182, height: 46, rx: 6, fill: active ? C.ok : on ? C.panel2 : C.panel, "fill-opacity": active ? 0.18 : 0.5, stroke: active ? C.ok : C.line }));
-      txt(46, y + 19, "K" + j + " / V" + j, { size: 9, fill: on ? C.fg : C.dim, mono: true });
-      txt(46, y + 35, on ? "s = " + scores[j].toFixed(2) : "not loaded", { size: 7.5, fill: on ? C.ok : C.dim, mono: true });
-      if (active) txt(200, y + 19, "new", { size: 7, fill: C.ok, anchor: "end" });
+    // Q
+    art.appendChild(s("rect", { x: 30, y: 100, width: 70, height: 30, rx: 6, fill: C.accent, "fill-opacity": 0.18, stroke: C.accent, "stroke-width": 1.6 }));
+    txt(65, 119, "Q", { anchor: "middle", size: 11, weight: 700, fill: C.fg, mono: true });
+    txt(30, 148, "one query", { size: 8, fill: C.dim });
+
+    // K and V tokens
+    const xs = [180, 275, 370];
+    xs.forEach((x, j) => {
+      const isNew = j === 2;
+      const kon = !isNew || tileStep >= 1;
+      const von = !isNew || tileStep >= 1;
+      art.appendChild(s("rect", { x, y: 70, width: 70, height: 30, rx: 6, fill: kon ? C.ok : C.panel2, "fill-opacity": kon ? 0.18 : 0.55, stroke: kon ? C.ok : C.line }));
+      txt(x + 35, 89, "K" + j, { anchor: "middle", size: 10, weight: 700, fill: kon ? C.fg : C.dim, mono: true });
+      art.appendChild(s("rect", { x, y: 350, width: 70, height: 30, rx: 6, fill: von ? C.purple : C.panel2, "fill-opacity": von ? 0.18 : 0.55, stroke: von ? C.purple : C.line }));
+      txt(x + 35, 369, "V" + j, { anchor: "middle", size: 10, weight: 700, fill: von ? C.fg : C.dim, mono: true });
+      if (isNew) txt(x + 35, 62, "new", { anchor: "middle", size: 7, fill: C.warn });
+    });
+
+    // Logits and weights
+    txt(180, 58, "K · logits", { size: 8.5, weight: 700, fill: C.dim });
+    xs.forEach((x, j) => {
+      const on = j < 2 || tileStep >= 1;
+      const val = scores[j];
+      if (on) chip(x + 35, 150, "s " + val.toFixed(2), C.warn, 1, 52);
+      const p = tileStep >= 2 ? newP(j) : oldP(j);
+      const bw = Math.max(2, 52 * p);
+      art.appendChild(s("rect", { x: x + 35 - bw / 2, y: 232, width: bw, height: 10, rx: 5, fill: C.ok, "fill-opacity": on ? 0.7 : 0.08, stroke: C.ok, "stroke-opacity": on ? 0.8 : 0.15 }));
+      if (on) txt(x + 35, 258, "p " + p.toFixed(3), { anchor: "middle", size: 7.2, fill: C.ok, mono: true });
+    });
+    txt(180, 278, "weights · old weights are renormalized", { size: 8, fill: C.dim });
+
+    // Merge chips
+    if (tileStep === 1) {
+      chip(405, 115, "Q", C.accent, 0.9, 28, 18);
+      chip(405, 85, "K", C.ok, 0.9, 28, 18);
+      chip(405, 150, "new logit", C.warn, 1, 58, 20);
+      txt(440, 154, "s = 0.34", { size: 8, fill: C.warn, mono: true });
     }
-    txt(34, 380, "Q is resident; K/V streamed once", { size: 7.5, fill: C.dim });
-    txt(34, 396, "no N×N matrix is written", { size: 7.5, fill: C.ok });
-
-    // Weights
-    art.appendChild(s("rect", { x: 245, y: 60, width: 300, height: 380, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
-    txt(259, 82, "logits → normalized weights", { size: 9.5, weight: 700, fill: C.warn });
-    for (let j = 0; j < 4; j++) {
-      const on = j <= kMax;
-      const active = tileStep === j + 1;
-      const y = 100 + j * 64;
-      art.appendChild(s("rect", { x: 259, y, width: 272, height: 52, rx: 5, fill: active ? C.warn : C.panel2, "fill-opacity": active ? 0.12 : 0.35, stroke: active ? C.warn : C.line }));
-      txt(269, y + 18, "K" + j, { size: 8, fill: on ? C.fg : C.dim, mono: true });
-      txt(300, y + 18, on ? "s " + scores[j].toFixed(2) : "—", { size: 8, fill: on ? C.fg : C.dim, mono: true });
-      const w = on ? 150 * p(j) : 0;
-      art.appendChild(s("rect", { x: 365, y: y + 12, width: Math.max(1, w), height: 9, rx: 4, fill: C.warn, "fill-opacity": on ? 0.5 : 0.05, stroke: C.warn, "stroke-opacity": on ? 0.5 : 0.1 }));
-      txt(365, y + 38, on ? "p " + p(j).toFixed(3) : "p —", { size: 7.5, fill: on ? C.warn : C.dim, mono: true });
+    if (tileStep >= 2) {
+      chip(360, 190, "Σ", C.teal, 1, 44, 24);
+      txt(360, 214, "denominator", { anchor: "middle", size: 7.5, fill: C.teal });
     }
-    txt(259, 370, "new pair only changes the scale and adds one weight", { size: 7.2, fill: C.dim });
+    if (tileStep >= 2) {
+      art.appendChild(s("rect", { x: 20, y: 286, width: 310, height: 44, rx: 7, fill: C.panel, "fill-opacity": 0.55, stroke: C.teal, "stroke-opacity": 0.4 }));
+      txt(32, 304, "renormalize: m " + old.m.toFixed(2) + " → " + cur.m.toFixed(2) + " · scale " + scale.toFixed(3), { size: 8.2, fill: C.warn, mono: true });
+      txt(32, 321, "ℓ " + old.l.toFixed(3) + " → " + cur.l.toFixed(3) + " · old O rescaled by " + scale.toFixed(3), { size: 8.2, fill: C.fg, mono: true });
+    }
 
-    // Running state
-    art.appendChild(s("rect", { x: 555, y: 60, width: 145, height: 380, rx: 10, fill: C.panel, "fill-opacity": 0.55, stroke: C.accent }));
-    txt(569, 82, "running state", { size: 9.5, weight: 700, fill: C.accent });
-    txt(569, 106, "m", { size: 8, fill: C.dim });
-    txt(569, 122, Number.isFinite(cur.m) ? cur.m.toFixed(2) : "—", { size: 12, fill: C.fg, mono: true });
-    txt(569, 148, "ℓ = Σ exp(s−m)", { size: 7.5, fill: C.dim });
-    txt(569, 164, cur.l.toFixed(3), { size: 12, fill: C.accent, mono: true });
-    txt(569, 190, "scale", { size: 7.5, fill: C.dim });
-    txt(569, 206, prev ? scale.toFixed(3) : "—", { size: 11, fill: C.warn, mono: true });
-    txt(569, 232, "new weight", { size: 7.5, fill: C.dim });
-    txt(569, 248, kMax >= 0 ? newWeight.toFixed(3) : "—", { size: 11, fill: C.ok, mono: true });
-    txt(569, 274, "O unnormalized", { size: 7.5, fill: C.dim });
-    txt(569, 290, cur.l > 0 ? cur.o.toFixed(2) : "—", { size: 12, fill: C.purple, mono: true });
-    txt(569, 316, "O / ℓ", { size: 7.5, fill: C.dim });
-    txt(569, 332, cur.l > 0 ? out.toFixed(2) : "—", { size: 12, fill: C.fg, mono: true });
-    txt(569, 360, tileStep >= 4 ? "normalized" : "running", { size: 7.5, fill: C.dim });
+    // O vector
+    art.appendChild(s("rect", { x: 590, y: 80, width: 100, height: 118, rx: 7, fill: C.panel2, "fill-opacity": 0.6, stroke: tileStep >= 3 ? C.purple : C.line }));
+    txt(640, 98, "O", { anchor: "middle", size: 12, weight: 700, fill: tileStep >= 3 ? C.purple : C.fg, mono: true });
+    const oVals = tileStep >= 3 ? newO : oldO;
+    for (let d = 0; d < 3; d++) {
+      art.appendChild(s("rect", { x: 602, y: 108 + d * 26, width: 76, height: 20, rx: 4, fill: tileStep >= 3 ? C.purple : C.panel, "fill-opacity": tileStep >= 3 ? 0.22 : 0.5, stroke: tileStep >= 3 ? C.purple : C.line }));
+      txt(610, 122 + d * 26, "O[" + d + "] " + oVals[d].toFixed(2), { size: 7.2, fill: C.fg, mono: true });
+    }
+    txt(590, 212, tileStep >= 3 ? "all components updated" : "old O", { size: 7.5, fill: tileStep >= 3 ? C.ok : C.dim });
 
-    // Formula ledger
-    art.appendChild(s("rect", { x: 20, y: 450, width: 680, height: 92, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
-    txt(34, 472, "rescale the previous state, then add the new pair", { size: 9, weight: 700, fill: C.dim });
-    txt(34, 492, "scale = exp(m_old − m_new) · ℓ_new = ℓ_old·scale + exp(s_new − m_new)", { size: 8.2, fill: C.fg, mono: true });
-    txt(34, 510, "O_new = O_old·scale + exp(s_new − m_new)·V_new · p_j = exp(s_j − m_new)/ℓ_new", { size: 8.2, fill: C.fg, mono: true });
-    txt(34, 528, "old K/V not reread · no N×N materialization · final O = O/ℓ", { size: 8, fill: C.ok });
+    // Weighted values
+    if (tileStep >= 3) {
+      xs.forEach((x, j) => {
+        chip(x + 35, 390, "w" + j + "·V" + j, C.purple, 1, 56);
+      });
+      txt(180, 412, "sum the weighted values → update every O", { size: 8, fill: C.purple });
+    }
 
-    svgBtn(art, 20, 570, 80, "▶ Step", () => { stopTile(); if (tileStep < 4) tileStep += 1; render(); });
-    svgBtn(art, 108, 570, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
-    svgBtn(art, 216, 570, 80, "↺ Reset", () => { stopTile(); tileStep = 0; render(); });
-    txt(316, 588, "step " + tileStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
+    // Transfer ledger
+    art.appendChild(s("rect", { x: 20, y: 450, width: 680, height: 96, rx: 9, fill: C.panel, "fill-opacity": 0.55, stroke: C.line }));
+    txt(34, 472, "new state", { size: 9, weight: 700, fill: C.dim });
+    txt(34, 492, "p_new = exp(s_new − m_new) / ℓ_new · old p × (ℓ_old·scale / ℓ_new)", { size: 8, fill: C.fg, mono: true });
+    txt(34, 510, "O = O_old·scale + p_new·V_new · then normalize O/ℓ", { size: 8, fill: C.fg, mono: true });
+    txt(34, 528, "old K/V not reread · one new pair changes every O", { size: 8, fill: C.ok });
+
+    svgBtn(art, 20, 570, 82, "▶ Step", () => { stopTile(); if (tileStep < 3) tileStep += 1; render(); });
+    svgBtn(art, 110, 570, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
+    svgBtn(art, 218, 570, 82, "↺ Reset", () => { stopTile(); tileStep = 0; render(); });
+    txt(318, 588, "step " + tileStep + " / 3", { size: 9.5, fill: C.dim, mono: true });
   }
 
   function drawVariants(art: SVGSVGElement): void {
