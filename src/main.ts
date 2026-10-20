@@ -57,6 +57,7 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 
 const NAV = [
   { href: '#/', label: 'Home' },
+  { href: '#/illustrations', label: 'Illustrations' },
 ];
 
 function renderNav() {
@@ -66,11 +67,11 @@ function renderNav() {
 }
 
 function markActiveNav(hash: string) {
-  // ExploreFlow owns everything beneath it (research, writing, courses, lessons).
-  const inExplore = /^#\/(exploreflow|research|courses|blog|lesson)/.test(hash);
+  const path = hash.split('?')[0] || '#/';
   topnav.querySelectorAll<HTMLAnchorElement>('a[data-nav]').forEach((a) => {
-    const target = a.dataset.nav;
-    a.classList.toggle('active', inExplore ? target === '#/exploreflow' : target === '#/');
+    const target = a.dataset.nav || '#/';
+    const active = target === '#/' ? path === '#/' : path === target || path.startsWith(target + '/');
+    a.classList.toggle('active', active);
   });
 }
 
@@ -644,6 +645,15 @@ function route() {
 async function boot() {
   courses = (await fetchJson<CourseManifest[]>('./data/courses.json')) || [];
   renderNav();
+  document.addEventListener('click', (event) => {
+    const anchor = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#/"]');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (!href) return;
+    event.preventDefault();
+    if (location.hash === href) route();
+    else location.hash = href;
+  });
   window.addEventListener('hashchange', route);
   route();
 }
