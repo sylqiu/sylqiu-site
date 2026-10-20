@@ -617,6 +617,7 @@ function route() {
   const hash = location.hash || '#/';
   teardown();
   markActiveNav(hash);
+  window.scrollTo(0, 0);
 
   const post = hash.match(/^#\/blog\/(.+)$/);
   if (post) return void viewPost(post[1]);
