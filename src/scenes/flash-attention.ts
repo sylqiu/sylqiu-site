@@ -174,10 +174,10 @@ const SECS: Sec[] = [
   },
   {
     id: "tiling",
-    title: "One new K/V: denominator and O correction",
+    title: "One new K/V: the online-softmax update",
     blurb:
-      "A new K/V pair changes the softmax denominator. Merge Q with the new K into one logit, update ℓ, form the new weight with the new V, then correct the old O by ℓ_old·scale/ℓ_new and add the new contribution. Old logits and old Vs are intentionally hidden.",
-    h: 620,
+      "One new K/V tile, one online-softmax update. Q meets the new K to form a logit s. That logit updates the running maximum m and the running denominator ℓ, and produces the new weight p = exp(s − m). Then p, ℓ and the new V flow into O: p·V is accumulated and ℓ normalizes the result. Old logits and old Vs stay hidden.",
+    h: 670,
   },
 
 ];
@@ -975,9 +975,10 @@ const flash: SceneFactory = (host) => {
     if (!tilePlaying) return;
     const dt = Math.min(0.05, (now - tileLast) / 1000);
     tileLast = now;
-    tilePhase = Math.min(1, tilePhase + dt / 1.1);
+    tilePhase = Math.min(1, tilePhase + dt / 1.35);
     if (tilePhase >= 1) {
       tilePhase = 1;
+      if (tileStep >= 3) tileDone[tileQ] = true;
       if (tileSingle) {
         tileSingle = false;
         tilePlaying = false;
@@ -1070,88 +1071,185 @@ const flash: SceneFactory = (host) => {
     };
     const old = stats(1);
     const cur = stats(2);
-    const scale = Math.exp(old.m - cur.m);
-    const lStart = old.l * scale;
-    const pNew = Math.exp(scores[2] - cur.m) / cur.l;
+    const pNew = Math.exp(scores[2] - cur.m);
     const ph = Math.min(1, Math.max(0, tilePhase));
     const ease = 1 - Math.pow(1 - ph, 3);
+    const seg = (a: number, b: number): number => {
+      const t = Math.min(1, Math.max(0, (ph - a) / (b - a)));
+      return 1 - Math.pow(1 - t, 3);
+    };
     const stateT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
     const pT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
-    const oT = tileStep >= 3 ? ease : 0;
+    const oT = tileStep >= 3 ? seg(0.62, 1) : 0;
     const qy = 78 + q * 50;
+    const mDisp = old.m + (cur.m - old.m) * stateT;
+    const lDisp = old.l + (cur.l - old.l) * stateT;
+    const lo = Math.min(...scores);
+    const hi = Math.max(...scores);
     const chip = (cx: number, cy: number, label: string, color: string, opacity = 1, w = 40, h = 20): void => {
       if (opacity <= 0.02) return;
       art.appendChild(s("rect", { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 5, fill: color, "fill-opacity": 0.1 + 0.16 * opacity, stroke: color, "stroke-opacity": 0.7 * opacity }));
       txt(cx, cy + 3.5, label, { anchor: "middle", size: 7.2, fill: color, mono: true });
     };
+    const active = (n: number): boolean => tileStep === n;
 
-    txt(20, 24, "one new K/V · smooth steps", { size: 10.5, weight: 700, fill: C.fg });
-    txt(20, 42, "Q/K → logit · logit + m,ℓ → p · p + V → O", { size: 8, fill: C.dim });
+    txt(20, 24, "one new K/V · online softmax in three steps", { size: 10.5, weight: 700, fill: C.fg });
+    txt(20, 42, "Q·K → s  ·  s + (m, ℓ) → p  ·  p, ℓ, V → O", { size: 8, fill: C.dim });
 
+    // Q loop on the left, one output row per Q on the right.
     for (let i = 0; i < 4; i++) {
-      const active = i === q;
+      const isActive = i === q;
       const done = tileDone[i];
-      const on = active || done;
+      const on = isActive || done;
       const y = 78 + i * 50;
-      art.appendChild(s("rect", { x: 30, y, width: 70, height: 30, rx: 6, fill: active ? C.accent : C.panel2, "fill-opacity": active ? 0.18 : 0.5, stroke: active ? C.accent : C.line, "stroke-width": active ? 1.6 : 1 }));
+      art.appendChild(s("rect", { x: 30, y, width: 70, height: 30, rx: 6, fill: isActive ? C.accent : C.panel2, "fill-opacity": isActive ? 0.18 : 0.5, stroke: isActive ? C.accent : C.line, "stroke-width": isActive ? 1.6 : 1 }));
       txt(65, y + 19, "Q" + i, { anchor: "middle", size: 10, weight: 700, fill: on ? C.fg : C.dim, mono: true });
-      const fill = done ? 1 : active ? oT : 0;
-      art.appendChild(s("rect", { x: 590, y, width: 100, height: 30, rx: 6, fill: fill > 0 ? C.purple : C.panel2, "fill-opacity": fill > 0 ? 0.12 + 0.22 * fill : 0.5, stroke: fill > 0 ? C.purple : C.line, "stroke-width": active ? 1.5 : 1 }));
+      const fill = done ? 1 : isActive ? oT : 0;
+      art.appendChild(s("rect", { x: 590, y, width: 100, height: 30, rx: 6, fill: fill > 0 ? C.purple : C.panel2, "fill-opacity": fill > 0 ? 0.12 + 0.22 * fill : 0.5, stroke: fill > 0 ? C.purple : C.line, "stroke-width": isActive ? 1.5 : 1 }));
       txt(640, y + 19, done ? "O ✓" : "O", { anchor: "middle", size: 10, weight: 700, fill: fill > 0 ? C.fg : C.dim, mono: true });
     }
     txt(30, 267, "Q loop", { size: 7.5, fill: C.dim });
+    txt(590, 267, "one O per Q", { size: 7.5, fill: C.dim });
 
+    // The new K/V tile.
     art.appendChild(s("rect", { x: 350, y: 62, width: 90, height: 30, rx: 6, fill: C.ok, "fill-opacity": tileStep >= 1 ? 0.22 : 0.12, stroke: C.ok }));
     txt(395, 81, "K new", { anchor: "middle", size: 10, weight: 700, fill: C.fg, mono: true });
     art.appendChild(s("rect", { x: 350, y: 382, width: 90, height: 30, rx: 6, fill: C.purple, "fill-opacity": 0.18, stroke: C.purple }));
     txt(395, 401, "V new", { anchor: "middle", size: 10, weight: 700, fill: C.fg, mono: true });
 
-    // Step 1 · Q and K merge into one logit.
+    // Step 1 · Q and the new K meet and form one logit.
     if (tileStep === 1) {
-      const fade = Math.max(0, 1 - (ph - 0.55) / 0.3);
+      const fade = Math.max(0, 1 - (ph - 0.7) / 0.2);
       const qS = { x: 65, y: qy + 15 };
       const qp = { x: qS.x + (395 - qS.x) * ease, y: qS.y + (150 - qS.y) * ease };
       chip(qp.x, qp.y, "Q", C.accent, fade, 30, 18);
       const kp = { x: 395, y: 85 + (145 - 85) * ease };
       chip(kp.x, kp.y, "K", C.ok, fade, 30, 18);
-      if (ph > 0.45) chip(395, 150, "logit", C.warn, Math.min(1, (ph - 0.45) / 0.3), 54);
+      if (ph > 0.55) {
+        const burst = Math.min(1, (ph - 0.55) / 0.3);
+        art.appendChild(s("circle", { cx: 395, cy: 150, r: 7 + 18 * burst, fill: "none", stroke: C.warn, "stroke-opacity": 0.55 * (1 - burst) }));
+      }
+      if (ph > 0.45) chip(395, 150, "s", C.warn, Math.min(1, (ph - 0.45) / 0.3), 40, 20);
+      if (ph > 0.45) txt(430, 146, "logit", { size: 8, fill: C.warn });
     }
 
-    // Persistent state panel; p is produced by the logit meeting m and ℓ.
-    art.appendChild(s("rect", { x: 20, y: 282, width: 330, height: 92, rx: 8, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
-    txt(34, 300, "state", { size: 8.5, weight: 700, fill: C.dim });
-    txt(34, 322, "m", { size: 8.5, fill: C.accent, mono: true });
-    art.appendChild(s("rect", { x: 72, y: 312, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
-    const mPos = 72 + 250 * (0.18 + 0.58 * stateT);
-    art.appendChild(s("circle", { cx: mPos, cy: 316, r: 4, fill: C.accent }));
-    txt(34, 344, "ℓ", { size: 8.5, fill: C.teal, mono: true });
-    art.appendChild(s("rect", { x: 72, y: 334, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
-    const lFrac = (lStart + (cur.l - lStart) * stateT) / cur.l;
-    art.appendChild(s("rect", { x: 72, y: 334, width: Math.max(2, 250 * lFrac), height: 8, rx: 4, fill: C.teal, "fill-opacity": 0.85 }));
-    txt(34, 366, "p", { size: 8.5, fill: C.ok, mono: true });
-    art.appendChild(s("rect", { x: 72, y: 356, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
-    art.appendChild(s("rect", { x: 72, y: 356, width: Math.max(2, 250 * pNew * pT), height: 8, rx: 4, fill: C.ok, "fill-opacity": 0.85 }));
+    // Persistent per-Q state: m, ℓ and p are the only values carried between tiles.
+    art.appendChild(s("rect", { x: 20, y: 282, width: 330, height: 108, rx: 8, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    txt(34, 300, "state for Q" + q, { size: 8.5, weight: 700, fill: C.dim });
 
-    // Step 2 · logit moves into the state; m and ℓ update; p emerges.
+    txt(34, 325, "m", { size: 8.5, fill: C.accent, mono: true });
+    txt(50, 325, "running max", { size: 7.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 96, y: 316, width: 210, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
+    const mPos = 96 + 210 * (hi === lo ? 1 : (mDisp - lo) / (hi - lo));
+    art.appendChild(s("circle", { cx: mPos, cy: 320, r: 4, fill: C.accent }));
+    const newDim = stateT > 0.02;
+    txt(236, 328, old.m.toFixed(2), { anchor: "end", size: 7.5, fill: C.dim, mono: true });
+    txt(244, 328, "→", { anchor: "middle", size: 7.5, fill: C.dim });
+    txt(332, 328, cur.m.toFixed(2), { anchor: "end", size: 8, fill: newDim ? C.accent : C.dim, mono: true });
+
+    txt(34, 353, "ℓ", { size: 8.5, fill: C.teal, mono: true });
+    txt(50, 353, "running denominator", { size: 7.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 96, y: 344, width: 210, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
+    art.appendChild(s("rect", { x: 96, y: 344, width: Math.max(2, 210 * (lDisp / Math.max(old.l, cur.l))), height: 8, rx: 4, fill: C.teal, "fill-opacity": 0.85 }));
+    txt(236, 356, old.l.toFixed(2), { anchor: "end", size: 7.5, fill: C.dim, mono: true });
+    txt(244, 356, "→", { anchor: "middle", size: 7.5, fill: C.dim });
+    txt(332, 356, cur.l.toFixed(2), { anchor: "end", size: 8, fill: newDim ? C.teal : C.dim, mono: true });
+
+    txt(34, 381, "p", { size: 8.5, fill: C.ok, mono: true });
+    txt(50, 381, "new weight", { size: 7.5, fill: C.dim });
+    art.appendChild(s("rect", { x: 96, y: 372, width: 210, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
+    art.appendChild(s("rect", { x: 96, y: 372, width: Math.max(2, 210 * pNew * pT), height: 8, rx: 4, fill: C.ok, "fill-opacity": 0.85 }));
+    txt(332, 384, pT > 0.05 ? pNew.toFixed(2) : "—", { anchor: "end", size: 8, fill: C.ok, mono: true });
+
+    // Step 2 · the logit enters the state; m and ℓ update; p appears.
     if (tileStep === 2) {
       const lx = 395 + (300 - 395) * ease;
-      const ly = 150 + (300 - 150) * ease;
-      chip(lx, ly, "logit", C.warn, 1 - 0.7 * ease, 50);
-      if (ph > 0.35) chip(300, 360, "p", C.ok, 1, 26, 18);
+      const ly = 150 + (306 - 150) * ease;
+      chip(lx, ly, "s", C.warn, 1 - 0.75 * ease, 40);
+      // s feeds the two running values: a dot travels down each row as it updates.
+      const flow = seg(0.4, 0.95);
+      if (flow > 0 && flow < 1) {
+        const lEnd = 96 + 210 * (lDisp / Math.max(old.l, cur.l));
+        art.appendChild(s("circle", { cx: 300 + (mPos - 300) * flow, cy: 306 + (320 - 306) * flow, r: 3.5, fill: C.accent, "fill-opacity": 0.9 }));
+        art.appendChild(s("circle", { cx: 300 + (lEnd - 300) * flow, cy: 306 + (348 - 306) * flow, r: 3.5, fill: C.teal, "fill-opacity": 0.9 }));
+      }
+      const pulse = 1 - Math.abs(0.5 - Math.min(1, ph)) * 2;
+      if (ph < 1) {
+        art.appendChild(s("circle", { cx: mPos, cy: 320, r: 3 + 4 * pulse, fill: "none", stroke: C.accent, "stroke-opacity": 0.35 + 0.3 * pulse }));
+        art.appendChild(s("circle", { cx: 332, cy: 356, r: 3 + 4 * pulse, fill: "none", stroke: C.teal, "stroke-opacity": 0.35 + 0.3 * pulse }));
+      }
+      if (ph > 0.5) chip(320, 381, "p", C.ok, Math.min(1, (ph - 0.5) / 0.25), 24, 18);
     }
 
-    // Step 3 · p and V merge into O. No p label below V.
+    // Step 3 · p, ℓ and the new V all flow into the O for this Q.
+    // p·V is the new numerator; ℓ is the denominator that normalizes the accumulated O.
     if (tileStep === 3) {
-      const px = 300 + (395 - 300) * ease;
-      const py = 360 + (397 - 360) * ease;
-      chip(px, py, "p", C.ok, 1 - 0.7 * ease, 24, 16);
-      art.appendChild(s("circle", { cx: 395, cy: 397, r: 5 + 10 * oT, fill: C.purple, "fill-opacity": 0.12 }));
+      const target = { x: 640, y: qy + 15 };
+      const p0 = { x: 340, y: 381 };
+      const l0 = { x: 340, y: 353 };
+      const v0 = { x: 395, y: 397 };
+      const pT3 = seg(0.02, 0.62);
+      const vT3 = seg(0.10, 0.70);
+      const lT3 = seg(0.38, 0.94);
+      const guide = (a: { x: number; y: number }, col: string): void => {
+        art.appendChild(s("line", { x1: a.x, y1: a.y, x2: target.x, y2: target.y, stroke: col, "stroke-opacity": 0.16, "stroke-dasharray": "3 4" }));
+      };
+      guide(p0, C.ok);
+      guide(l0, C.teal);
+      guide(v0, C.purple);
+      const move = (a: { x: number; y: number }, t: number): { x: number; y: number } => ({ x: a.x + (target.x - a.x) * t, y: a.y + (target.y - a.y) * t });
+      const p1 = move(p0, pT3);
+      const l1 = move(l0, lT3);
+      const v1 = move(v0, vT3);
+      chip(p1.x, p1.y, "p", C.ok, 1 - pT3 * pT3 * pT3, 22, 18);
+      chip(l1.x, l1.y, "ℓ", C.teal, 1 - lT3 * lT3 * lT3, 22, 18);
+      chip(v1.x, v1.y, "V", C.purple, 1 - vT3 * vT3 * vT3, 22, 18);
     }
 
-    svgBtn(art, 20, 566, 82, "▶ Step", () => { stepTileOnce(); });
-    svgBtn(art, 110, 566, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
-    svgBtn(art, 218, 566, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tileStep = 0; tilePhase = 0; render(); });
-    txt(318, 584, "Q " + (q + 1) + " / 4 · step " + tileStep + " / 3", { size: 9.2, fill: C.dim, mono: true });
+    // Definitions, in plain language.
+    art.appendChild(s("rect", { x: 20, y: 430, width: 330, height: 166, rx: 8, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    txt(34, 448, "what the letters mean", { size: 8.5, weight: 700, fill: C.dim });
+    txt(34, 470, "m · running max", { size: 8.5, weight: 700, fill: C.accent });
+    txt(34, 484, "the largest logit seen so far", { size: 8, fill: C.dim });
+    txt(34, 496, "subtracting it keeps exp() finite", { size: 8, fill: C.dim });
+    txt(34, 516, "ℓ · running denominator", { size: 8.5, weight: 700, fill: C.teal });
+    txt(34, 530, "sum of exp(s − m) over all K/V so far", { size: 8, fill: C.dim });
+    txt(34, 542, "the divisor that normalizes O at the end", { size: 8, fill: C.dim });
+    txt(34, 562, "p · new weight", { size: 8.5, weight: 700, fill: C.ok });
+    txt(34, 576, "exp(sₙ − mₙ) for the new K/V", { size: 8, fill: C.dim });
+    txt(34, 588, "p/ℓ is its final softmax probability", { size: 8, fill: C.dim });
+
+    // Update formulas, one block per step. The active block is highlighted.
+    art.appendChild(s("rect", { x: 358, y: 430, width: 342, height: 166, rx: 8, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
+    txt(370, 448, "update formulas", { size: 8.5, weight: 700, fill: C.dim });
+
+    if (active(1)) art.appendChild(s("rect", { x: 362, y: 456, width: 334, height: 22, rx: 5, fill: C.accent, "fill-opacity": 0.08 }));
+    txt(370, 472, "1", { size: 8, fill: active(1) ? C.accent : C.dim, mono: true });
+    txt(386, 472, "sₙ = q · kₙ / √d", { size: 9, fill: active(1) ? C.fg : C.dim, mono: true });
+
+    if (active(2)) art.appendChild(s("rect", { x: 362, y: 482, width: 334, height: 54, rx: 5, fill: C.accent, "fill-opacity": 0.08 }));
+    txt(370, 498, "2", { size: 8, fill: active(2) ? C.accent : C.dim, mono: true });
+    txt(386, 498, "mₙ = max(mₒ, sₙ)", { size: 9, fill: active(2) ? C.fg : C.dim, mono: true });
+    txt(386, 514, "p = exp(sₙ − mₙ)", { size: 9, fill: active(2) ? C.fg : C.dim, mono: true });
+    txt(386, 530, "ℓₙ = exp(mₒ − mₙ) · ℓₒ + p", { size: 9, fill: active(2) ? C.fg : C.dim, mono: true });
+
+    if (active(3)) art.appendChild(s("rect", { x: 362, y: 540, width: 334, height: 26, rx: 5, fill: C.accent, "fill-opacity": 0.08 }));
+    txt(370, 558, "3", { size: 8, fill: active(3) ? C.accent : C.dim, mono: true });
+    txt(386, 558, "Oₙ = (exp(mₒ − mₙ) · Oₒ + p · Vₙ) / ℓₙ", { size: 8.8, fill: active(3) ? C.fg : C.dim, mono: true });
+    txt(370, 578, "p is unnormalized; the division by ℓ is the last operation.", { size: 7.5, fill: C.dim });
+
+    const stage = [
+      "Press Step or Run. m, ℓ and O carry over from one key/value tile to the next.",
+      "1 · Form the new logit: sₙ = q · kₙ / √d.",
+      "2 · Update m and ℓ, then form p = exp(sₙ − mₙ).",
+      "3 · p·V accumulates into O; ℓ is the divisor that normalizes it.",
+    ][tileStep];
+    txt(20, 650, stage, { size: 9.5, fill: C.fg });
+
+    svgBtn(art, 20, 606, 82, "▶ Step", () => { stepTileOnce(); });
+    svgBtn(art, 110, 606, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
+    svgBtn(art, 218, 606, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tileStep = 0; tilePhase = 0; render(); });
+    txt(318, 622, "Q " + (q + 1) + " / 4 · step " + tileStep + " / 3", { size: 9.2, fill: C.dim, mono: true });
   }
 
   render();
