@@ -11,7 +11,11 @@ import type { SceneFactory } from "../lib/registry.ts";
 
 const NS = "http://www.w3.org/2000/svg";
 const VB_W = 720;
-let currentArt: SVGSVGElement | null = null;
+let currentArt: SVGGElement | null = null;
+type SvgButton = { g: SVGGElement; rect: SVGRectElement; label: SVGTextElement };
+const btnActions = new WeakMap<SVGGElement, Map<string, () => void>>();
+const controlsFor = new WeakMap<SVGGElement, SVGGElement>();
+const buttonsFor = new WeakMap<SVGGElement, Map<string, SvgButton>>();
 
 const C = {
   fg: "#e6edf3",
@@ -74,42 +78,88 @@ function marker(id: string, color: string): SVGMarkerElement {
   return m;
 }
 
-function arrow(art: SVGSVGElement, x1: number, y1: number, x2: number, y2: number, color: string, id: string, width = 1.2): void {
+function arrow(art: SVGGElement, x1: number, y1: number, x2: number, y2: number, color: string, id: string, width = 1.2): void {
   art.appendChild(s("line", { x1, y1, x2, y2, stroke: color, "stroke-width": width, "marker-end": "url(#" + id + ")" }));
 }
 
-function box(art: SVGSVGElement, x: number, y: number, w: number, h: number, title: string, sub: string, color: string, dim = false): void {
+function box(art: SVGGElement, x: number, y: number, w: number, h: number, title: string, sub: string, color: string, dim = false): void {
   art.appendChild(s("rect", { x, y, width: w, height: h, rx: 9, fill: C.panel, "fill-opacity": dim ? 0.3 : 0.7, stroke: color, "stroke-opacity": dim ? 0.3 : 0.7 }));
   art.appendChild(txt(x + 12, y + 22, title, { size: 11, weight: 700, fill: dim ? C.dim : color }));
   art.appendChild(txt(x + 12, y + 41, sub, { size: 8.5, fill: C.dim }));
 }
 
-function svgBtn(art: SVGSVGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
+function wireSvgButtons(svg: SVGSVGElement, art: SVGGElement): void {
+  let lastPointer = 0;
+  const run = (target: EventTarget | null): boolean => {
+    const g = (target as Element | null)?.closest?.("g[data-btn]");
+    if (!g || !svg.contains(g)) return false;
+    const key = g.getAttribute("data-btn") || "";
+    const action = btnActions.get(art)?.get(key);
+    if (!action) return false;
+    action();
+    return true;
+  };
+  // Delegate on the <svg> root: the scene rebuilds its contents every frame,
+  // so per-button listeners disappear on touch devices mid-tap.
+  svg.addEventListener("pointerdown", (event) => {
+    lastPointer = Date.now();
+    if (run(event.target)) event.preventDefault();
+  });
+  svg.addEventListener("click", (event) => {
+    if (Date.now() - lastPointer < 700) return;
+    if (run(event.target)) event.preventDefault();
+  });
+  svg.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      if (run(event.target)) event.preventDefault();
+    }
+  });
+}
+
+function svgBtn(art: SVGGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
   const color = on ? C.accent : C.dim;
-  const g = s("g", { cursor: on ? "pointer" : "default", class: "ill-svg-btn" });
-  g.appendChild(s("rect", { x, y, width: w, height: 26, rx: 13, fill: color, "fill-opacity": on ? 0.12 : 0.06, stroke: color }));
-  g.appendChild(txt(x + w / 2, y + 17, label, { anchor: "middle", size: 10.5, fill: color, weight: 600 }));
-  if (on) {
-    let lastPointer = 0;
-    g.setAttribute("role", "button");
-    g.setAttribute("tabindex", "0");
-    g.addEventListener("pointerdown", (event) => {
-      lastPointer = Date.now();
-      event.preventDefault();
-      onClick();
-    });
-    g.addEventListener("click", () => {
-      if (Date.now() - lastPointer < 700) return;
-      onClick();
-    });
-    g.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onClick();
-      }
-    });
+  const key = x + "," + y + "," + w;
+  let buttons = buttonsFor.get(art);
+  if (!buttons) {
+    buttons = new Map();
+    buttonsFor.set(art, buttons);
   }
-  art.appendChild(g);
+  let node = buttons.get(key);
+  if (!node) {
+    const g = s("g", { class: "ill-svg-btn" });
+    const rect = s("rect", { x, y, width: w, height: 26, rx: 13 });
+    const text = s("text", {
+      x: x + w / 2,
+      y: y + 17,
+      "text-anchor": "middle",
+      "font-size": 10.5,
+      "font-weight": 600,
+    });
+    text.textContent = label;
+    g.append(rect, text);
+    const layer = controlsFor.get(art);
+    if (layer) layer.appendChild(g);
+    node = { g, rect, label: text };
+    buttons.set(key, node);
+  }
+  node.rect.setAttribute("fill", color);
+  node.rect.setAttribute("fill-opacity", String(on ? 0.12 : 0.06));
+  node.rect.setAttribute("stroke", color);
+  node.label.textContent = label;
+  node.label.setAttribute("fill", color);
+  node.g.setAttribute("data-btn", key);
+  node.g.setAttribute("cursor", on ? "pointer" : "default");
+  node.g.setAttribute("role", "button");
+  node.g.setAttribute("tabindex", "0");
+  node.g.style.display = on ? "" : "none";
+  if (on) {
+    let actions = btnActions.get(art);
+    if (!actions) {
+      actions = new Map();
+      btnActions.set(art, actions);
+    }
+    actions.set(key, onClick);
+  }
 }
 
 function wrapText(text: string, width: number): string[] {
@@ -129,7 +179,7 @@ function wrapText(text: string, width: number): string[] {
   return lines;
 }
 
-function bar(art: SVGSVGElement, x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void {
+function bar(art: SVGGElement, x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void {
   art.appendChild(txt(x, y - 6, label, { size: 9.5, fill: C.dim }));
   art.appendChild(s("rect", { x, y, width: w, height: 12, rx: 6, fill: C.panel2, stroke: C.line }));
   art.appendChild(s("rect", { x, y, width: Math.max(2, w * Math.min(1, frac)), height: 12, rx: 6, fill: color, "fill-opacity": 0.85 }));
@@ -323,7 +373,7 @@ const flash: SceneFactory = (host) => {
   const root = document.createElement("div");
   root.className = "ill";
 
-  const secEls: Array<{ svg: SVGSVGElement; ctl: HTMLElement; section: HTMLElement }> = [];
+  const secEls: Array<{ svg: SVGSVGElement; art: SVGGElement; ctl: HTMLElement; section: HTMLElement }> = [];
   SECS.forEach((sec, secIndex) => {
     const section = document.createElement("section");
     section.className = "ill-sec";
@@ -345,29 +395,72 @@ const flash: SceneFactory = (host) => {
       role: "img",
       "aria-label": sec.title,
     });
+    const art = s("g", { class: "ill-art" });
+    const controls = s("g", { class: "ill-controls" });
+    svg.append(art, controls);
+    controlsFor.set(art, controls);
     fig.appendChild(svg);
+    wireSvgButtons(svg, art);
     section.append(head, blurb, fig);
     root.appendChild(section);
-    secEls.push({ svg, ctl, section });
+    secEls.push({ svg, art, ctl, section });
   });
   host.appendChild(root);
 
+  const visible = new Set<number>();
+  let io: IntersectionObserver | null = null;
+  if ("IntersectionObserver" in window) {
+    io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const idx = secEls.findIndex((x) => x.section === entry.target);
+          if (idx < 0) continue;
+          if (entry.isIntersecting) visible.add(idx);
+          else visible.delete(idx);
+
+          // Do not burn frames on a scene the reader cannot see.
+          if (idx === 1 && entry.isIntersecting && attnPlaying && attnRaf === null) {
+            attnLast = performance.now();
+            attnRaf = window.requestAnimationFrame(attnTick);
+          } else if (idx === 1 && !entry.isIntersecting && attnRaf !== null) {
+            window.cancelAnimationFrame(attnRaf);
+            attnRaf = null;
+          }
+          if (idx === 4 && entry.isIntersecting && tilePlaying && tileRaf === null) {
+            tileLast = performance.now();
+            tileRaf = window.requestAnimationFrame(tickTile);
+          } else if (idx === 4 && !entry.isIntersecting && tileRaf !== null) {
+            window.cancelAnimationFrame(tileRaf);
+            tileRaf = null;
+          }
+        }
+      },
+      { rootMargin: "160px 0px" },
+    );
+    for (const { section } of secEls) io.observe(section);
+  }
+
   const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling];
 
+  function renderSection(i: number): void {
+    const { art } = secEls[i];
+    // The controls live in a sibling <g> that is never cleared: keeping the
+    // same DOM nodes is what makes taps reliable on mobile while animating.
+    btnActions.set(art, new Map());
+    while (art.firstChild) art.removeChild(art.firstChild);
+    currentArt = art;
+    draws[i](art);
+    currentArt = null;
+  }
+
   function render(): void {
-    for (let i = 0; i < secEls.length; i++) {
-      const svg = secEls[i].svg;
-      while (svg.firstChild) svg.removeChild(svg.firstChild);
-      currentArt = svg;
-      draws[i](svg);
-      currentArt = null;
-    }
+    for (let i = 0; i < secEls.length; i++) renderSection(i);
   }
 
   /* ------------------------------ section 1 ------------------------------ */
 
   function drawMatrix(
-    art: SVGSVGElement,
+    art: SVGGElement,
     x: number,
     y: number,
     rows: number,
@@ -403,7 +496,7 @@ const flash: SceneFactory = (host) => {
     }
   }
 
-  function drawDefinition(art: SVGSVGElement): void {
+  function drawDefinition(art: SVGGElement): void {
     art.appendChild(marker("arw-def", C.dim));
     const qx = 30;
     const qw = 70;
@@ -553,11 +646,7 @@ const flash: SceneFactory = (host) => {
   }
 
   function renderDefinition(): void {
-    const svg = secEls[1].svg;
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    currentArt = svg;
-    drawDefinition(svg);
-    currentArt = null;
+    renderSection(1);
   }
 
   function stopAttn(): void {
@@ -620,7 +709,7 @@ const flash: SceneFactory = (host) => {
     }
 
     renderDefinition();
-    if (attnPlaying) attnRaf = window.requestAnimationFrame(attnTick);
+    if (attnPlaying && (io === null || visible.has(1))) attnRaf = window.requestAnimationFrame(attnTick);
   }
 
   function stepAttn(): void {
@@ -657,7 +746,7 @@ const flash: SceneFactory = (host) => {
 
   /* ------------------------------ section 2 ------------------------------ */
 
-  function drawMemory(art: SVGSVGElement): void {
+  function drawMemory(art: SVGGElement): void {
     art.appendChild(marker("arw-mem", C.dim));
     const gpuOn = arch === "gpu";
     const tpuOn = arch === "tpu";
@@ -743,8 +832,8 @@ const flash: SceneFactory = (host) => {
     txt(34, 500, "CPU and accelerator share one address space; no explicit H2D/D2H copies", { size: 8.5, fill: C.fg });
     txt(34, 516, "still HBM-bound; coherence and capacity are the trade-offs", { size: 8.5, fill: C.warn });
 
-    svgBtn(art, 20, 548, 90, gpuOn ? "✓ GPU" : "GPU", () => { arch = "gpu"; render(); });
-    svgBtn(art, 118, 548, 90, tpuOn ? "✓ TPU" : "TPU", () => { arch = "tpu"; render(); });
+    svgBtn(art, 20, 548, 90, gpuOn ? "✓ GPU" : "GPU", () => { arch = "gpu"; renderSection(0); });
+    svgBtn(art, 118, 548, 90, tpuOn ? "✓ TPU" : "TPU", () => { arch = "tpu"; renderSection(0); });
     txt(220, 566, "toggle target: architectures and scheduling differ", { size: 8.5, fill: C.dim });
   }
 
@@ -761,7 +850,7 @@ const flash: SceneFactory = (host) => {
   function toggleNaive(): void {
     if (naivePlaying) {
       stopNaive();
-      render();
+      renderSection(2);
       return;
     }
     if (naiveStep >= 4) naiveStep = 0;
@@ -771,30 +860,30 @@ const flash: SceneFactory = (host) => {
       if (naiveStep >= 4) {
         naivePlaying = false;
         naiveTimer = null;
-        render();
+        renderSection(2);
         return;
       }
       naiveStep += 1;
-      render();
+      renderSection(2);
       naiveTimer = window.setTimeout(tick, 950);
     };
     naiveTimer = window.setTimeout(tick, 500);
-    render();
+    renderSection(2);
   }
 
   function stepNaive(): void {
     stopNaive();
     naiveStep = naiveStep >= 4 ? 0 : naiveStep + 1;
-    render();
+    renderSection(2);
   }
 
   function resetNaive(): void {
     stopNaive();
     naiveStep = 0;
-    render();
+    renderSection(2);
   }
 
-  function drawNaive(art: SVGSVGElement): void {
+  function drawNaive(art: SVGGElement): void {
     const T = {
       total: 61.3,
       steps: [
@@ -888,7 +977,7 @@ const flash: SceneFactory = (host) => {
     txt(340, 518, "step " + naiveStep + " / 4", { size: 9.5, fill: C.dim, mono: true });
   }
 
-  function drawFused(art: SVGSVGElement): void {
+  function drawFused(art: SVGGElement): void {
     const total = 27.1;
     const x0 = 150;
     const x1 = 680;
@@ -996,14 +1085,14 @@ const flash: SceneFactory = (host) => {
         }
       }
     }
-    render();
-    if (tilePlaying) tileRaf = window.requestAnimationFrame(tickTile);
+    renderSection(4);
+    if (tilePlaying && (io === null || visible.has(4))) tileRaf = window.requestAnimationFrame(tickTile);
   }
 
   function toggleTile(): void {
     if (tilePlaying) {
       stopTile();
-      render();
+      renderSection(4);
       return;
     }
     if (tileStep >= 3 && tileQ >= 3) {
@@ -1017,7 +1106,7 @@ const flash: SceneFactory = (host) => {
     tilePlaying = true;
     tileLast = performance.now();
     tileRaf = window.requestAnimationFrame(tickTile);
-    render();
+    renderSection(4);
   }
 
   function stepTileOnce(): void {
@@ -1042,10 +1131,10 @@ const flash: SceneFactory = (host) => {
     tilePlaying = true;
     tileLast = performance.now();
     tileRaf = window.requestAnimationFrame(tickTile);
-    render();
+    renderSection(4);
   }
 
-  function drawTiling(art: SVGSVGElement): void {
+  function drawTiling(art: SVGGElement): void {
     const scoresByQ = [
       [-0.68, -1.14, 0.34],
       [0.12, -0.40, 0.80],
@@ -1248,7 +1337,7 @@ const flash: SceneFactory = (host) => {
 
     svgBtn(art, 20, 606, 82, "▶ Step", () => { stepTileOnce(); });
     svgBtn(art, 110, 606, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
-    svgBtn(art, 218, 606, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tileStep = 0; tilePhase = 0; render(); });
+    svgBtn(art, 218, 606, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tileStep = 0; tilePhase = 0; renderSection(4); });
     txt(318, 622, "Q " + (q + 1) + " / 4 · step " + tileStep + " / 3", { size: 9.2, fill: C.dim, mono: true });
   }
 
@@ -1256,6 +1345,7 @@ const flash: SceneFactory = (host) => {
   startAttn(false);
   return {
     destroy(): void {
+      io?.disconnect();
       stopAttn();
       stopNaive();
       stopTile();

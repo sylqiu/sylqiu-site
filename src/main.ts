@@ -55,10 +55,7 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 
 /* ---------------------------------- nav ---------------------------------- */
 
-const NAV = [
-  { href: '?nav=home#/', label: 'Home', nav: '#/' },
-  { href: '?nav=illustrations#/illustrations', label: 'Illustrations', nav: '#/illustrations' },
-];
+const NAV = [{ href: '#/', label: 'Home', nav: '#/' }];
 
 function renderNav() {
   topnav.innerHTML = NAV.map(
@@ -128,14 +125,14 @@ async function viewIllustration(id: string) {
     app.innerHTML = `<article class="page">
       <header><h1>Not here</h1></header>
       <p>No illustration <code>${esc(id)}</code>.</p>
-      <p><a href="?nav=illustrations#/illustrations">← All illustrations</a></p>
+      <p><a href="#/illustrations">← All illustrations</a></p>
     </article>`;
     return;
   }
 
   app.innerHTML = `<article class="page">
     <header>
-      <a class="back" href="?nav=illustrations#/illustrations">← All illustrations</a>
+      <a class="back" href="#/illustrations">← All illustrations</a>
       <h1>${esc(ill.title)}</h1>
     </header>
     <div class="ill-canvas" id="ill-stage"></div>
