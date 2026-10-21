@@ -975,14 +975,24 @@ const flash: SceneFactory = (host) => {
     if (!tilePlaying) return;
     const dt = Math.min(0.05, (now - tileLast) / 1000);
     tileLast = now;
-    tilePhase = Math.min(1, tilePhase + dt / 4.2);
+    tilePhase = Math.min(1, tilePhase + dt / 1.1);
     if (tilePhase >= 1) {
-      tileDone[tileQ] = true;
-      if (tileQ < 3) {
-        tileQ += 1;
+      tilePhase = 1;
+      if (tileSingle) {
+        tileSingle = false;
+        tilePlaying = false;
+      } else if (tileStep < 3) {
+        tileStep += 1;
         tilePhase = 0;
       } else {
-        tilePlaying = false;
+        tileDone[tileQ] = true;
+        if (tileQ < 3) {
+          tileQ += 1;
+          tileStep = 1;
+          tilePhase = 0;
+        } else {
+          tilePlaying = false;
+        }
       }
     }
     render();
@@ -995,11 +1005,39 @@ const flash: SceneFactory = (host) => {
       render();
       return;
     }
-    if (tileQ >= 3 && tileDone[3]) {
+    if (tileStep >= 3 && tileQ >= 3) {
       tileQ = 0;
       tileDone.fill(false);
-      tilePhase = 0;
+      tileStep = 0;
     }
+    if (tileStep === 0) tileStep = 1;
+    tilePhase = 0;
+    tileSingle = false;
+    tilePlaying = true;
+    tileLast = performance.now();
+    tileRaf = window.requestAnimationFrame(tickTile);
+    render();
+  }
+
+  function stepTileOnce(): void {
+    stopTile();
+    if (tileStep >= 3) {
+      tileDone[tileQ] = true;
+      if (tileQ < 3) {
+        tileQ += 1;
+        tileStep = 1;
+      } else {
+        tileQ = 0;
+        tileDone.fill(false);
+        tileStep = 0;
+      }
+    } else if (tileStep === 0) {
+      tileStep = 1;
+    } else {
+      tileStep += 1;
+    }
+    tilePhase = 0;
+    tileSingle = true;
     tilePlaying = true;
     tileLast = performance.now();
     tileRaf = window.requestAnimationFrame(tickTile);
@@ -1035,14 +1073,11 @@ const flash: SceneFactory = (host) => {
     const scale = Math.exp(old.m - cur.m);
     const lStart = old.l * scale;
     const pNew = Math.exp(scores[2] - cur.m) / cur.l;
-    const phase = Math.min(1, Math.max(0, tilePhase));
-    const clamp = (v: number): number => Math.min(1, Math.max(0, v));
-    const ease = (v: number): number => 1 - Math.pow(1 - v, 3);
-    const mergeT = ease(clamp(phase / 0.25));
-    const maxT = clamp((phase - 0.20) / 0.22);
-    const denomT = clamp((phase - 0.34) / 0.24);
-    const pT = clamp((phase - 0.48) / 0.22);
-    const oT = clamp((phase - 0.66) / 0.25);
+    const ph = Math.min(1, Math.max(0, tilePhase));
+    const ease = 1 - Math.pow(1 - ph, 3);
+    const stateT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
+    const pT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
+    const oT = tileStep >= 3 ? ease : 0;
     const qy = 78 + q * 50;
     const chip = (cx: number, cy: number, label: string, color: string, opacity = 1, w = 40, h = 20): void => {
       if (opacity <= 0.02) return;
@@ -1050,8 +1085,8 @@ const flash: SceneFactory = (host) => {
       txt(cx, cy + 3.5, label, { anchor: "middle", size: 7.2, fill: color, mono: true });
     };
 
-    txt(20, 24, "one new K/V · smooth update", { size: 10.5, weight: 700, fill: C.fg });
-    txt(20, 42, "Q/K → logit → state → p·V → O", { size: 8, fill: C.dim });
+    txt(20, 24, "one new K/V · smooth steps", { size: 10.5, weight: 700, fill: C.fg });
+    txt(20, 42, "Q/K → logit · logit + m,ℓ → p · p + V → O", { size: 8, fill: C.dim });
 
     for (let i = 0; i < 4; i++) {
       const active = i === q;
@@ -1066,56 +1101,57 @@ const flash: SceneFactory = (host) => {
     }
     txt(30, 267, "Q loop", { size: 7.5, fill: C.dim });
 
-    // The new K/V pair persists; old keys and values are hidden.
-    art.appendChild(s("rect", { x: 350, y: 62, width: 90, height: 30, rx: 6, fill: C.ok, "fill-opacity": mergeT > 0 ? 0.22 : 0.12, stroke: C.ok, "stroke-width": 1.4 }));
+    art.appendChild(s("rect", { x: 350, y: 62, width: 90, height: 30, rx: 6, fill: C.ok, "fill-opacity": tileStep >= 1 ? 0.22 : 0.12, stroke: C.ok }));
     txt(395, 81, "K new", { anchor: "middle", size: 10, weight: 700, fill: C.fg, mono: true });
     art.appendChild(s("rect", { x: 350, y: 382, width: 90, height: 30, rx: 6, fill: C.purple, "fill-opacity": 0.18, stroke: C.purple }));
     txt(395, 401, "V new", { anchor: "middle", size: 10, weight: 700, fill: C.fg, mono: true });
 
-    // Q and K merge in place; the logit appears under K, not off to the side.
-    if (phase < 0.32) {
+    // Step 1 · Q and K merge into one logit.
+    if (tileStep === 1) {
+      const fade = Math.max(0, 1 - (ph - 0.55) / 0.3);
       const qS = { x: 65, y: qy + 15 };
-      const qp = { x: qS.x + (395 - qS.x) * mergeT, y: qS.y + (150 - qS.y) * mergeT };
-      chip(qp.x, qp.y, "Q", C.accent, 1, 30, 18);
-      const kp = { x: 395, y: 85 + (145 - 85) * mergeT };
-      chip(kp.x, kp.y, "K", C.ok, 1, 30, 18);
-    }
-    if (phase > 0.18) {
-      chip(395, 150, "logit", C.warn, clamp((phase - 0.18) / 0.1), 54, 20);
+      const qp = { x: qS.x + (395 - qS.x) * ease, y: qS.y + (150 - qS.y) * ease };
+      chip(qp.x, qp.y, "Q", C.accent, fade, 30, 18);
+      const kp = { x: 395, y: 85 + (145 - 85) * ease };
+      chip(kp.x, kp.y, "K", C.ok, fade, 30, 18);
+      if (ph > 0.45) chip(395, 150, "logit", C.warn, Math.min(1, (ph - 0.45) / 0.3), 54);
     }
 
-    // Persistent state panel: only the quantities that change.
+    // Persistent state panel; p is produced by the logit meeting m and ℓ.
     art.appendChild(s("rect", { x: 20, y: 282, width: 330, height: 92, rx: 8, fill: C.panel, "fill-opacity": 0.5, stroke: C.line }));
     txt(34, 300, "state", { size: 8.5, weight: 700, fill: C.dim });
     txt(34, 322, "m", { size: 8.5, fill: C.accent, mono: true });
     art.appendChild(s("rect", { x: 72, y: 312, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
-    const mPos = 72 + 250 * (0.18 + 0.58 * maxT);
+    const mPos = 72 + 250 * (0.18 + 0.58 * stateT);
     art.appendChild(s("circle", { cx: mPos, cy: 316, r: 4, fill: C.accent }));
     txt(34, 344, "ℓ", { size: 8.5, fill: C.teal, mono: true });
     art.appendChild(s("rect", { x: 72, y: 334, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
-    const lFrac = (lStart + (cur.l - lStart) * denomT) / cur.l;
+    const lFrac = (lStart + (cur.l - lStart) * stateT) / cur.l;
     art.appendChild(s("rect", { x: 72, y: 334, width: Math.max(2, 250 * lFrac), height: 8, rx: 4, fill: C.teal, "fill-opacity": 0.85 }));
     txt(34, 366, "p", { size: 8.5, fill: C.ok, mono: true });
     art.appendChild(s("rect", { x: 72, y: 356, width: 250, height: 8, rx: 4, fill: C.panel2, stroke: C.line }));
     art.appendChild(s("rect", { x: 72, y: 356, width: Math.max(2, 250 * pNew * pT), height: 8, rx: 4, fill: C.ok, "fill-opacity": 0.85 }));
 
-    // Probability chip moves into the new V, then the weighted value moves into O.
-    if (pT > 0 && pT < 1) {
-      const pStart = { x: 330, y: 360 };
-      const pEnd = { x: 395, y: 397 };
-      chip(pStart.x + (pEnd.x - pStart.x) * pT, pStart.y + (pEnd.y - pStart.y) * pT, "p", C.ok, 1, 22, 16);
-    }
-    if (pT > 0.65) {
-      chip(395, 425, "p·V", C.purple, 1, 44);
-    }
-    if (oT > 0) {
-      const active = q;
-      art.appendChild(s("circle", { cx: 640, cy: 78 + active * 50 + 15, r: 4 + 6 * oT, fill: C.purple, "fill-opacity": 0.15 }));
+    // Step 2 · logit moves into the state; m and ℓ update; p emerges.
+    if (tileStep === 2) {
+      const lx = 395 + (300 - 395) * ease;
+      const ly = 150 + (300 - 150) * ease;
+      chip(lx, ly, "logit", C.warn, 1 - 0.7 * ease, 50);
+      if (ph > 0.35) chip(300, 360, "p", C.ok, 1, 26, 18);
     }
 
-    svgBtn(art, 20, 566, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
-    svgBtn(art, 128, 566, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tilePhase = 0; render(); });
-    txt(228, 584, "Q " + (q + 1) + " / 4", { size: 9.2, fill: C.dim, mono: true });
+    // Step 3 · p and V merge into O. No p label below V.
+    if (tileStep === 3) {
+      const px = 300 + (395 - 300) * ease;
+      const py = 360 + (397 - 360) * ease;
+      chip(px, py, "p", C.ok, 1 - 0.7 * ease, 24, 16);
+      art.appendChild(s("circle", { cx: 395, cy: 397, r: 5 + 10 * oT, fill: C.purple, "fill-opacity": 0.12 }));
+    }
+
+    svgBtn(art, 20, 566, 82, "▶ Step", () => { stepTileOnce(); });
+    svgBtn(art, 110, 566, 100, tilePlaying ? "⏸ Pause" : "▶ Run", () => { toggleTile(); });
+    svgBtn(art, 218, 566, 82, "↺ Reset", () => { stopTile(); tileQ = 0; tileDone.fill(false); tileStep = 0; tilePhase = 0; render(); });
+    txt(318, 584, "Q " + (q + 1) + " / 4 · step " + tileStep + " / 3", { size: 9.2, fill: C.dim, mono: true });
   }
 
   render();
