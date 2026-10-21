@@ -8,60 +8,23 @@
  * 5  code for PyTorch, CUDA/CUTLASS, Triton, and TPU/Pallas
  */
 import type { SceneFactory } from "../lib/registry.ts";
+import {
+  C,
+  MOTION,
+  s,
+  txtInto,
+  attachSvgControls,
+  type TxtOpts,
+  type SvgControls,
+} from "../lib/illustration-kit.ts";
 
-const NS = "http://www.w3.org/2000/svg";
 const VB_W = 720;
 let currentArt: SVGGElement | null = null;
-type SvgButton = { g: SVGGElement; rect: SVGRectElement; label: SVGTextElement };
-const btnActions = new WeakMap<SVGGElement, Map<string, () => void>>();
-const controlsFor = new WeakMap<SVGGElement, SVGGElement>();
-const buttonsFor = new WeakMap<SVGGElement, Map<string, SvgButton>>();
-
-const C = {
-  fg: "#e6edf3",
-  dim: "#8b949e",
-  line: "#2a3140",
-  panel: "#161b22",
-  panel2: "#1c2230",
-  accent: "#58a6ff",
-  ok: "#3fb950",
-  warn: "#d29922",
-  bad: "#f85149",
-  teal: "#39c5cf",
-  purple: "#a371f7",
-  pink: "#f778ba",
-};
-
-function s<K extends keyof SVGElementTagNameMap>(
-  tag: K,
-  attrs: Record<string, string | number> = {},
-): SVGElementTagNameMap[K] {
-  const node = document.createElementNS(NS, tag);
-  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
-  return node;
-}
-
-interface TxtOpts {
-  fill?: string;
-  size?: number;
-  anchor?: "start" | "middle" | "end";
-  mono?: boolean;
-  weight?: number;
-}
+let currentControls: SvgControls | null = null;
 
 function txt(x: number, y: number, content: string, o: TxtOpts = {}): SVGTextElement {
-  const t = s("text", {
-    x,
-    y,
-    fill: o.fill ?? C.dim,
-    "font-size": o.size ?? 11,
-    "text-anchor": o.anchor ?? "start",
-    "font-family": o.mono === true ? "ui-monospace, SFMono-Regular, Menlo, monospace" : "inherit",
-  });
-  if (o.weight !== undefined) t.setAttribute("font-weight", String(o.weight));
-  t.textContent = content;
-  if (currentArt) currentArt.appendChild(t);
-  return t;
+  if (!currentArt) throw new Error("txt() called outside a draw");
+  return txtInto(currentArt, x, y, content, o);
 }
 
 function marker(id: string, color: string): SVGMarkerElement {
@@ -82,108 +45,8 @@ function arrow(art: SVGGElement, x1: number, y1: number, x2: number, y2: number,
   art.appendChild(s("line", { x1, y1, x2, y2, stroke: color, "stroke-width": width, "marker-end": "url(#" + id + ")" }));
 }
 
-function box(art: SVGGElement, x: number, y: number, w: number, h: number, title: string, sub: string, color: string, dim = false): void {
-  art.appendChild(s("rect", { x, y, width: w, height: h, rx: 9, fill: C.panel, "fill-opacity": dim ? 0.3 : 0.7, stroke: color, "stroke-opacity": dim ? 0.3 : 0.7 }));
-  art.appendChild(txt(x + 12, y + 22, title, { size: 11, weight: 700, fill: dim ? C.dim : color }));
-  art.appendChild(txt(x + 12, y + 41, sub, { size: 8.5, fill: C.dim }));
-}
-
-function wireSvgButtons(svg: SVGSVGElement, art: SVGGElement): void {
-  let lastPointer = 0;
-  const run = (target: EventTarget | null): boolean => {
-    const g = (target as Element | null)?.closest?.("g[data-btn]");
-    if (!g || !svg.contains(g)) return false;
-    const key = g.getAttribute("data-btn") || "";
-    const action = btnActions.get(art)?.get(key);
-    if (!action) return false;
-    action();
-    return true;
-  };
-  // Delegate on the <svg> root: the scene rebuilds its contents every frame,
-  // so per-button listeners disappear on touch devices mid-tap.
-  svg.addEventListener("pointerdown", (event) => {
-    lastPointer = Date.now();
-    if (run(event.target)) event.preventDefault();
-  });
-  svg.addEventListener("click", (event) => {
-    if (Date.now() - lastPointer < 700) return;
-    if (run(event.target)) event.preventDefault();
-  });
-  svg.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      if (run(event.target)) event.preventDefault();
-    }
-  });
-}
-
-function svgBtn(art: SVGGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
-  const color = on ? C.accent : C.dim;
-  const key = x + "," + y + "," + w;
-  let buttons = buttonsFor.get(art);
-  if (!buttons) {
-    buttons = new Map();
-    buttonsFor.set(art, buttons);
-  }
-  let node = buttons.get(key);
-  if (!node) {
-    const g = s("g", { class: "ill-svg-btn" });
-    const rect = s("rect", { x, y, width: w, height: 26, rx: 13 });
-    const text = s("text", {
-      x: x + w / 2,
-      y: y + 17,
-      "text-anchor": "middle",
-      "font-size": 10.5,
-      "font-weight": 600,
-    });
-    text.textContent = label;
-    g.append(rect, text);
-    const layer = controlsFor.get(art);
-    if (layer) layer.appendChild(g);
-    node = { g, rect, label: text };
-    buttons.set(key, node);
-  }
-  node.rect.setAttribute("fill", color);
-  node.rect.setAttribute("fill-opacity", String(on ? 0.12 : 0.06));
-  node.rect.setAttribute("stroke", color);
-  node.label.textContent = label;
-  node.label.setAttribute("fill", color);
-  node.g.setAttribute("data-btn", key);
-  node.g.setAttribute("cursor", on ? "pointer" : "default");
-  node.g.setAttribute("role", "button");
-  node.g.setAttribute("tabindex", "0");
-  node.g.style.display = on ? "" : "none";
-  if (on) {
-    let actions = btnActions.get(art);
-    if (!actions) {
-      actions = new Map();
-      btnActions.set(art, actions);
-    }
-    actions.set(key, onClick);
-  }
-}
-
-function wrapText(text: string, width: number): string[] {
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const next = line ? line + " " + word : word;
-    if (next.length > width && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-function bar(art: SVGGElement, x: number, y: number, w: number, frac: number, color: string, label: string, value: string): void {
-  art.appendChild(txt(x, y - 6, label, { size: 9.5, fill: C.dim }));
-  art.appendChild(s("rect", { x, y, width: w, height: 12, rx: 6, fill: C.panel2, stroke: C.line }));
-  art.appendChild(s("rect", { x, y, width: Math.max(2, w * Math.min(1, frac)), height: 12, rx: 6, fill: color, "fill-opacity": 0.85 }));
-  art.appendChild(txt(x + w, y + 26, value, { anchor: "end", size: 9, fill: color, mono: true }));
+function svgBtn(_art: SVGGElement, x: number, y: number, w: number, label: string, onClick: () => void, on = true): void {
+  currentControls?.button(x, y, w, label, onClick, on);
 }
 
 interface Sec {
@@ -373,7 +236,7 @@ const flash: SceneFactory = (host) => {
   const root = document.createElement("div");
   root.className = "ill";
 
-  const secEls: Array<{ svg: SVGSVGElement; art: SVGGElement; ctl: HTMLElement; section: HTMLElement }> = [];
+  const secEls: Array<{ svg: SVGSVGElement; art: SVGGElement; controls: SvgControls; ctl: HTMLElement; section: HTMLElement }> = [];
   SECS.forEach((sec, secIndex) => {
     const section = document.createElement("section");
     section.className = "ill-sec";
@@ -396,14 +259,12 @@ const flash: SceneFactory = (host) => {
       "aria-label": sec.title,
     });
     const art = s("g", { class: "ill-art" });
-    const controls = s("g", { class: "ill-controls" });
-    svg.append(art, controls);
-    controlsFor.set(art, controls);
+    svg.appendChild(art);
+    const controls = attachSvgControls(svg, art);
     fig.appendChild(svg);
-    wireSvgButtons(svg, art);
     section.append(head, blurb, fig);
     root.appendChild(section);
-    secEls.push({ svg, art, ctl, section });
+    secEls.push({ svg, art, controls, ctl, section });
   });
   host.appendChild(root);
 
@@ -443,14 +304,16 @@ const flash: SceneFactory = (host) => {
   const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling];
 
   function renderSection(i: number): void {
-    const { art } = secEls[i];
-    // The controls live in a sibling <g> that is never cleared: keeping the
-    // same DOM nodes is what makes taps reliable on mobile while animating.
-    btnActions.set(art, new Map());
+    const { art, controls } = secEls[i];
+    // Controls live in a sibling <g> that is never cleared. Keeping the same
+    // nodes is what makes taps reliable on mobile while the art animates.
+    currentControls = controls;
+    controls.beginFrame();
     while (art.firstChild) art.removeChild(art.firstChild);
     currentArt = art;
     draws[i](art);
     currentArt = null;
+    currentControls = null;
   }
 
   function render(): void {
@@ -508,7 +371,7 @@ const flash: SceneFactory = (host) => {
     const qys = [80, 130, 180, 230];
     const kxs = [180, 275, 370, 465];
     const phase = Math.min(1, Math.max(0, attnPhaseT));
-    const ease = 1 - Math.pow(1 - phase, 3);
+    const ease = MOTION.ease(phase);
     const qCenter = { x: qx + qw / 2, y: qys[activeQ] + 15 };
     const oY = qys[activeQ] + 15;
     const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
@@ -1064,7 +927,7 @@ const flash: SceneFactory = (host) => {
     if (!tilePlaying) return;
     const dt = Math.min(0.05, (now - tileLast) / 1000);
     tileLast = now;
-    tilePhase = Math.min(1, tilePhase + dt / 1.35);
+    tilePhase = Math.min(1, tilePhase + dt / MOTION.seconds(MOTION.stepSeconds));
     if (tilePhase >= 1) {
       tilePhase = 1;
       if (tileStep >= 3) tileDone[tileQ] = true;
@@ -1162,11 +1025,8 @@ const flash: SceneFactory = (host) => {
     const cur = stats(2);
     const pNew = Math.exp(scores[2] - cur.m);
     const ph = Math.min(1, Math.max(0, tilePhase));
-    const ease = 1 - Math.pow(1 - ph, 3);
-    const seg = (a: number, b: number): number => {
-      const t = Math.min(1, Math.max(0, (ph - a) / (b - a)));
-      return 1 - Math.pow(1 - t, 3);
-    };
+    const ease = MOTION.ease(ph);
+    const seg = (a: number, b: number): number => MOTION.segment(ph, a, b);
     const stateT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
     const pT = tileStep === 2 ? ease : tileStep >= 3 ? 1 : 0;
     const oT = tileStep >= 3 ? seg(0.62, 1) : 0;

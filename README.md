@@ -21,7 +21,21 @@ npm run build     # lessons + blog + static site -> dist/
 npm run preview   # serve dist/
 ```
 
-Push to `main` deploys to Pages automatically:
+## Build and publish
+
+One command builds, commits the source, pushes `main`, publishes `dist/` to
+`sylqiu.github.io`, and waits for the live bundle to match:
+
+```sh
+./scripts/release.sh "what changed"
+```
+
+The script uses `jj` when the repo is colocated and falls back to `git`.
+The lower-level `npm run deploy` only publishes `dist/`; it does not commit
+the source.
+
+The Pages repo is `sylqiu/sylqiu.github.io` (branch `master`). The project
+repo's `main` is the source of truth.
 <https://sylqiu.github.io/sylqiu-site/>
 
 ## Surfaces
