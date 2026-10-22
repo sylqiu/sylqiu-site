@@ -99,9 +99,43 @@ function viewHome() {
 let illustrationHost: SceneHost | null = null;
 let lastRoutedHash = "";
 
-function viewIllustrations() {
+const ILL_PER_PAGE = 6;
+
+/** Shared pager: step links plus numbered pages. Hidden for single-page lists. */
+function renderPager(
+  page: number,
+  totalPages: number,
+  base: string,
+  prevLabel = '← Prev',
+  nextLabel = 'Next →',
+): string {
+  if (totalPages <= 1) return '';
+  const href = (n: number) => `${base}?page=${n}`;
+  const nums = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .map((n) =>
+      n === page
+        ? `<span class="pager-num is-current" aria-current="page">${n}</span>`
+        : `<a class="pager-num" href="${href(n)}">${n}</a>`,
+    )
+    .join('');
+  const prev =
+    page > 1
+      ? `<a class="pager-step" href="${href(page - 1)}">${prevLabel}</a>`
+      : `<span class="pager-step is-disabled">${prevLabel}</span>`;
+  const next =
+    page < totalPages
+      ? `<a class="pager-step" href="${href(page + 1)}">${nextLabel}</a>`
+      : `<span class="pager-step is-disabled">${nextLabel}</span>`;
+  return `<nav class="pager" aria-label="Pagination">${prev}<span class="pager-nums">${nums}</span>${next}</nav>`;
+}
+
+function viewIllustrations(requested = 1) {
+  const totalPages = Math.max(1, Math.ceil(illustrations.length / ILL_PER_PAGE));
+  const page = Math.min(Math.max(1, requested), totalPages);
+  const slice = illustrations.slice((page - 1) * ILL_PER_PAGE, page * ILL_PER_PAGE);
+
   // Index page: one row per illustration, each linking to its own page.
-  const items = illustrations
+  const items = slice
     .map(
       (ill) => `<a class="ill-card-link" href="#/illustrations/${esc(ill.id)}">
         <h2>${esc(ill.title)}</h2>
@@ -111,13 +145,17 @@ function viewIllustrations() {
     )
     .join('');
 
+  const count = illustrations.length;
+  const pageNote = totalPages > 1 ? ` · page ${page} of ${totalPages}` : '';
+
   app.innerHTML = `<article class="page">
     <header>
       <h1>Interactive Illustrations</h1>
       <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one has
-      its own page and is meant to be played with.</p>
+      its own page and is meant to be played with.${count ? ` ${count} illustrations${pageNote}.` : ''}</p>
     </header>
     <nav class="ill-index">${items || '<p class="dim">Nothing here yet.</p>'}</nav>
+    ${renderPager(page, totalPages, '#/illustrations')}
   </article>`;
 }
 
@@ -361,7 +399,7 @@ function viewCourse(id: string) {
 
 /* ---------------------------------- blog ---------------------------------- */
 
-async function viewBlog() {
+async function viewBlog(requested = 1) {
   const index = await fetchJson<BlogIndexEntry[]>('./data/blog.json');
   if (!index) {
     app.innerHTML = `<article class="page"><header><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
@@ -399,22 +437,39 @@ async function viewBlog() {
   }
   if (other.length) groups.push({ name: 'Other', posts: other });
 
-  const sections = groups
-    .filter((g) => g.posts.length)
+  // Flatten in category order so pagination can slice across sections.
+  const ordered = groups.flatMap((g) => g.posts.map((post) => ({ post, group: g.name })));
+  const totals = new Map(groups.map((g) => [g.name, g.posts.length]));
+  const BLOG_PER_PAGE = 6;
+  const totalPages = Math.max(1, Math.ceil(ordered.length / BLOG_PER_PAGE));
+  const page = Math.min(Math.max(1, requested), totalPages);
+  const slice = ordered.slice((page - 1) * BLOG_PER_PAGE, page * BLOG_PER_PAGE);
+
+  const pageGroups: { name: string; posts: BlogIndexEntry[] }[] = [];
+  for (const { post, group } of slice) {
+    const last = pageGroups[pageGroups.length - 1];
+    if (last && last.name === group) last.posts.push(post);
+    else pageGroups.push({ name: group, posts: [post] });
+  }
+
+  const sections = pageGroups
     .map(
       (g) => `<section class="blog-cat">
-        <h2>${esc(g.name)}<span class="blog-cat-count">${g.posts.length}</span></h2>
+        <h2>${esc(g.name)}<span class="blog-cat-count">${totals.get(g.name) ?? g.posts.length}</span></h2>
         <ul class="post-list">${g.posts.map(item).join('')}</ul>
       </section>`,
     )
     .join('');
 
+  const note = totalPages > 1 ? ` · page ${page} of ${totalPages}` : '';
+
   app.innerHTML = `<article class="page">
     <header>
       <h1>Writing</h1>
-      <p class="reading">${index.length} notes, grouped by topic.</p>
+      <p class="reading">${index.length} notes, grouped by topic${note}.</p>
     </header>
     ${sections}
+    ${renderPager(page, totalPages, '#/blog', '← Newer', 'Older →')}
   </article>`;
 }
 
@@ -641,29 +696,31 @@ function teardown() {
 
 function route() {
   const hash = location.hash || '#/';
+  const [path, query] = hash.split('?');
+  const requestedPage = Math.max(1, Number(new URLSearchParams(query || '').get('page')) || 1);
   window.scrollTo(0, 0);
   if (hash === lastRoutedHash) return;
   lastRoutedHash = hash;
   teardown();
   markActiveNav(hash);
 
-  const post = hash.match(/^#\/blog\/(.+)$/);
+  const post = path.match(/^#\/blog\/(.+)$/);
   if (post) return void viewPost(post[1]);
 
-  const lesson = hash.match(/^#\/lesson\/(.+)$/);
+  const lesson = path.match(/^#\/lesson\/(.+)$/);
   if (lesson) return void viewLesson(lesson[1]);
 
-  const course = hash.match(/^#\/courses\/(.+)$/);
+  const course = path.match(/^#\/courses\/(.+)$/);
   if (course) return void viewCourse(course[1]);
 
-  if (hash.startsWith('#/exploreflow')) return void viewExploreFlow();
-  if (hash.startsWith('#/cv')) return void viewCv();
-  const illustration = hash.match(/^#\/illustrations\/(.+)$/);
+  if (path.startsWith('#/exploreflow')) return void viewExploreFlow();
+  if (path.startsWith('#/cv')) return void viewCv();
+  const illustration = path.match(/^#\/illustrations\/(.+)$/);
   if (illustration) return void viewIllustration(illustration[1]);
-  if (hash.startsWith('#/illustrations')) return void viewIllustrations();
-  if (hash.startsWith('#/blog')) return void viewBlog();
-  if (hash.startsWith('#/courses')) return void viewCourses();
-  if (hash.startsWith('#/research')) return void viewResearch();
+  if (path.startsWith('#/illustrations')) return void viewIllustrations(requestedPage);
+  if (path.startsWith('#/blog')) return void viewBlog(requestedPage);
+  if (path.startsWith('#/courses')) return void viewCourses();
+  if (path.startsWith('#/research')) return void viewResearch();
 
   viewHome();
   window.scrollTo(0, 0);
