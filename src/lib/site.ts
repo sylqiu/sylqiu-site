@@ -260,12 +260,15 @@ export interface Illustration {
   id: string;
   title: string;
   blurb: string;
+  /** Topic shown in the index side panel. */
+  category: string;
   scene: string;
 }
 
 export const illustrations: Illustration[] = [
   {
     id: 'flash-attention',
+    category: 'LLM Inference',
     title: 'FlashAttention: From Attention to Kernels',
     blurb:
       'Attention by definition, the GPU and TPU memory hierarchies, tiling and online softmax with a focus on data movement, the variant landscape, and kernel code for PyTorch, CUDA, Triton, and TPU/Pallas.',
@@ -273,6 +276,7 @@ export const illustrations: Illustration[] = [
   },
   {
     id: 'kv-cache',
+    category: 'LLM Inference',
     title: 'How KV cache works in an autoregressive LLM',
     blurb:
       'From one transformer layer to prefill and decode: what a position computes for itself, the step where it reads its past, and how serving systems store, share, and schedule that past — paged blocks, copy-on-write, RadixAttention, disaggregated prefill/decode, and pseudocode linked to vLLM, SGLang, and TensorRT-LLM.',

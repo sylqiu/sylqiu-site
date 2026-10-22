@@ -45,6 +45,9 @@ interface BlogPost extends BlogIndexEntry {
 const esc = (s: string) =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
 function saveProgress() {
   localStorage.setItem('exploreflow:progress', JSON.stringify([...progress]));
 }
@@ -131,10 +134,19 @@ function renderPager(
   return `<nav class="pager" aria-label="Pagination">${prev}<span class="pager-nums">${nums}</span>${next}</nav>`;
 }
 
-function viewIllustrations(requested = 1) {
-  const totalPages = Math.max(1, Math.ceil(illustrations.length / ILL_PER_PAGE));
+function viewIllustrations(requested = 1, categorySlug = '') {
+  const categories = Array.from(new Set(illustrations.map((ill) => ill.category).filter(Boolean)));
+  const counts = new Map(
+    categories.map((name) => [name, illustrations.filter((ill) => ill.category === name).length]),
+  );
+  const activeName = categories.find((name) => slugify(name) === categorySlug) || '';
+  const filtered = activeName
+    ? illustrations.filter((ill) => ill.category === activeName)
+    : illustrations;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ILL_PER_PAGE));
   const page = Math.min(Math.max(1, requested), totalPages);
-  const slice = illustrations.slice((page - 1) * ILL_PER_PAGE, page * ILL_PER_PAGE);
+  const slice = filtered.slice((page - 1) * ILL_PER_PAGE, page * ILL_PER_PAGE);
 
   // Index page: one row per illustration, each linking to its own page.
   const items = slice
@@ -147,17 +159,36 @@ function viewIllustrations(requested = 1) {
     )
     .join('');
 
-  const count = illustrations.length;
+  const categoryLinks = [
+    `<a class="blog-cat-link${activeName ? '' : ' is-active'}" href="#/illustrations">All<span>${illustrations.length}</span></a>`,
+    ...categories.map((name) => {
+      const slug = slugify(name);
+      return `<a class="blog-cat-link${activeName === name ? ' is-active' : ''}" href="#/illustrations?category=${slug}">${esc(name)}<span>${counts.get(name)}</span></a>`;
+    }),
+  ].join('');
+
   const pageNote = totalPages > 1 ? ` · page ${page} of ${totalPages}` : '';
+  const summary = activeName
+    ? `${filtered.length} illustrations in ${activeName}${pageNote}.`
+    : `${illustrations.length} illustrations${pageNote}.`;
 
   app.innerHTML = `<article class="page">
     <header>
       <h1>Interactive Illustrations</h1>
       <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one has
-      its own page and is meant to be played with.${count ? ` ${count} illustrations${pageNote}.` : ''}</p>
+      its own page and is meant to be played with.</p>
+      <p class="reading">${summary}</p>
     </header>
-    <nav class="ill-index">${items || '<p class="dim">Nothing here yet.</p>'}</nav>
-    ${renderPager(page, totalPages, '#/illustrations')}
+    <div class="blog-layout">
+      <aside class="blog-side">
+        <div class="blog-side-title">Topics</div>
+        <nav class="blog-cats" aria-label="Topics">${categoryLinks}</nav>
+      </aside>
+      <div class="blog-main">
+        <nav class="ill-index">${items || '<p class="dim">Nothing here yet.</p>'}</nav>
+        ${renderPager(page, totalPages, '#/illustrations', '← Prev', 'Next →', activeName ? { category: categorySlug } : {})}
+      </div>
+    </div>
   </article>`;
 }
 
@@ -430,8 +461,6 @@ async function viewBlog(requested = 1, categorySlug = '') {
   };
 
   // Assign each post to the first category whose tags it carries.
-  const slugify = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const categoryOf = (p: BlogIndexEntry) => {
     const match = blogCategories.find((category) => p.tags.some((tag) => category.tags.includes(tag)));
     return match ? match.name : 'Other';
@@ -733,7 +762,7 @@ function route() {
   if (path.startsWith('#/cv')) return void viewCv();
   const illustration = path.match(/^#\/illustrations\/(.+)$/);
   if (illustration) return void viewIllustration(illustration[1]);
-  if (path.startsWith('#/illustrations')) return void viewIllustrations(requestedPage);
+  if (path.startsWith('#/illustrations')) return void viewIllustrations(requestedPage, requestedCategory);
   if (path.startsWith('#/blog')) return void viewBlog(requestedPage, requestedCategory);
   if (path.startsWith('#/courses')) return void viewCourses();
   if (path.startsWith('#/research')) return void viewResearch();
