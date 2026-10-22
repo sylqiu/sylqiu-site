@@ -108,9 +108,11 @@ function renderPager(
   base: string,
   prevLabel = '← Prev',
   nextLabel = 'Next →',
+  params: Record<string, string> = {},
 ): string {
   if (totalPages <= 1) return '';
-  const href = (n: number) => `${base}?page=${n}`;
+  const href = (n: number) =>
+    `${base}?${new URLSearchParams({ ...params, page: String(n) }).toString()}`;
   const nums = Array.from({ length: totalPages }, (_, i) => i + 1)
     .map((n) =>
       n === page
@@ -399,7 +401,7 @@ function viewCourse(id: string) {
 
 /* ---------------------------------- blog ---------------------------------- */
 
-async function viewBlog(requested = 1) {
+async function viewBlog(requested = 1, categorySlug = '') {
   const index = await fetchJson<BlogIndexEntry[]>('./data/blog.json');
   if (!index) {
     app.innerHTML = `<article class="page"><header><h1>Writing</h1></header><p class="dim">Nothing built.</p></article>`;
@@ -427,49 +429,61 @@ async function viewBlog(requested = 1) {
       </li>`;
   };
 
-  // File each post under the first category whose tags it carries.
-  const groups = blogCategories.map((c) => ({ name: c.name, posts: [] as BlogIndexEntry[] }));
-  const other: BlogIndexEntry[] = [];
+  // Assign each post to the first category whose tags it carries.
+  const slugify = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const categoryOf = (p: BlogIndexEntry) => {
+    const match = blogCategories.find((category) => p.tags.some((tag) => category.tags.includes(tag)));
+    return match ? match.name : 'Other';
+  };
+  const counts = new Map<string, number>();
   for (const p of index) {
-    const gi = blogCategories.findIndex((c) => p.tags.some((t) => c.tags.includes(t)));
-    if (gi < 0) other.push(p);
-    else groups[gi].posts.push(p);
+    const name = categoryOf(p);
+    counts.set(name, (counts.get(name) || 0) + 1);
   }
-  if (other.length) groups.push({ name: 'Other', posts: other });
 
-  // Flatten in category order so pagination can slice across sections.
-  const ordered = groups.flatMap((g) => g.posts.map((post) => ({ post, group: g.name })));
-  const totals = new Map(groups.map((g) => [g.name, g.posts.length]));
+  // Newest first is the default view; categories are a filter, not a grouping.
+  const posts = [...index].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const activeName =
+    [...blogCategories.map((c) => c.name), 'Other'].find((name) => slugify(name) === categorySlug) || '';
+  const filtered = activeName ? posts.filter((p) => categoryOf(p) === activeName) : posts;
+
   const BLOG_PER_PAGE = 6;
-  const totalPages = Math.max(1, Math.ceil(ordered.length / BLOG_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / BLOG_PER_PAGE));
   const page = Math.min(Math.max(1, requested), totalPages);
-  const slice = ordered.slice((page - 1) * BLOG_PER_PAGE, page * BLOG_PER_PAGE);
+  const slice = filtered.slice((page - 1) * BLOG_PER_PAGE, page * BLOG_PER_PAGE);
 
-  const pageGroups: { name: string; posts: BlogIndexEntry[] }[] = [];
-  for (const { post, group } of slice) {
-    const last = pageGroups[pageGroups.length - 1];
-    if (last && last.name === group) last.posts.push(post);
-    else pageGroups.push({ name: group, posts: [post] });
-  }
-
-  const sections = pageGroups
-    .map(
-      (g) => `<section class="blog-cat">
-        <h2>${esc(g.name)}<span class="blog-cat-count">${totals.get(g.name) ?? g.posts.length}</span></h2>
-        <ul class="post-list">${g.posts.map(item).join('')}</ul>
-      </section>`,
-    )
-    .join('');
+  const categoryLinks = [
+    `<a class="blog-cat-link${activeName ? '' : ' is-active'}" href="#/blog">All<span>${index.length}</span></a>`,
+    ...[...blogCategories.map((c) => c.name), 'Other']
+      .filter((name) => (counts.get(name) || 0) > 0)
+      .map((name) => {
+        const slug = slugify(name);
+        return `<a class="blog-cat-link${activeName === name ? ' is-active' : ''}" href="#/blog?category=${slug}">${esc(name)}<span>${counts.get(name)}</span></a>`;
+      }),
+  ].join('');
 
   const note = totalPages > 1 ? ` · page ${page} of ${totalPages}` : '';
+  const summary = activeName
+    ? `${filtered.length} notes in ${activeName}, newest first${note}.`
+    : `${index.length} notes, newest first${note}.`;
 
   app.innerHTML = `<article class="page">
     <header>
       <h1>Writing</h1>
-      <p class="reading">${index.length} notes, grouped by topic${note}.</p>
+      <p class="reading">${summary}</p>
     </header>
-    ${sections}
-    ${renderPager(page, totalPages, '#/blog', '← Newer', 'Older →')}
+    <div class="blog-layout">
+      <aside class="blog-side">
+        <div class="blog-side-title">Topics</div>
+        <nav class="blog-cats" aria-label="Topics">${categoryLinks}</nav>
+      </aside>
+      <div class="blog-main">
+        <ul class="post-list">${slice.map(item).join('')}</ul>
+        ${filtered.length ? '' : '<p class="dim">No posts in this topic.</p>'}
+        ${renderPager(page, totalPages, '#/blog', '← Newer', 'Older →', activeName ? { category: categorySlug } : {})}
+      </div>
+    </div>
   </article>`;
 }
 
@@ -697,7 +711,9 @@ function teardown() {
 function route() {
   const hash = location.hash || '#/';
   const [path, query] = hash.split('?');
-  const requestedPage = Math.max(1, Number(new URLSearchParams(query || '').get('page')) || 1);
+  const params = new URLSearchParams(query || '');
+  const requestedPage = Math.max(1, Number(params.get('page')) || 1);
+  const requestedCategory = params.get('category') || '';
   window.scrollTo(0, 0);
   if (hash === lastRoutedHash) return;
   lastRoutedHash = hash;
@@ -718,7 +734,7 @@ function route() {
   const illustration = path.match(/^#\/illustrations\/(.+)$/);
   if (illustration) return void viewIllustration(illustration[1]);
   if (path.startsWith('#/illustrations')) return void viewIllustrations(requestedPage);
-  if (path.startsWith('#/blog')) return void viewBlog(requestedPage);
+  if (path.startsWith('#/blog')) return void viewBlog(requestedPage, requestedCategory);
   if (path.startsWith('#/courses')) return void viewCourses();
   if (path.startsWith('#/research')) return void viewResearch();
 
