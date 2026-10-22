@@ -370,9 +370,8 @@ async function viewBlog() {
 
   const item = (p: BlogIndexEntry) => {
     const href = `#/blog/${esc(p.id)}`;
-    const preview = (p.preview || [])
-      .map((paragraph) => `<p>${esc(paragraph)}</p>`)
-      .join('');
+    // Stored as rendered HTML so KaTeX in the previews keeps its markup.
+    const preview = (p.preview || []).map((paragraph) => `<p>${paragraph}</p>`).join('');
     const images = (p.images || [])
       .map(
         (image) =>

@@ -116,12 +116,17 @@ interface BlogIndexEntry {
   source?: string;
 }
 
-/** First few real paragraphs of a rendered post, as plain text. */
-function previewParagraphs(html: string, count = 3): string[] {
+/**
+ * First few real paragraphs of a rendered post, as HTML with KaTeX intact.
+ * Math-only lines, captions, and stray fragments are skipped so the preview
+ * always reads as prose.
+ */
+function previewParagraphs(html: string, count = 2): string[] {
   const out: string[] = [];
   for (const match of html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
-    const text = match[1]
-      // Drop KaTeX's MathML twin: keeping both duplicates every formula.
+    const inner = match[1];
+    const text = inner
+      // Drop KaTeX's MathML twin only for the readability test.
       .replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/&nbsp;/g, ' ')
@@ -132,10 +137,9 @@ function previewParagraphs(html: string, count = 3): string[] {
       .replace(/&#39;/g, "'")
       .replace(/\s+/g, ' ')
       .trim();
-    // Skip captions, math-only lines, and stray fragments.
     if (text.length < 60) continue;
     if ((text.match(/[A-Za-z]{2,}/g) || []).length < 8) continue;
-    out.push(text);
+    out.push(inner.trim());
     if (out.length >= count) break;
   }
   return out;

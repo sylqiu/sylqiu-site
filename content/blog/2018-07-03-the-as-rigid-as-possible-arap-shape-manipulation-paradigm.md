@@ -8,8 +8,17 @@ publish: true
 ---
 In an Euclidean space $ {\mathbb{R}^{d}}$, rigid motions are simply translations and rotations, which can be identified with the action of the groups $ {\mathbb{R}^{d}}$ and $ {SO(d)}$. The transformation applied to each point of the space (or object) is the same. The rigid motions in low dimensions $ {d=2,3}$, especially rotations, have been widely used in various daily computer graphics applications with the help of complex numbers and quaternions.  
 
-But deformations of surfaces common to our experience, such as bending of a thin metal sheet, waving of a flag, or winkling of a cloth, are not as simple as rotations. From a geometric point of view, the deformations are only *locally rigid*. A course in differential geometry would tell us such a deformation is an isometry, i.e. it should preserve the geodesic distance of two arbitrary points, so no *stretching nor shearing* is allowed. Denote the bijective mapping by $ {f:M\rightarrow\tilde{M}}$. This (intrinsic) isometric property can be expressed as an differential equation plus an orientation constraint \\begin{align\*} & df^{T}df=Id\_{2}\\,&\\,\\det(df)>0  
-\\iff & df\\in SO(2). \\end{align\*} And so we see that at the tangent space level, the mapping is a rotation.  
+But deformations of surfaces common to our experience, such as bending of a thin metal sheet, waving of a flag, or winkling of a cloth, are not as simple as rotations. From a geometric point of view, the deformations are only *locally rigid*. A course in differential geometry would tell us such a deformation is an isometry, i.e. it should preserve the geodesic distance of two arbitrary points, so no *stretching nor shearing* is allowed. Denote the bijective mapping by $f:M\rightarrow\tilde{M}$. This (intrinsic) isometric property can be expressed as a differential equation plus an orientation constraint:
+
+$$
+\begin{aligned}
+& df^{T}df = Id_{2},\\
+& \det(df) > 0 \\
+\iff\ & df \in SO(2).
+\end{aligned}
+$$
+
+And so we see that at the tangent space level, the mapping is a rotation.
 
 In dimension $ {d=2}$, conformal geometry naturally enters the picture via the following. First, we relax the differential equation to  
 
