@@ -33,6 +33,8 @@ interface BlogIndexEntry {
   date: string;
   tags: string[];
   excerpt: string;
+  preview?: string[];
+  images?: { src: string; alt: string }[];
   source?: string;
 }
 
@@ -366,10 +368,27 @@ async function viewBlog() {
     return;
   }
 
-  const item = (p: BlogIndexEntry) => `<li class="post">
-        <a class="post-title" href="#/blog/${esc(p.id)}">${esc(p.title)}</a>
-        <span class="post-date">${esc(p.date)}</span>
+  const item = (p: BlogIndexEntry) => {
+    const href = `#/blog/${esc(p.id)}`;
+    const preview = (p.preview || [])
+      .map((paragraph) => `<p>${esc(paragraph)}</p>`)
+      .join('');
+    const images = (p.images || [])
+      .map(
+        (image) =>
+          `<a class="post-thumb" href="${href}" title="${esc(image.alt || '')}"><img src="${esc(image.src)}" alt="${esc(image.alt || '')}" loading="lazy" decoding="async"></a>`,
+      )
+      .join('');
+    return `<li class="post">
+        <div class="post-head">
+          <a class="post-title" href="${href}">${esc(p.title)}</a>
+          <span class="post-date">${esc(p.date)}</span>
+        </div>
+        ${preview ? `<div class="post-preview">${preview}</div>` : ''}
+        ${images ? `<div class="post-thumbs">${images}</div>` : ''}
+        <a class="post-more" href="${href}">Read →</a>
       </li>`;
+  };
 
   // File each post under the first category whose tags it carries.
   const groups = blogCategories.map((c) => ({ name: c.name, posts: [] as BlogIndexEntry[] }));

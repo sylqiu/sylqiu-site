@@ -98,13 +98,62 @@ writeFileSync(join(OUT, 'courses.json'), JSON.stringify(courses, null, 2), 'utf8
 
 /* ---------------------------------- blog ---------------------------------- */
 
+interface BlogImage {
+  src: string;
+  alt: string;
+}
+
 interface BlogIndexEntry {
   id: string;
   title: string;
   date: string;
   tags: string[];
   excerpt: string;
+  /** First few paragraphs, plain text, shown as the index-card preview. */
+  preview: string[];
+  /** Every image in the post, in document order. */
+  images: BlogImage[];
   source?: string;
+}
+
+/** First few real paragraphs of a rendered post, as plain text. */
+function previewParagraphs(html: string, count = 3): string[] {
+  const out: string[] = [];
+  for (const match of html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)) {
+    const text = match[1]
+      // Drop KaTeX's MathML twin: keeping both duplicates every formula.
+      .replace(/<span class="katex-mathml">[\s\S]*?<\/span>/g, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Skip captions, math-only lines, and stray fragments.
+    if (text.length < 60) continue;
+    if ((text.match(/[A-Za-z]{2,}/g) || []).length < 8) continue;
+    out.push(text);
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
+/** All <img> tags in a rendered post, deduped by src, in document order. */
+function postImages(html: string): BlogImage[] {
+  const seen = new Set<string>();
+  const images: BlogImage[] = [];
+  for (const match of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = match[0];
+    const src = (tag.match(/src=["']([^"']+)["']/i) || [])[1];
+    if (!src || seen.has(src)) continue;
+    const alt = (tag.match(/alt=["']([^"']*)["']/i) || [])[1] || '';
+    seen.add(src);
+    images.push({ src, alt });
+  }
+  return images;
 }
 
 rmSync(join(OUT, 'blog'), { recursive: true, force: true });
@@ -122,11 +171,22 @@ if (existsSync(BLOG)) {
     const html = renderMarkdown(body);
     const id = String(data.id || basename(name, '.md'));
     const plain = html.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim();
+    const preview = previewParagraphs(html);
+    const images = postImages(html);
 
     writeFileSync(
       join(OUT, 'blog', `${id}.json`),
       JSON.stringify(
-        { id, title: String(data.title || id), date: String(data.date || ''), tags: data.tags || [], source: data.source, html },
+        {
+          id,
+          title: String(data.title || id),
+          date: String(data.date || ''),
+          tags: data.tags || [],
+          source: data.source,
+          preview,
+          images,
+          html,
+        },
         null,
         2,
       ),
@@ -139,6 +199,8 @@ if (existsSync(BLOG)) {
       date: String(data.date || ''),
       tags: data.tags || [],
       excerpt: plain.slice(0, 200) + (plain.length > 200 ? '…' : ''),
+      preview,
+      images,
       source: data.source,
     });
   }
