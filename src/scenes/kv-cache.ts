@@ -20,6 +20,7 @@
  */
 import type { SceneFactory } from "../lib/registry.ts";
 import { pseudocode } from "../content/kv_cache_pseudocode/index.ts";
+import { styleCodeBlocks } from "../lib/code-highlight.ts";
 import framesData from "../content/kv-cache-frames.json";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -1757,74 +1758,6 @@ const kvCache: SceneFactory = (host) => {
     art.appendChild(txt(360, 538, "P:D imbalance can still queue decode", { size: 9.5, fill: C.dim }));
     art.appendChild(txt(360, 554, "placement, more queues, more failure modes", { size: 9.5, fill: C.dim }));
     art.appendChild(txt(20, 578, "Chunked prefill avoids the stall without a second pool; it just delays the new prompt's first token.", { size: 9.5, fill: C.dim }));
-  }
-
-  function styleCodeBlocks(root: HTMLElement): void {
-    const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const keywords = new Set(["def","if","else","elif","while","for","in","return","break","continue","not","and","or","is","lambda","yield","pass","raise","try","except","finally","with","as","import","from","class","async","await"]);
-    const builtins = new Set(["len","range","copy","ceil","print","int","float","str","list","dict","set","tuple","bool","deque","dataclass","asyncio","None","True","False","Node"]);
-    const types = new Set(["Tensor","Sequence","KVBlock","RadixNode","BlockPool","KVTensor","Protocol","Worker"]);
-    const highlight = (line: string): string => {
-      const token = /("""[^"]*"""|"[^"]*"|'[^']*')|(#[^\n]*)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|(\s+)|([^\sA-Za-z0-9_]+)/g;
-      let out = "";
-      let last = "";
-      let m: RegExpExecArray | null;
-      while ((m = token.exec(line)) !== null) {
-        const [raw, str, comment, num, ident, space, op] = m;
-        if (str) {
-          out += '<span class="tok-str">' + esc(str) + '</span>';
-        } else if (comment) {
-          out += '<span class="tok-com">' + esc(comment) + '</span>';
-        } else if (num) {
-          out += '<span class="tok-num">' + esc(num) + '</span>';
-        } else if (ident) {
-          const cls = keywords.has(ident) ? "tok-kw" : last === "def" ? "tok-fn" : types.has(ident) ? "tok-type" : builtins.has(ident) ? "tok-builtin" : "";
-          out += cls ? '<span class="' + cls + '">' + esc(ident) + '</span>' : esc(ident);
-          last = ident;
-          continue;
-        } else if (space) {
-          out += space;
-          continue;
-        } else if (op) {
-          out += '<span class="tok-op">' + esc(op) + '</span>';
-        }
-        last = raw;
-      }
-      return out || " ";
-    };
-
-    root.querySelectorAll("pre").forEach((pre) => {
-      const previous = pre.previousElementSibling;
-      const title = previous && previous.tagName === "H3" ? (previous.textContent || "pseudocode").split(":")[0] : "pseudocode";
-      const lines = (pre.textContent || "").replace(/\n$/, "").split("\n");
-      const card = document.createElement("div");
-      card.className = "code-card";
-
-      const head = document.createElement("div");
-      head.className = "code-head";
-      head.innerHTML = '<span class="code-dots"><i></i><i></i><i></i></span><span class="code-title"></span><span class="code-lang">python</span>';
-      const titleEl = head.querySelector(".code-title");
-      if (titleEl) titleEl.textContent = title;
-
-      const codeEl = document.createElement("code");
-      lines.forEach((line, index) => {
-        const row = document.createElement("span");
-        row.className = "code-line";
-        const ln = document.createElement("span");
-        ln.className = "ln";
-        ln.textContent = String(index + 1);
-        const lc = document.createElement("span");
-        lc.className = "lc";
-        lc.innerHTML = highlight(line);
-        row.append(ln, lc);
-        codeEl.appendChild(row);
-      });
-
-      const newPre = document.createElement("pre");
-      newPre.appendChild(codeEl);
-      card.append(head, newPre);
-      pre.replaceWith(card);
-    });
   }
 
   /* ----------------------------- section 11 ----------------------------- */

@@ -268,18 +268,26 @@ export interface Illustration {
 export const illustrations: Illustration[] = [
   {
     id: 'flash-attention',
-    category: 'LLM Inference',
-    title: 'FlashAttention: From Attention to Kernels',
+    category: 'LLM foundation',
+    title: 'Why and how FlashAttention works',
     blurb:
-      'Attention by definition, the GPU and TPU memory hierarchies, tiling and online softmax with a focus on data movement, the variant landscape, and kernel code for PyTorch, CUDA, Triton, and TPU/Pallas.',
+      'We will see why the memory and communication cost of the naive implementation is high, and how efficient implementation like FlashAttention solves that.',
     scene: 'flash-attention',
   },
   {
-    id: 'kv-cache',
-    category: 'LLM Inference',
-    title: 'How KV cache works in an autoregressive LLM',
+    id: 'distributed-lab',
+    category: 'Distributed systems',
+    title: 'One request, one lost reply (WIP)',
     blurb:
-      'From one transformer layer to prefill and decode: what a position computes for itself, the step where it reads its past, and how serving systems store, share, and schedule that past — paged blocks, copy-on-write, RadixAttention, disaggregated prefill/decode, and pseudocode linked to vLLM, SGLang, and TensorRT-LLM.',
+      'A ledger, a dropped reply, and four designs. Watch duplicate effects appear, then disappear — for the wrong and the right reasons.',
+    scene: 'distributed-lab',
+  },
+  {
+    id: 'kv-cache',
+    category: 'LLM foundation',
+    title: 'Why and how KV cache works in an autoregressive LLM',
+    blurb:
+      'We will see why only KV of the dialog history is needed, and how to efficiently manage them in HBM',
     scene: 'kv-cache',
   },
 ];

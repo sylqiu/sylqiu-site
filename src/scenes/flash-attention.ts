@@ -5,9 +5,11 @@
  * 2  GPU and TPU memory architectures
  * 3  tiling + online softmax, focused on data movement
  * 4  variants: masks, layouts, precision, platforms
- * 5  code for PyTorch, CUDA/CUTLASS, Triton, and TPU/Pallas
+ * 5  tiling + online softmax, focused on data movement
+ * 6  kernels: v1 -> v4, PyTorch, Triton, CUTLASS, Blackwell, ROCm, Pallas, FP8
  */
 import type { SceneFactory } from "../lib/registry.ts";
+import { styleCodeBlocks, escapeHtml } from "../lib/code-highlight.ts";
 import {
   C,
   MOTION,
@@ -54,42 +56,43 @@ interface Sec {
   title: string;
   blurb: string;
   h: number;
+  prose?: string[];
 }
 
 const SECS: Sec[] = [
   {
     id: "memory",
-    title: "GPU and TPU memory architectures",
+    title: "Hardware reliminary",
     blurb:
-      "The CPU orchestrates; the GPU and TPU expose very different memory hierarchies. GPU programs stage tiles explicitly through SMEM and rely on caches; TPU programs hand tiles to the compiler, which schedules CMEM and the MXU. Unified memory removes explicit copies, but not HBM bandwidth.",
+      "The CPU orchestrates; GPU programs stage tiles explicitly through SMEM and rely on caches; TPU programs hand tiles to the compiler, which schedules CMEM and the MXU. Unified memory removes explicit copies, but not HBM bandwidth.",
     h: 590,
   },
   {
     id: "definition",
-    title: "Attention, by definition",
+    title: "Attention as softmax(QK^T)V",
     blurb:
-      "Attention is a loop. Take one query Q, pair it with every key K, turn those scores into weights with a softmax, then pair each weight with its value V and sum. Repeat the inner K/V loop for every Q. FlashAttention is the same loop, staged through on-chip memory.",
+      "Take one query Q, pair it with every key K and get those logits, then turn them into weights with a softmax, then pair each weight with its value V and sum.",
     h: 510,
   },
   {
     id: "naive",
-    title: "Naive attention: the obvious trace",
+    title: "Naive implementation",
     blurb:
-      "The textbook implementation launches a sequence of kernels and materializes the N×N score and probability matrices in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory bill that motivates FlashAttention.",
+      "If implemented as above, a sequence of kernels will be launched and the N×N score and probability matrices will be materialized in HBM. The trace shows CPU launches, HBM reads/writes, compute-active time, and the memory and communication traffic bill.",
     h: 560,
   },
   {
     id: "fused",
     title: "Fused attention: one kernel, no intermediates",
     blurb:
-      "The same workload through PyTorch's fused SDPA. One kernel reads Q/K/V and writes O; S and P never exist as whole tensors. This is the memory-efficient SM75 path, not FlashAttention, but it shows exactly what removing the intermediates buys.",
+      "The same workload through PyTorch's fused SDPA. One kernel reads Q/K/V and writes O; S and P never exist as whole tensors. This is the memory-efficient SM75 path, not exactly FlashAttention, but very close.",
     h: 500,
   },
   {
     id: "tiling",
-    title: "One new K/V: the online-softmax update",
+    title: "FlashAttention: better scale up KV with online-softmax update",
     blurb:
-      "One new K/V tile, one online-softmax update. Q meets the new K to form a logit s. That logit updates the running maximum m and the running denominator ℓ, and produces the new weight p = exp(s − m). Then p, ℓ and the new V flow into O: p·V is accumulated and ℓ normalizes the result. Old logits and old Vs stay hidden.",
+      "Q meets the new K to form a logit s. That logit updates the running maximum m and the running denominator ℓ, and produces the new weight p = exp(s − m). Then p, ℓ and the new V flow can be used to update O: p·V is accumulated and ℓ normalizes the result. Everything can be done in one kernel.",
     h: 670,
   },
 
@@ -110,91 +113,390 @@ const SCORES = QVALS.map((q) =>
   KVALS.map((k) => q.reduce((sum, qv, idx) => sum + qv * k[idx], 0) / Math.sqrt(D)),
 );
 
-const CODE: Array<{ label: string; lang: string; lines: string[]; note: string }> = [
+interface CodeSample {
+  title: string;
+  lang: "python" | "cuda" | "cpp";
+  tag: string;
+  note: string;
+  code: string;
+  refs: string;
+}
+
+const KERNEL_CODE: CodeSample[] = [
   {
-    label: "PyTorch",
+    title: "PyTorch SDPA",
     lang: "python",
-    note: "The dispatch layer picks a fused backend; you do not write the tiling loop.",
-    lines: [
-      "import torch",
-      "import torch.nn.functional as F",
-      "",
-      "q = torch.randn(2, 8, 4096, 64, device='cuda', dtype=torch.float16)",
-      "k = torch.randn_like(q)",
-      "v = torch.randn_like(q)",
-      "",
-      "# causal mask, fused attention kernel",
-      "out = F.scaled_dot_product_attention(q, k, v, is_causal=True)",
-      "",
-      "# FlashAttention / efficient attention is selected by the backend",
-    ],
+    tag: "v2 · any GPU",
+    note:
+      "PyTorch is the high-level tensor library. q, k, and v are dense tensors shaped (batch, heads, sequence, head_dim); torch.float16 is the operand type. F.scaled_dot_product_attention is one fused op, not a hand-written loop. SDPBackend is an enum of kernel families and sdpa_kernel is a context manager that pins one family.",
+    code: `import torch
+import torch.nn.functional as F
+from torch.nn.attention import SDPBackend, sdpa_kernel
+
+# torch.randn allocates random-normal values. Shape:
+# (batch, heads, sequence, head_dim) = (2, 8, 4096, 64).
+# float16 is the matmul precision; PyTorch accumulates softmax in fp32.
+q = torch.randn(2, 8, 4096, 64, device="cuda", dtype=torch.float16)
+k = torch.randn_like(q)   # same shape, dtype, and device as q
+v = torch.randn_like(q)
+
+# One op fuses Q @ K^T, the 1/sqrt(d) scale, the causal mask,
+# softmax, and P @ V. is_causal=True means query i sees keys j <= i.
+out = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+
+# SDPBackend names the kernel families (FLASH_ATTENTION, EFFICIENT_ATTENTION,
+# CUDNN_ATTENTION, MATH). sdpa_kernel pins one for the block.
+with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+    out = F.scaled_dot_product_attention(q, k, v, is_causal=True)`,
+    refs:
+      '<p class="ill-refs"><a href="https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html">torch.nn.functional.scaled_dot_product_attention</a> · <a href="https://pytorch.org/blog/accelerating-large-language-models/">PyTorch SDPA backends</a></p>',
   },
   {
-    label: "CUDA / CUTLASS",
+    title: "Triton FA-2 forward",
+    lang: "python",
+    tag: "v2 · Ampere / Hopper",
+    note:
+      "Triton is a Python-embedded GPU kernel language: the decorated function becomes a kernel, and each program is one CTA. tl.arange builds index vectors, [:, None] adds a dimension for broadcasting, and tl.load takes a base pointer plus element offsets. BLOCK_M/BLOCK_N are compile-time tile sizes. tl.dot lowers to the target's matrix instructions; tl.max(..., 1) reduces each row.",
+    code: `# Triton is a Python-embedded GPU language. @triton.jit turns this
+# function into a kernel; each program (CTA) owns BLOCK_M query rows
+# for one (batch, head) pair.
+@triton.jit
+def _attn_fwd(Q, K, V, O, sm_scale,
+              # Element strides, not bytes. For a contiguous tensor,
+              # stride_qm is head_dim and stride_qk is 1.
+              stride_qz, stride_qh, stride_qm, stride_qk,
+              stride_kz, stride_kh, stride_kn, stride_kk,
+              stride_vz, stride_vh, stride_vn, stride_vk,
+              stride_oz, stride_oh, stride_om, stride_on,
+              Z, H, N_CTX,
+              # tl.constexpr = known at compile time, so Triton can size
+              # registers and shared memory for the tile.
+              BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr,
+              HEAD_DIM: tl.constexpr):
+    # program_id(0) selects the query tile; program_id(1) selects
+    # the flattened (batch, head) slice.
+    start_m = tl.program_id(0)
+    off_hz = tl.program_id(1)
+    qvk_offset = off_hz * stride_qh
+
+    # tl.arange builds a vector of indices. [:, None] makes it a column,
+    # so row and column offsets broadcast into a BLOCK_M x HEAD_DIM tile.
+    q = tl.load(Q + qvk_offset + start_m * BLOCK_M * stride_qm
+                + tl.arange(0, BLOCK_M)[:, None] * stride_qm
+                + tl.arange(0, HEAD_DIM)[None, :] * stride_qk)
+
+    # Running softmax state, one value per query row.
+    m_i = tl.full([BLOCK_M], -float("inf"), tl.float32)  # row max
+    l_i = tl.zeros([BLOCK_M], tl.float32)                # row denominator
+    acc = tl.zeros([BLOCK_M, HEAD_DIM], tl.float32)      # P @ V accumulator
+
+    for start_n in range(0, N_CTX, BLOCK_N):
+        # Load one BLOCK_N x HEAD_DIM K tile.
+        k = tl.load(K + qvk_offset + start_n * stride_kn
+                    + tl.arange(0, BLOCK_N)[:, None] * stride_kn
+                    + tl.arange(0, HEAD_DIM)[None, :] * stride_kk)
+        # tl.dot is the matrix multiply (tensor cores); tl.trans transposes.
+        qk = tl.dot(q, tl.trans(k)) * sm_scale
+
+        # tl.max(qk, 1) reduces along axis 1 (each row); tl.maximum is elementwise.
+        m_new = tl.maximum(m_i, tl.max(qk, 1))
+        # If the row max grew, rescale the old denominator.
+        alpha = tl.exp(m_i - m_new)
+        p = tl.exp(qk - m_new[:, None])
+        # tl.sum(p, 1) is the new row sum, added to the rescaled old sum.
+        l_i = l_i * alpha + tl.sum(p, 1)
+
+        v = tl.load(V + qvk_offset + start_n * stride_vn
+                    + tl.arange(0, BLOCK_N)[:, None] * stride_vn
+                    + tl.arange(0, HEAD_DIM)[None, :] * stride_vk)
+        # p.to(v.dtype) casts probabilities to fp16 for the tensor-core dot.
+        acc = acc * alpha[:, None] + tl.dot(p.to(v.dtype), v)
+        m_i = m_new
+
+    # Divide once at the end; p stayed unnormalized through the loop.
+    acc = acc / l_i[:, None]
+    tl.store(O + qvk_offset + start_m * BLOCK_M * stride_om
+             + tl.arange(0, BLOCK_M)[:, None] * stride_om
+             + tl.arange(0, HEAD_DIM)[None, :] * stride_on, acc)`,
+    refs:
+      '<p class="ill-refs"><a href="https://github.com/triton-lang/triton/blob/main/python/tutorials/06-fused-attention.py">Triton fused-attention tutorial</a> · <a href="https://github.com/Dao-AILab/flash-attention">Dao-AILab/flash-attention</a></p>',
+  },
+  {
+    title: "Hopper CUTLASS (FA-3)",
     lang: "cuda",
-    note: "One CTA owns one Q tile; TMA/WGMMA/TMEM are the Hopper/Blackwell primitives.",
-    lines: [
-      "// one CTA = one Q tile, BQ rows",
-      "extern __shared__ half smem[];",
-      "half* Qs = smem;              // BQ x D",
-      "half* Ks = Qs + BQ * D;       // BK x D",
-      "half* Vs = Ks + BK * D;",
-      "",
-      "for (int kt = 0; kt < num_k_tiles; ++kt) {",
-      "  cp_async(Ks, K + kt * BK * D, ...);",
-      "  cp_async(Vs, V + kt * BK * D, ...);",
-      "  wgmma(S, Qs, Ks);            // S = Q K^T",
-      "  online_softmax(S, m, l);     // row max, exp, rescale",
-      "  wgmma(O, P, Vs);             // O += P V",
-      "}",
-      "store(O, O_ptr + q_tile * BQ * D);",
-    ],
+    tag: "v3 · H100 · SM90",
+    note:
+      "This is a CuTe/CUTLASS-style schedule sketch, not a complete translation unit. __global__ marks a host-launched kernel, __shared__ places a tile in per-CTA shared memory (SMEM), half is fp16, and barrier is an arrive/wait barrier. A TMA descriptor (TmaDescriptor, make_tma_copy) describes an asynchronous bulk copy; copy(tmaK.with(barK), ...) enqueues it. WGMMA is Hopper's warpgroup matrix instruction, and GMMA::ScaleOut says whether to overwrite or accumulate.",
+    code: `// Sketch, not a full TU: BQ, BK, D, num_k_tiles, warp_idx,
+// sQ_desc, sK_desc, and idesc come from the enclosing CUTLASS kernel.
+// One CTA owns BQ query rows. Warp 0 is the producer (TMA);
+// the other warps are consumers (WGMMA + online softmax).
+#include <cute/tensor.hpp>
+#include <cuda/barrier>
+
+using namespace cute;   // CuTe layout/tensor vocabulary
+
+__global__ void flash_fwd_h100(const half* Q, const half* K,
+                               const half* V, half* O) {
+  // __shared__ = per-CTA SMEM. alignas(128) keeps TMA/WGMMA aligned.
+  __shared__ alignas(128) half sQ[BQ][D];
+  __shared__ alignas(128) half sK[BK][D];
+  __shared__ alignas(128) half sV[BK][D];
+  __shared__ barrier barK, barV;   // mbarrier: arrive/wait for TMA
+
+  // A TMA descriptor describes a multidimensional bulk copy. make_tma_copy
+  // builds it for a tensor and a shared-memory layout.
+  TmaDescriptor tmaQ = make_tma_copy(SM90_TMA_LOAD{}, Q, ...);
+  TmaDescriptor tmaK = make_tma_copy(SM90_TMA_LOAD{}, K, ...);
+  TmaDescriptor tmaV = make_tma_copy(SM90_TMA_LOAD{}, V, ...);
+  copy(tmaQ, Q + blockIdx.x * BQ * D, sQ);   // enqueue Q tile
+
+  if (warp_idx == 0) {                        // producer warp
+    for (int kt = 0; kt < num_k_tiles; ++kt) {
+      // .with(barK) attaches the barrier that signals copy completion.
+      copy(tmaK.with(barK), K + kt * BK * D, sK);
+      copy(tmaV.with(barV), V + kt * BK * D, sV);
+    }
+  } else {                                    // consumer warpgroups
+    float m[BQ], l[BQ], acc[BQ][D];
+    for (int kt = 0; kt < num_k_tiles; ++kt) {
+      barK.wait(0);   // wait for the K tile
+      // WGMMA: warpgroup matrix multiply-accumulate. ScaleOut::Zero
+      // overwrites the accumulator; ScaleOut::One accumulates into it.
+      wgmma(acc, sQ, sK, GMMA::ScaleOut::Zero);   // S = Q K^T
+      online_softmax(acc, m, l);                  // rescale by exp(m_old - m_new)
+      barV.wait(0);   // wait for the V tile
+      wgmma(acc, acc, sV, GMMA::ScaleOut::One);   // O += P V
+    }
+  }
+}`,
+    refs:
+      '<p class="ill-refs"><a href="https://github.com/Dao-AILab/flash-attention/tree/main/hopper">FA-3 Hopper kernels</a> · <a href="https://github.com/NVIDIA/cutlass">CUTLASS</a> · <a href="https://arxiv.org/abs/2407.08608">FlashAttention-3 paper</a></p>',
   },
   {
-    label: "Triton",
-    lang: "python",
-    note: "Triton expresses the tile loop directly; tl.dot maps to tensor cores.",
-    lines: [
-      "@triton.jit",
-      "def flash_fwd(Q, K, V, O, stride_q, stride_k, stride_v, N, D: tl.constexpr):",
-      "    q = tl.load(Q + ...)",
-      "    m = tl.full([BQ], -float('inf'), tl.float32)",
-      "    l = tl.zeros([BQ], tl.float32)",
-      "    acc = tl.zeros([BQ, D], tl.float32)",
-      "    for kt in range(0, N, BK):",
-      "        k = tl.load(K + kt * stride_k + ...)",
-      "        v = tl.load(V + kt * stride_v + ...)",
-      "        s = tl.dot(q, tl.trans(k))",
-      "        m_new = tl.maximum(m, tl.max(s, 1))",
-      "        p = tl.exp(s - m_new[:, None])",
-      "        l = l * tl.exp(m - m_new) + tl.sum(p, 1)",
-      "        acc = acc * tl.exp(m - m_new)[:, None] + tl.dot(p, v)",
-      "        m = m_new",
-      "    tl.store(O + ..., acc / l[:, None])",
-    ],
+    title: "Blackwell tcgen05 (FA-4)",
+    lang: "cuda",
+    tag: "v4 · B200 · SM100",
+    note:
+      "Blackwell's tcgen05 path moves the accumulator out of registers into Tensor Memory (TMEM). tcgen05_alloc reserves TMEM columns and returns an address; tcgen05_mma issues the 2-SM matrix instruction; idesc is the instruction descriptor (dtype, shape, transpose); tcgen05_commit and mma_bar order completion; tcgen05_ld/st move the softmax tile between TMEM and registers. elect_one_sync picks one thread for the allocation.",
+    code: `// Sketch, not a full TU: BQ, BK, D, num_k_tiles, sQ_desc, sK_desc,
+// sV_desc, and idesc come from the enclosing kernel.
+// A CTA pair owns 256 Q rows; K/V tiles arrive by TMA.
+#include <cuda/barrier>
+
+__global__ void flash_fwd_b200(const half* Q, const half* K,
+                               const half* V, half* O) {
+  __shared__ alignas(1024) half sQ[256][D];
+  __shared__ alignas(1024) half sK[BK][D];
+  __shared__ alignas(1024) half sV[BK][D];
+  __shared__ uint32_t tmem_addr;      // TMEM base address, in columns
+  __shared__ barrier barK, barV, mma_bar;
+
+  // elect_one_sync = one thread in the warp performs the allocation.
+  if (elect_one_sync()) tcgen05_alloc(&tmem_addr, 512);
+
+  TmaDescriptor tmaK = make_tma_copy(SM100_TMA_LOAD{}, K, ...);
+  TmaDescriptor tmaV = make_tma_copy(SM100_TMA_LOAD{}, V, ...);
+
+  for (int kt = 0; kt < num_k_tiles; ++kt) {
+    copy(tmaK.with(barK), K + kt * BK * D, sK);
+    copy(tmaV.with(barV), V + kt * BK * D, sV);
+    barK.wait(0);
+
+    // tcgen05_mma = Blackwell 2-SM matrix multiply-accumulate.
+    // idesc describes operand dtype/shape/transpose; ScaleOut::Zero resets.
+    tcgen05_mma(tmem_addr + 0, sQ_desc, sK_desc, idesc,
+                GMMA::ScaleOut::Zero, mma_bar);
+    tcgen05_commit(mma_bar);   // make the MMA visible to the barrier
+    mma_bar.wait(0);
+
+    // tcgen05_ld/st copy between TMEM and registers around the softmax.
+    tcgen05_ld(tmem_addr + 0, s_reg);     // S tile -> registers
+    online_softmax(s_reg, m, l);
+    tcgen05_st(s_reg, tmem_addr + 0);     // P tile -> TMEM
+    barV.wait(0);
+    tcgen05_mma(tmem_addr + 256, tmem_addr + 0, sV_desc, idesc,
+                GMMA::ScaleOut::One, mma_bar);   // O += P V
+  }
+}`,
+    refs:
+      '<p class="ill-refs"><a href="https://github.com/Dao-AILab/flash-attention">Dao-AILab/flash-attention (v4)</a> · <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/">CUDA tcgen05 / TMEM guide</a></p>',
   },
   {
-    label: "TPU / Pallas",
+    title: "AMD ROCm (CDNA3)",
     lang: "python",
-    note: "Pallas makes the tile shapes and DMA explicit; XLA maps them to CMEM and the MXU.",
-    lines: [
-      "def flash_attention(q, k, v, BQ=128, BK=128):",
-      "    m = jnp.full((BQ,), -jnp.inf)",
-      "    l = jnp.zeros((BQ,))",
-      "    o = jnp.zeros((BQ, D))",
-      "    for kt in range(0, N, BK):",
-      "        k_tile = pl.load(k, (kt, 0), (BK, D))",
-      "        v_tile = pl.load(v, (kt, 0), (BK, D))",
-      "        s = pl.dot(q_tile, k_tile.T)",
-      "        m_new = jnp.maximum(m, jnp.max(s, axis=1))",
-      "        p = jnp.exp(s - m_new[:, None])",
-      "        l = l * jnp.exp(m - m_new) + jnp.sum(p, axis=1)",
-      "        o = o * jnp.exp(m - m_new)[:, None] + pl.dot(p, v_tile)",
-      "        m = m_new",
-      "    pl.store(o / l[:, None], ...)",
-    ],
+    tag: "MI300 · MFMA",
+    note:
+      "CDNA3 is AMD's data-center GPU architecture, and MFMA is its matrix instruction. The Triton loop is the same as the NVIDIA card, but the launch knobs differ: matrix_instr_nonkdim=32 selects 32x32 MFMA shapes, waves_per_eu controls how many wavefronts share a compute unit, and num_stages pipelines shared-memory (LDS) loads. grid is the number of programs; each owns BLOCK_M query rows.",
+    code: `# CDNA3 (MI300): the same online-softmax loop, lowered to MFMA.
+# Triton launch knobs select 32x32 MFMA shapes and LDS/occupancy tradeoffs.
+@triton.jit
+def _attn_fwd_rocm(Q, K, V, O, sm_scale, stride_m, stride_k, N_CTX,
+                   BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr,
+                   HEAD_DIM: tl.constexpr):
+    # off_m is the first query row owned by this program.
+    off_m = tl.program_id(0) * BLOCK_M
+
+    # One running softmax state per query row, in fp32.
+    m_i = tl.full([BLOCK_M], -float("inf"), tl.float32)
+    l_i = tl.zeros([BLOCK_M], tl.float32)
+    acc = tl.zeros([BLOCK_M, HEAD_DIM], tl.float32)
+
+    # tl.arange + [:, None] builds the row indices; [None, :] builds columns.
+    q = tl.load(Q + off_m * stride_m
+                + tl.arange(0, BLOCK_M)[:, None] * stride_m
+                + tl.arange(0, HEAD_DIM)[None, :])
+
+    for start_n in range(0, N_CTX, BLOCK_N):
+        k = tl.load(K + start_n * stride_k
+                    + tl.arange(0, BLOCK_N)[:, None] * stride_k
+                    + tl.arange(0, HEAD_DIM)[None, :])
+        # tl.dot lowers to MFMA on CDNA; the math is unchanged.
+        qk = tl.dot(q, tl.trans(k)) * sm_scale
+        m_new = tl.maximum(m_i, tl.max(qk, 1))
+        alpha = tl.exp(m_i - m_new)
+        p = tl.exp(qk - m_new[:, None])
+        l_i = l_i * alpha + tl.sum(p, 1)
+
+        v = tl.load(V + start_n * stride_k
+                    + tl.arange(0, BLOCK_N)[:, None] * stride_k
+                    + tl.arange(0, HEAD_DIM)[None, :])
+        # Cast p to fp16 so the MFMA operand matches v.
+        acc = acc * alpha[:, None] + tl.dot(p.to(tl.float16), v)
+        m_i = m_new
+
+    tl.store(O + off_m * stride_m
+             + tl.arange(0, BLOCK_M)[:, None] * stride_m
+             + tl.arange(0, HEAD_DIM)[None, :], acc / l_i[:, None])
+
+# grid = number of programs. num_warps/num_stages and the MFMA shape
+# are launch-time tuning knobs; waves_per_eu limits occupancy per CU.
+_attn_fwd_rocm[(grid_m, grid_h)](..., num_warps=8, num_stages=2,
+                                 matrix_instr_nonkdim=32, waves_per_eu=1)`,
+    refs:
+      '<p class="ill-refs"><a href="https://github.com/ROCm/composable_kernel">Composable Kernel</a> · <a href="https://rocm.docs.amd.com/">ROCm docs</a> · <a href="https://github.com/triton-lang/triton">Triton on AMD</a></p>',
+  },
+  {
+    title: "TPU Pallas",
+    lang: "python",
+    tag: "TPU v5e / v6e",
+    note:
+      "Pallas is JAX's kernel language for TPU and GPU. pl.pallas_call launches a kernel over a grid; pl.BlockSpec says which slice of each input the program sees and how the block index maps to it. q_ref[...] reads the block and o_ref[...] = ... writes it. jnp is JAX's NumPy-like API; jax.ShapeDtypeStruct declares the output shape and dtype. XLA maps the block to CMEM and the MXU.",
+    code: `import jax
+import jax.numpy as jnp
+from jax.experimental import pallas as pl
+
+# Pallas passes each input as a ref (a view of one block), not a whole tensor.
+def flash_kernel(q_ref, k_ref, v_ref, o_ref, *, BQ: int, BK: int, D: int):
+    # q_ref[...] reads the current block into a JAX array; astype is a cast.
+    q = q_ref[...].astype(jnp.float32)
+
+    # Running softmax state. jnp.full/zeros allocate arrays on the TPU.
+    m = jnp.full((BQ,), -jnp.inf, jnp.float32)
+    l = jnp.zeros((BQ,), jnp.float32)
+    acc = jnp.zeros((BQ, D), jnp.float32)
+
+    for kt in range(k_ref.shape[0]):
+        k = k_ref[kt].astype(jnp.float32)
+        v = v_ref[kt].astype(jnp.float32)
+
+        # jnp.dot lowers to the MXU; k.T is a transpose view.
+        s = jnp.dot(q, k.T) * (1.0 / jnp.sqrt(D))
+        # jnp.max(..., axis=1) reduces each row; jnp.maximum is elementwise.
+        m_new = jnp.maximum(m, jnp.max(s, axis=1))
+        alpha = jnp.exp(m - m_new)
+        p = jnp.exp(s - m_new[:, None])
+        l = l * alpha + jnp.sum(p, axis=1)
+        # [:, None] broadcasts the row scale across the D columns.
+        acc = acc * alpha[:, None] + jnp.dot(p.astype(v.dtype), v)
+        m = m_new
+
+    # o_ref[...] = ... writes the output block back to HBM.
+    o_ref[...] = (acc / l[:, None]).astype(o_ref.dtype)
+
+# pl.pallas_call launches the kernel. grid says how many programs run;
+# each BlockSpec maps a program index to an input/output block.
+def flash_attention(q, k, v, BQ=128, BK=128):
+    return pl.pallas_call(
+        flash_kernel,
+        grid=(q.shape[0] // BQ,),
+        in_specs=[
+            pl.BlockSpec((BQ, q.shape[-1]), lambda i: (i, 0)),
+            pl.BlockSpec((q.shape[0] // BK, BK, k.shape[-1]), lambda i: (0, 0, 0)),
+            pl.BlockSpec((q.shape[0] // BK, BK, v.shape[-1]), lambda i: (0, 0, 0)),
+        ],
+        out_specs=pl.BlockSpec((BQ, v.shape[-1]), lambda i: (i, 0)),
+        out_shape=jax.ShapeDtypeStruct((q.shape[0], v.shape[-1]), q.dtype),
+    )(q, k, v)`,
+    refs:
+      '<p class="ill-refs"><a href="https://github.com/jax-ml/jax/tree/main/jax/experimental/pallas/ops/tpu/attention">Pallas TPU attention</a> · <a href="https://jax.readthedocs.io/en/latest/pallas/index.html">Pallas docs</a> · <a href="https://arxiv.org/abs/2308.14089">Pallas paper</a></p>',
+  },
+  {
+    title: "FP8 variant",
+    lang: "python",
+    tag: "Hopper / Blackwell",
+    note:
+      "FP8 is a storage and matmul format, not a softmax format. tl.float8e4nv is the E4M3 variant (4 exponent bits, 3 mantissa bits). per_tile_quant is a stand-in for a quantization helper that returns the FP8 tile plus a scale; the scales are applied after the dot. m, l, and acc stay in fp32 because exponentiation and accumulation lose too much precision in FP8.",
+    code: `# FP8 on Hopper/Blackwell: quantize operands per tile, accumulate in fp32.
+# The softmax state stays fp32; only the matmul operands are low precision.
+# per_tile_quant is a helper: it returns (fp8_tile, scale) for each tile.
+q8, q_scale = per_tile_quant(q, axis=-1, dtype=tl.float8e4nv)
+k8, k_scale = per_tile_quant(k, axis=-1, dtype=tl.float8e4nv)
+v8, v_scale = per_tile_quant(v, axis=-1, dtype=tl.float8e4nv)
+
+# The dot sees fp8 operands; the per-tile scales are applied afterwards.
+s = tl.dot(q8, tl.trans(k8)) * (q_scale[:, None] * k_scale[None, :]) * sm_scale
+m_new = tl.maximum(m_i, tl.max(s, 1))
+p = tl.exp(s - m_new[:, None])
+l_i = l_i * tl.exp(m_i - m_new) + tl.sum(p, 1)
+# Cast p down for the P @ V dot, then undo v_scale in fp32.
+acc = acc * tl.exp(m_i - m_new)[:, None] + tl.dot(p.to(tl.float8e4nv), v8) * v_scale
+m_i = m_new`,
+    refs:
+      '<p class="ill-refs"><a href="https://arxiv.org/abs/2407.08608">FlashAttention-3</a> · <a href="https://github.com/Dao-AILab/flash-attention">FP8 kernels</a> · <a href="https://docs.nvidia.com/deeplearning/transformer-engine/">Transformer Engine</a></p>',
   },
 ];
+
+function attr(value: string): string {
+  return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
+function buildKernelProse(): string[] {
+  const intro =
+    '<p>The equation is fixed; the kernel is a schedule. Each release moves the same online-softmax loop onto a different memory path and matrix unit. The snippets are representative sketches, not drop-in code — the links point at the production kernels.</p>' +
+    '<p class="kernel-note"><strong>Reading guide.</strong> B/H/N/D mean batch, heads, sequence length, and head dimension. BQ/BK and BLOCK_M/BLOCK_N are tile sizes. HBM is global memory; SMEM/LDS is per-SM shared memory; TMEM is Blackwell tensor memory; CMEM is TPU on-chip memory. MMA, WGMMA, tcgen05, MFMA, and MXU are matrix instructions or units. Strides are in elements, not bytes.</p>';
+  const table =
+    '<div class="kernel-table-wrap"><table class="kernel-table">' +
+    '<thead><tr><th>Release</th><th>Year</th><th>Hardware</th><th>Schedule change</th></tr></thead><tbody>' +
+    '<tr><td>v1</td><td>2022</td><td>A100 · SM80</td><td>IO-aware tiling; recompute S/P instead of storing them.</td></tr>' +
+    '<tr><td>v2</td><td>2023</td><td>A100 / H100</td><td>Better work partitioning; fewer non-matmul FLOPs; causal fast path.</td></tr>' +
+    '<tr><td>v3</td><td>2024</td><td>H100 · SM90</td><td>Warp specialization, TMA, WGMMA, FP8.</td></tr>' +
+    '<tr><td>v4</td><td>2025</td><td>B200 · SM100</td><td>tcgen05 MMA, Tensor Memory, 2-SM cooperation.</td></tr>' +
+    '</tbody></table></div>' +
+    '<p class="kernel-note">Upstream versions are FlashAttention releases. Triton, ROCm, and Pallas are ports of the same algorithm to other toolchains.</p>';
+  const blocks = KERNEL_CODE.map((sample) => {
+    return (
+      '<h3 class="kernel-h">' + escapeHtml(sample.title) + '</h3>' +
+      '<p class="kernel-note">' + escapeHtml(sample.note) + '</p>' +
+      '<pre data-lang="' + sample.lang + '" data-title="' + attr(sample.title) + '" data-tag="' + attr(sample.tag) + '"><code>' +
+      escapeHtml(sample.code.trim()) +
+      '</code></pre>' +
+      sample.refs
+    );
+  });
+  const more =
+    '<p class="ill-refs"><strong>More:</strong> <a href="https://github.com/Dao-AILab/flash-attention">Dao-AILab/flash-attention</a> · <a href="https://github.com/NVIDIA/cutlass">CUTLASS</a> · <a href="https://github.com/triton-lang/triton">Triton</a> · <a href="https://github.com/jax-ml/jax/tree/main/jax/experimental/pallas">Pallas</a> · <a href="https://arxiv.org/abs/2205.14135">FlashAttention</a> · <a href="https://arxiv.org/abs/2307.08691">FlashAttention-2</a> · <a href="https://arxiv.org/abs/2407.08608">FlashAttention-3</a></p>';
+  return [intro, table, ...blocks, more];
+}
+
+SECS.push({
+  id: "kernels",
+  title: "Kernel implementations: versions and hardware variants",
+  blurb:
+    "v1 through v4 keep the same online-softmax math and move it across memory hierarchies and matrix units. Below: a representative kernel for each path, from the PyTorch dispatch to Triton, CUTLASS on Hopper, tcgen05 on Blackwell, ROCm, Pallas on TPU, and the FP8 variant.",
+  h: 160,
+  prose: buildKernelProse(),
+});
 
 const VARIANTS: Array<{ title: string; color: string; detail: string }> = [
   { title: "Causal", color: C.accent, detail: "Mask S where key > query. Whole tiles above the diagonal are skipped; diagonal tiles apply the mask before the online update." },
@@ -211,7 +513,7 @@ const VARIANTS: Array<{ title: string; color: string; detail: string }> = [
 
 const flash: SceneFactory = (host) => {
   let attnStep = 1;
-  let attnPlaying = true;
+  let attnPlaying = false;
   let activeQ = 0;
   let attnPhaseT = 0;
   let osDone = [false, false, false, false];
@@ -263,6 +565,15 @@ const flash: SceneFactory = (host) => {
     const controls = attachSvgControls(svg, art);
     fig.appendChild(svg);
     section.append(head, blurb, fig);
+    if (sec.prose) {
+      const proseEl = document.createElement("div");
+      proseEl.className = "ill-prose";
+      proseEl.innerHTML = sec.prose
+        .map((p) => (p.trim().startsWith("<") ? p : "<p>" + p + "</p>"))
+        .join("");
+      styleCodeBlocks(proseEl);
+      section.appendChild(proseEl);
+    }
     root.appendChild(section);
     secEls.push({ svg, art, controls, ctl, section });
   });
@@ -301,7 +612,7 @@ const flash: SceneFactory = (host) => {
     for (const { section } of secEls) io.observe(section);
   }
 
-  const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling];
+  const draws = [drawMemory, drawDefinition, drawNaive, drawFused, drawTiling, drawKernels];
 
   function renderSection(i: number): void {
     const { art, controls } = secEls[i];
@@ -1201,8 +1512,51 @@ const flash: SceneFactory = (host) => {
     txt(318, 622, "Q " + (q + 1) + " / 4 · step " + tileStep + " / 3", { size: 9.2, fill: C.dim, mono: true });
   }
 
+  /* ------------------------------ section 6 ------------------------------ */
+
+  function drawKernels(art: SVGGElement): void {
+    art.appendChild(marker("arw-k", C.dim));
+    const versions = [
+      { v: "v1", year: "2022", hw: "A100 · SM80", note: "IO-aware tiling" },
+      { v: "v2", year: "2023", hw: "A100 / H100", note: "work partitioning" },
+      { v: "v3", year: "2024", hw: "H100 · SM90", note: "TMA · WGMMA · FP8" },
+      { v: "v4", year: "2025", hw: "B200 · SM100", note: "tcgen05 · TMEM" },
+    ];
+    const colors = [C.dim, C.teal, C.accent, C.ok];
+    const w = 150;
+    const gap = 24;
+    const x0 = 20;
+    const y = 34;
+    versions.forEach((item, i) => {
+      const x = x0 + i * (w + gap);
+      art.appendChild(
+        s("rect", {
+          x,
+          y,
+          width: w,
+          height: 84,
+          rx: 8,
+          fill: C.panel,
+          "fill-opacity": 0.6,
+          stroke: colors[i],
+          "stroke-opacity": 0.8,
+        }),
+      );
+      txt(x + 12, y + 24, item.v, { size: 14, weight: 700, fill: colors[i], mono: true });
+      txt(x + 44, y + 23, item.year, { size: 8.5, fill: C.dim, mono: true });
+      txt(x + 12, y + 47, item.hw, { size: 8, fill: C.fg, mono: true });
+      txt(x + 12, y + 65, item.note, { size: 8, fill: C.dim });
+      if (i < versions.length - 1) {
+        arrow(art, x + w + 3, y + 42, x + w + gap - 3, y + 42, C.dim, "arw-k");
+      }
+    });
+    txt(20, 142, "same math · one forward pass · the schedule moves between units", {
+      size: 8.5,
+      fill: C.dim,
+    });
+  }
+
   render();
-  startAttn(false);
   return {
     destroy(): void {
       io?.disconnect();
