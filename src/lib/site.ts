@@ -283,6 +283,14 @@ export const illustrations: Illustration[] = [
     scene: 'distributed-lab',
   },
   {
+    id: 'the-letters',
+    category: 'Distributed systems',
+    title: 'The Letters (WIP)',
+    blurb:
+      'Three friends, three post offices, and a rule book you set. Watch a letter cross the world, then find the day your rules stop working.',
+    scene: 'the-letters',
+  },
+  {
     id: 'kv-cache',
     category: 'LLM foundation',
     title: 'Why and how KV cache works in an autoregressive LLM',
