@@ -117,7 +117,12 @@ const HTML = `
   </div>
 
   <div class="mapwrap">
-    <svg id="map" viewBox="0 0 800 430" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="map" viewBox="0 0 800 430" preserveAspectRatio="xMidYMid meet">
+      <defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#1b2230"/></pattern></defs>
+      <rect x="0" y="0" width="800" height="430" fill="url(#dots)" opacity="0.65" />
+      <g id="map-static"></g>
+      <g id="map-dynamic"></g>
+    </svg>
     <div class="verdict" id="verdict">
       <div class="vt" id="vt"></div>
       <div class="vs" id="vs"></div>
@@ -148,7 +153,10 @@ const scene: SceneFactory = (el) => {
   shadow.innerHTML = '<style>' + CSS + '</style>' + HTML;
 
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => shadow.querySelector('#' + id) as T;
-  const SVGNS = 'http://www.w3.org/2000/svg';
+  const svg = shadow.querySelector<SVGSVGElement>('#map')!;
+  const staticLayer = shadow.querySelector<SVGGElement>('#map-static')!;
+  const dynamicLayer = shadow.querySelector<SVGGElement>('#map-dynamic')!;
+  let staticKey = '';
 
   const POS: Record<string, { x: number; y: number }> = {
     A: { x: 150, y: 300 },
@@ -159,19 +167,22 @@ const scene: SceneFactory = (el) => {
 
   const state = {
     day: 0,
-    rules: { numbering: 'none', receipts: 'none', retry: 'never', ledger: 'off', route: 'direct' },
+    // Day 1 starts from a book that can actually keep the promise; the lesson
+    // is what each add-on costs, not discovering that no receipts can pass.
+    rules: { numbering: 'serial', receipts: 'sign', retry: 'never', ledger: 'off', route: 'direct' },
     sim: null as Day | null,
     days: [] as Day[],
     index: 0,
     results: [] as DaySummary[],
     playing: false,
-    speed: 2,
+    speed: 1,
     drawnLog: 0,
     focus: null as string | null,
     ended: false,
   };
   let raf = 0;
   let lastTs = 0;
+  let holdUntil = 0;
 
   function cityPos(id: string) {
     if (state.sim?.scenario.remote && id === 'B') return REMOTE_B;
@@ -204,6 +215,7 @@ const scene: SceneFactory = (el) => {
 
   function newCampaign() {
     stop();
+    holdUntil = 0;
     state.ended = false;
     state.drawnLog = 0;
     state.focus = null;
@@ -230,9 +242,17 @@ const scene: SceneFactory = (el) => {
 
   function frame(ts: number) {
     if (!state.playing || !state.sim) return;
+    if (ts < holdUntil) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     const dt = Math.min(0.06, (ts - lastTs) / 1000);
     lastTs = ts;
-    state.sim.tick(dt * state.speed * 9);
+    // The first morning gets a readable pace; the rest of the batch is a
+    // little quicker. At 18 sim-days/sec the whole run flashed past before a
+    // delivered letter could even land in a stack.
+    const rate = state.index === 0 ? 2.2 : 4.2;
+    state.sim.tick(dt * state.speed * rate);
     if (state.sim.now >= state.sim.scenario.deadline + 2) {
       state.results.push(state.sim.summary());
       state.index++;
@@ -244,6 +264,8 @@ const scene: SceneFactory = (el) => {
       $('log').innerHTML = '';
       state.drawnLog = 0;
       draw();
+      lastTs = ts;
+      holdUntil = ts + 220;
       raf = requestAnimationFrame(frame);
       return;
     }
@@ -320,17 +342,17 @@ const scene: SceneFactory = (el) => {
   }
 
   function drawMap() {
-    const svg = $('map');
     const sim = state.sim;
     if (!sim) return;
     const F = sim.flightDays;
-    const parts: string[] = [];
+    const staticParts: string[] = [];
+    const dynamicParts: string[] = [];
 
     for (const [a, b] of [['A', 'B'], ['B', 'C'], ['A', 'C']]) {
       const r = routeFor(a, b);
-      parts.push(`<path class="route" d="M ${r.p1.x} ${r.p1.y} Q ${r.c.x} ${r.c.y} ${r.p2.x} ${r.p2.y}" />`);
+      staticParts.push(`<path class="route" d="M ${r.p1.x} ${r.p1.y} Q ${r.c.x} ${r.c.y} ${r.p2.x} ${r.p2.y}" />`);
       const m = quad(r.p1, r.c, r.p2, 0.5);
-      parts.push(`<text class="routelabel" x="${m.x}" y="${m.y - 12}" text-anchor="middle">${F} days</text>`);
+      staticParts.push(`<text class="routelabel" x="${m.x}" y="${m.y - 12}" text-anchor="middle">${F} days</text>`);
     }
 
     for (const id of ['A', 'B', 'C']) {
@@ -338,7 +360,7 @@ const scene: SceneFactory = (el) => {
       const c = CITIES[id];
       const toHere = sim.deliveries.filter((d) => sim.letters.find((l) => l.id === d.letterId)!.to === id);
       const remote = sim.scenario.remote && id === 'B';
-      parts.push(`<g class="city">
+      staticParts.push(`<g class="city">
         <circle cx="${p.x}" cy="${p.y}" r="28" fill="#0f141b" stroke="${c.color}" stroke-width="2" />
         <text class="name" x="${p.x}" y="${p.y + 44}" text-anchor="middle">${c.friend}</text>
         <text class="place" x="${p.x}" y="${p.y + 58}" text-anchor="middle">${remote ? 'the mountains' : c.city}</text>
@@ -350,7 +372,7 @@ const scene: SceneFactory = (el) => {
       </g>`);
 
       toHere.slice(0, 4).forEach((d, i) => {
-        parts.push(`<g class="stack" transform="translate(${p.x + 38 + i * 13},${p.y - 10})">
+        dynamicParts.push(`<g class="stack" transform="translate(${p.x + 38 + i * 13},${p.y - 10})">
           <rect x="0" y="0" width="14" height="9" rx="1.5" fill="#f2e6c8" stroke="#b99a52" />
           <path d="M 0 0 L 7 5 L 14 0" fill="none" stroke="#b99a52" />
           ${d.number ? `<text x="7" y="-4" text-anchor="middle">${d.number}</text>` : ''}
@@ -359,7 +381,6 @@ const scene: SceneFactory = (el) => {
     }
 
     const total = 1.2 + F;
-    parts.push('<defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#1b2230"/></pattern></defs><rect x="0" y="0" width="800" height="430" fill="url(#dots)" opacity="0.65"/>');
 
     let jitter = 0;
     for (const a of sim.attempts) {
@@ -384,11 +405,11 @@ const scene: SceneFactory = (el) => {
         p.y -= 8;
         for (let g = 1; g <= 2; g++) {
           const gp = quad(r.p1, r.c, r.p2, Math.max(0, k - g * 0.03));
-          parts.push('<rect x="' + (gp.x - 8) + '" y="' + (gp.y - 13) + '" width="16" height="11" rx="2" fill="#f2e6c8" opacity="' + (0.18 / g) + '" />');
+          dynamicParts.push('<rect x="' + (gp.x - 8) + '" y="' + (gp.y - 13) + '" width="16" height="11" rx="2" fill="#f2e6c8" opacity="' + (0.18 / g) + '" />');
         }
       }
       const focused = state.focus === a.letterId;
-      parts.push(
+      dynamicParts.push(
         '<g class="letter ' + (focused ? 'focus' : '') + '" data-letter="' + a.letterId + '" style="cursor:pointer" transform="translate(' + p.x + ' ' + p.y + ') rotate(' + angle + ')">' +
           '<rect x="-11" y="-7.5" width="22" height="15" rx="2" />' +
           '<path d="M -11 -7.5 L 0 2 L 11 -7.5" />' +
@@ -409,7 +430,7 @@ const scene: SceneFactory = (el) => {
       const r = routeFor(l.to, l.from);
       const p = quad(r.p1, r.c, r.p2, prog);
       const fade = lost ? Math.max(0.15, 1 - Math.max(0, prog - 0.3) / 0.25) : 1;
-      parts.push(
+      dynamicParts.push(
         '<g transform="translate(' + p.x + ' ' + (p.y - 7) + ')" opacity="' + fade + '">' +
           '<rect x="-7" y="-5" width="14" height="10" rx="1.5" fill="#e8eef7" stroke="#9fb0c8" />' +
           '<path d="M -7 -5 L 0 0 L 7 -5" fill="none" stroke="#9fb0c8" />' +
@@ -426,11 +447,11 @@ const scene: SceneFactory = (el) => {
       if (!target) continue;
       const p = cityPos(target.to);
       const k = age / 1.1;
-      parts.push('<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (28 + 36 * k) + '" fill="none" stroke="#3fb950" stroke-width="' + (2.2 * (1 - k)) + '" opacity="' + (0.5 * (1 - k)) + '" />');
+      dynamicParts.push('<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (28 + 36 * k) + '" fill="none" stroke="#3fb950" stroke-width="' + (2.2 * (1 - k)) + '" opacity="' + (0.5 * (1 - k)) + '" />');
       for (let i = 0; i < 6; i++) {
         const ang = (Math.PI * 2 * i) / 6;
         const rad = 26 + 30 * k;
-        parts.push('<circle cx="' + (p.x + Math.cos(ang) * rad) + '" cy="' + (p.y + Math.sin(ang) * rad) + '" r="1.7" fill="#3fb950" opacity="' + (0.75 * (1 - k)) + '" />');
+        dynamicParts.push('<circle cx="' + (p.x + Math.cos(ang) * rad) + '" cy="' + (p.y + Math.sin(ang) * rad) + '" r="1.7" fill="#3fb950" opacity="' + (0.75 * (1 - k)) + '" />');
       }
     }
 
@@ -445,7 +466,7 @@ const scene: SceneFactory = (el) => {
       const k = Math.min(1, (u - s0) / (s1 - s0));
       const sc = 0.75 + 0.25 * k;
       const fade = u > s1 ? Math.max(0, 1 - (u - s1) / 0.08) : 1;
-      parts.push(
+      dynamicParts.push(
         '<g transform="translate(' + (p.x - 26) + ' ' + (p.y + 24) + ') scale(' + sc + ')" opacity="' + (0.9 * fade) + '">' +
           '<circle r="9" fill="none" stroke="#b4453a" stroke-width="1.4" />' +
           '<path d="M -4 0 L -1 3 L 5 -3" fill="none" stroke="#b4453a" stroke-width="1.6" />' +
@@ -453,16 +474,12 @@ const scene: SceneFactory = (el) => {
       );
     }
 
-    svg.innerHTML = parts.join('');
-    svg.querySelectorAll<SVGElement>('.letter').forEach((node) => {
-      node.addEventListener('click', () => {
-        const id = node.getAttribute('data-letter');
-        state.focus = state.focus === id ? null : id;
-        $('log').innerHTML = '';
-        state.drawnLog = 0;
-        draw();
-      });
-    });
+    const key = sim.scenario.day + '|' + F + '|' + sim.scenario.remote;
+    if (key !== staticKey) {
+      staticLayer.innerHTML = staticParts.join('');
+      staticKey = key;
+    }
+    dynamicLayer.innerHTML = dynamicParts.join('');
   }
 
   function drawPanels() {
@@ -471,10 +488,12 @@ const scene: SceneFactory = (el) => {
     const agg = aggregate();
     if (state.ended) {
       $('promiseState').innerHTML = '<span class="' + (agg.kept >= 17 && agg.cost <= agg.budget ? 'ok' : 'bad') + '">' + agg.kept + ' / ' + MORNINGS + '</span>';
+    } else if (agg.n === 0) {
+      $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">in progress</span>';
     } else {
-      $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">' + agg.kept + ' / ' + Math.max(agg.n, 1) + ' so far</span>';
+      $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">' + agg.kept + ' / ' + agg.n + ' so far</span>';
     }
-    $('cost').textContent = agg.cost + ' / ' + agg.budget + ' coins';
+    $('cost').textContent = (agg.n ? agg.cost : '—') + ' / ' + agg.budget + ' coins';
     $('cost').className = 'mono' + (agg.cost > agg.budget ? ' bad' : '');
     $('promise').innerHTML =
       'Promise: every letter once, within ' + sim.scenario.deadline + ' days, with a signed slip back.';
@@ -559,6 +578,15 @@ const scene: SceneFactory = (el) => {
   $('again').addEventListener('click', () => newCampaign());
   $('next').addEventListener('click', () => {
     if (state.day < SCENARIOS.length - 1) setDay(state.day + 1);
+  });
+  svg.addEventListener('click', (ev) => {
+    const node = (ev.target as Element | null)?.closest?.('.letter');
+    if (!node) return;
+    const id = node.getAttribute('data-letter');
+    state.focus = state.focus === id ? null : id;
+    $('log').innerHTML = '';
+    state.drawnLog = 0;
+    draw();
   });
 
   setDay(0);
