@@ -463,3 +463,41 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
 }
 
 export type Day = ReturnType<typeof createDay>;
+
+/**
+ * Cheapest configuration that still delivers every letter and returns every
+ * signed slip, for one scenario. This is the S-rank target: proof at the
+ * efficient price, not proof at any price.
+ */
+const proofCostCache = new Map<number, number | null>();
+
+export function minProofCost(day: number): number | null {
+  const cached = proofCostCache.get(day);
+  if (cached !== undefined) return cached;
+
+  let best = Infinity;
+  const numberings = ['none', 'date', 'serial'] as const;
+  const retries = ['never', 'tuned', 'quick'] as const;
+  for (const numbering of numberings) {
+    for (const retry of retries) {
+      for (const ledger of ['off', 'on'] as const) {
+        if (ledger === 'on' && numbering === 'none') continue;
+        const rules: Rules = { numbering, receipts: 'sign', retry, ledger, route: 'direct' };
+        let cost = 0;
+        let ok = true;
+        for (let i = 0; i < SITUATIONS; i++) {
+          const s = createDay({ scenario: day, rules, plan: morningPlan(day, i) }).runAll();
+          if (!s.promise || !s.proof) {
+            ok = false;
+            break;
+          }
+          cost += s.cost;
+        }
+        if (ok) best = Math.min(best, cost);
+      }
+    }
+  }
+  const result = Number.isFinite(best) ? Math.round(best * 10) / 10 : null;
+  proofCostCache.set(day, result);
+  return result;
+}
