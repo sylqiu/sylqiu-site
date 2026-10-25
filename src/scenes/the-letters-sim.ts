@@ -53,6 +53,8 @@ export interface Attempt {
   deliverAt: number;
   lost: boolean;
   lostAt: number;
+  /** One-way flight time for this edge, in days (including storm delay). */
+  flightDays: number;
   endedAt?: number;
 }
 
@@ -219,9 +221,11 @@ const WALK = 0.4;
 const OFFICE = 0.2;
 const RECEIPT_TAIL = 0.6;
 
-export function flightDays(scenarioIdx: number, route: string): number {
-  const sc = SCENARIOS[scenarioIdx];
-  if (!sc.remote) return 2;
+export function flightDays(scenario: Scenario, route: string, from: string, to: string): number {
+  if (!scenario.remote) return 2;
+  // Only edges that touch Bob change when he moves to the mountains. The
+  // Alice–Carol route is independent of Bob's location.
+  if (from !== 'B' && to !== 'B') return 2;
   return route === 'relay' ? 3 : 4;
 }
 
@@ -244,7 +248,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
   const plan = opts.plan ?? null;
   const lostBags = plan ? plan.lostBags : scenario.lostBags;
   const lostReceipts = plan ? plan.lostReceipts : scenario.lostReceipts;
-  const F = flightDays(opts.scenario ?? 0, rules.route) + (plan?.delay ?? 0);
+  const stormDelay = plan?.delay ?? 0;
 
   const letters: Letter[] = [
     { id: 'L1', seq: 1, from: 'A', to: 'B', label: 'Alice → Bob' },
@@ -277,6 +281,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
   };
 
   function spawn(letter: Letter, n: number): Attempt {
+    const f = flightDays(scenario, rules.route, letter.from, letter.to) + stormDelay;
     const a: Attempt = {
       id: 'a' + ++seq,
       letterId: letter.id,
@@ -287,9 +292,10 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
       start: now,
       delivered: false,
       status: 'moving',
-      deliverAt: now + WALK + OFFICE + F + OFFICE + WALK,
+      deliverAt: now + WALK + OFFICE + f + OFFICE + WALK,
       lost: lostBags.some((b) => b.letter === letter.seq && b.attempt === n),
-      lostAt: now + WALK + OFFICE + F * 0.55,
+      lostAt: now + WALK + OFFICE + f * 0.55,
+      flightDays: f,
     };
     letter.attempts.push(a);
     attempts.push(a);
@@ -311,7 +317,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
       });
       // the office still confirms the original delivery, or the sender would
       // resend forever
-      if (rules.receipts === 'sign') letter.ackAt = now + F + RECEIPT_TAIL;
+      if (rules.receipts === 'sign') letter.ackAt = now + a.flightDays + RECEIPT_TAIL;
       return;
     }
     if (ledgerOn && a.number) ledger.add(a.number);
@@ -323,7 +329,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
       letter: a.letterId,
       attempt: a.id,
     });
-    if (rules.receipts === 'sign') letter.ackAt = now + F + RECEIPT_TAIL;
+    if (rules.receipts === 'sign') letter.ackAt = now + a.flightDays + RECEIPT_TAIL;
   }
 
   function tick(dt: number) {
@@ -363,7 +369,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
         if (l.attempts.length >= cap) continue;
         const last = l.attempts[l.attempts.length - 1];
         if (!last) continue;
-        const wait = rules.retry === 'tuned' ? 2 * F + 2.6 : 6.5;
+        const wait = rules.retry === 'tuned' ? 2 * last.flightDays + 2.6 : 6.5;
         if (now >= last.start + wait) {
           log('retry', `no slip from ${l.label} — sending again`, { letter: l.id });
           spawn(l, l.attempts.length + 1);
@@ -436,7 +442,6 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
     attempts,
     deliveries,
     events,
-    flightDays: F,
     plan: { lostBags, lostReceipts, delay: plan?.delay ?? 0 },
     get now() {
       return now;

@@ -10,7 +10,7 @@
  * live in a shadow root so the game cannot leak into the site's prose.
  */
 import type { SceneFactory } from '../lib/registry.ts';
-import { createDay, morningPlan, SITUATIONS, BUDGETS, RULES, SCENARIOS, CITIES, type Day, type DaySummary } from './the-letters-sim.ts';
+import { createDay, morningPlan, flightDays, SITUATIONS, BUDGETS, RULES, SCENARIOS, CITIES, type Day, type DaySummary } from './the-letters-sim.ts';
 
 const CSS = `
 :host { display: block; }
@@ -40,10 +40,11 @@ button:disabled { opacity: .4; cursor: default; }
 .clock { font-size: 11px; color: var(--dim); }
 .clock b { color: var(--text); font-weight: 500; }
 .sitchips { display: flex; gap: 3px; align-items: center; }
-.sitchips i { width: 7px; height: 7px; border-radius: 50%; background: #242b36; border: 1px solid #333d4b; }
-.sitchips i.cur { background: var(--gold); border-color: var(--gold); }
-.sitchips i.ok { background: var(--green); border-color: var(--green); }
-.sitchips i.bad { background: var(--red); border-color: var(--red); }
+.sitchips .sip { width: 8px; height: 8px; padding: 0; border-radius: 50%; background: #242b36; border: 1px solid #333d4b; cursor: pointer; }
+.sitchips .sip:hover { border-color: var(--text); }
+.sitchips .sip.ok { background: var(--green); border-color: var(--green); }
+.sitchips .sip.bad { background: var(--red); border-color: var(--red); }
+.sitchips .sip.sel { box-shadow: 0 0 0 1px var(--gold); }
 
 .mapwrap { position: relative; height: 420px; background: radial-gradient(120% 100% at 50% 0%, #10151d 0%, #0b0d10 70%); }
 svg { width: 100%; height: 100%; display: block; }
@@ -116,8 +117,7 @@ const HTML = `
     <span class="spacer"></span>
     <div class="days" id="days"></div>
     <span class="sitchips" id="sitchips"></span>
-    <button id="step" class="primary" title="Run one situation">Step →</button>
-    <button id="run">▶ Run 10</button>
+    <button id="run" class="primary">▶ Run 10</button>
     <button id="reset" title="Reset">↺</button>
     <button id="skip" title="Skip to results">⏭</button>
     <span class="clock mono"><b id="clock">situation 1/10 · day 0.0</b></span>
@@ -181,7 +181,7 @@ const scene: SceneFactory = (el) => {
     sim: null as Day | null,
     days: [] as Day[],
     index: 0,
-    results: [] as DaySummary[],
+    results: [] as (DaySummary | null)[],
     playing: false,
     single: false,
     speed: 1,
@@ -229,7 +229,7 @@ const scene: SceneFactory = (el) => {
     state.single = false;
     state.drawnLog = 0;
     state.focus = null;
-    state.results = [];
+    state.results = Array(SITUATIONS).fill(null);
     state.index = 0;
     state.days = Array.from({ length: SITUATIONS }, (_, i) =>
       createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) }),
@@ -238,7 +238,6 @@ const scene: SceneFactory = (el) => {
     $('verdict').classList.remove('show');
     $('log').innerHTML = '';
     $('run').textContent = '▶ Run ' + SITUATIONS;
-    $('step').textContent = 'Step →';
     draw();
   }
 
@@ -252,18 +251,42 @@ const scene: SceneFactory = (el) => {
 
   function play(single = false) {
     if (state.ended) newCampaign();
-    // After a single step we leave the finished morning on screen. Starting
-    // again means moving to the next one.
-    if (state.sim && state.sim.now >= state.sim.scenario.deadline + 2 && state.index < state.days.length) {
-      loadNextMorning();
+    // After watching one situation, Run continues with the next pending one.
+    if (state.sim && state.sim.now >= state.sim.scenario.deadline + 2 && !single) {
+      let next = state.index + 1;
+      while (next < SITUATIONS && state.results[next]) next++;
+      if (next < SITUATIONS) {
+        state.index = next;
+        state.sim = state.days[next];
+        $('log').innerHTML = '';
+        state.drawnLog = 0;
+        draw();
+      }
     }
     state.playing = true;
     state.single = single;
     $('run').textContent = '⏸ Pause';
-    $('step').textContent = 'Step →';
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(frame);
+  }
+
+  function selectSituation(i: number) {
+    stop();
+    $('verdict').classList.remove('show');
+    state.ended = false;
+    state.single = false;
+    state.playing = false;
+    state.index = i;
+    // Replay this world from the morning; clicking a pip should explain it,
+    // not just freeze its final frame.
+    state.days[i] = createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) });
+    state.sim = state.days[i];
+    state.results[i] = null;
+    $('log').innerHTML = '';
+    state.drawnLog = 0;
+    draw();
+    play(true);
   }
 
   function frame(ts: number) {
@@ -274,27 +297,28 @@ const scene: SceneFactory = (el) => {
     }
     const dt = Math.min(0.06, (ts - lastTs) / 1000);
     lastTs = ts;
-    // The first morning gets a readable pace; the rest of the batch is a
-    // little quicker. At 18 sim-days/sec the whole run flashed past before a
-    // delivered letter could even land in a stack.
-    const rate = state.index === 0 ? 2.2 : 4.2;
+    // The first watchable situation gets a readable pace; the rest of a
+    // batch run is a little quicker.
+    const rate = state.single || state.index === 0 ? 2.2 : 4.2;
     state.sim.tick(dt * state.speed * rate);
     if (state.sim.now >= state.sim.scenario.deadline + 2) {
-      state.results.push(state.sim.summary());
-      state.index++;
-      if (state.index >= state.days.length) {
-        finishAll();
-        return;
-      }
+      state.results[state.index] = state.sim.summary();
       if (state.single) {
-        // Keep the finished morning visible (its stacks, log, and score)
-        // until the visitor asks for the next one.
         state.playing = false;
         state.single = false;
         cancelAnimationFrame(raf);
         $('run').textContent = '▶ Run ' + SITUATIONS;
-        $('step').textContent = 'Next situation →';
         draw();
+        return;
+      }
+      state.index++;
+      if (state.results.every(Boolean) || state.index >= SITUATIONS) {
+        finishAll();
+        return;
+      }
+      while (state.index < SITUATIONS && state.results[state.index]) state.index++;
+      if (state.index >= SITUATIONS) {
+        finishAll();
         return;
       }
       state.sim = state.days[state.index];
@@ -311,7 +335,7 @@ const scene: SceneFactory = (el) => {
   }
 
   function aggregate() {
-    const rs = state.results;
+    const rs = state.results.filter((r): r is DaySummary => !!r);
     const kept = rs.filter((r) => r.promise).length;
     const cost = Math.round(rs.reduce((acc, r) => acc + r.cost, 0) * 10) / 10;
     const budget = BUDGETS[state.day];
@@ -335,7 +359,6 @@ const scene: SceneFactory = (el) => {
     state.single = false;
     state.ended = true;
     $('run').textContent = '▶ Run ' + SITUATIONS;
-    $('step').textContent = 'Step →';
     const agg = aggregate();
     const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
     $('verdict').classList.add('show');
@@ -349,10 +372,11 @@ const scene: SceneFactory = (el) => {
     let wi = -1;
     let wscore = 99;
     state.results.forEach((r, i) => {
+      if (!r) return;
       const sc = r.exact * 2 - r.dupes;
       if (sc < wscore) { wscore = sc; wi = i; }
     });
-    const worst = state.results[wi];
+    const worst = wi >= 0 ? state.results[wi] : null;
     const wrow = worst ? worst.rows.slice().sort((x, y) => y.delivered - x.delivered)[0] : null;
     const tail = wrow && wrow.delivered > 1
       ? ' · worst: situation ' + (wi + 1) + ', ' + wrow.delivered + ' copies for ' + wrow.label
@@ -380,8 +404,7 @@ const scene: SceneFactory = (el) => {
     drawMap();
     drawPanels();
     drawLog();
-    const finished = state.sim.now >= state.sim.scenario.deadline + 2;
-    const sit = Math.min(finished ? Math.max(1, state.index) : state.index + 1, SITUATIONS);
+    const sit = Math.min(state.index + 1, SITUATIONS);
     const day = Math.min(state.sim.now, state.sim.scenario.deadline).toFixed(1);
     $('clock').textContent = 'situation ' + sit + '/' + SITUATIONS + ' · day ' + day + ' / ' + state.sim.scenario.deadline;
   }
@@ -389,7 +412,6 @@ const scene: SceneFactory = (el) => {
   function drawMap() {
     const sim = state.sim;
     if (!sim) return;
-    const F = sim.flightDays;
     const staticParts: string[] = [];
     const dynamicParts: string[] = [];
 
@@ -397,7 +419,8 @@ const scene: SceneFactory = (el) => {
       const r = routeFor(a, b);
       staticParts.push(`<path class="route" d="M ${r.p1.x} ${r.p1.y} Q ${r.c.x} ${r.c.y} ${r.p2.x} ${r.p2.y}" />`);
       const m = quad(r.p1, r.c, r.p2, 0.5);
-      staticParts.push(`<text class="routelabel" x="${m.x}" y="${m.y - 12}" text-anchor="middle">${F} days</text>`);
+      const days = flightDays(sim.scenario, sim.rules.route, a, b);
+      staticParts.push(`<text class="routelabel" x="${m.x}" y="${m.y - 12}" text-anchor="middle">${days} days one-way</text>`);
     }
 
     for (const id of ['A', 'B', 'C']) {
@@ -425,14 +448,13 @@ const scene: SceneFactory = (el) => {
       });
     }
 
-    const total = 1.2 + F;
-
     let jitter = 0;
     for (const a of sim.attempts) {
       if (a.status !== 'moving') continue;
+      const total = 1.2 + a.flightDays;
       const u = Math.max(0, Math.min(1, (sim.now - a.start) / total));
       const flyStart = 0.6 / total;
-      const flyEnd = (0.6 + F) / total;
+      const flyEnd = (0.6 + a.flightDays) / total;
       let p: { x: number; y: number };
       let angle = 0;
       if (u <= flyStart) {
@@ -470,7 +492,7 @@ const scene: SceneFactory = (el) => {
       if (!d || sim.rules.receipts !== 'sign' || !l.ackAt) continue;
       if (sim.now < d.at || sim.now > l.ackAt) continue;
       const prog = (sim.now - d.at) / (l.ackAt - d.at);
-      const lost = sim.scenario.lostReceipts.some((r) => r.letter === l.seq);
+      const lost = sim.plan.lostReceipts.some((r) => r.letter === l.seq);
       if (lost && prog > 0.55) continue;
       const r = routeFor(l.to, l.from);
       const p = quad(r.p1, r.c, r.p2, prog);
@@ -503,6 +525,7 @@ const scene: SceneFactory = (el) => {
     // the office stamp, while a letter is processed
     for (const a of sim.attempts) {
       if (a.status !== 'moving') continue;
+      const total = 1.2 + a.flightDays;
       const u = (sim.now - a.start) / total;
       const s0 = 0.6 / total;
       const s1 = 0.8 / total;
@@ -519,7 +542,7 @@ const scene: SceneFactory = (el) => {
       );
     }
 
-    const key = sim.scenario.day + '|' + F + '|' + sim.scenario.remote;
+    const key = sim.scenario.day + '|' + sim.scenario.remote + '|' + sim.rules.route;
     if (key !== staticKey) {
       staticLayer.innerHTML = staticParts.join('');
       staticKey = key;
@@ -528,14 +551,19 @@ const scene: SceneFactory = (el) => {
   }
 
   function drawSitchips() {
-    const finished = !!state.sim && state.sim.now >= state.sim.scenario.deadline + 2;
-    const current = state.ended || finished ? -1 : state.index;
-    $('sitchips').innerHTML = state.days.map((_, i) => {
+    const box = $('sitchips');
+    if (box.children.length !== SITUATIONS) {
+      // Build the buttons once; replacing them every frame would eat clicks.
+      box.innerHTML = Array.from({ length: SITUATIONS }, (_, i) =>
+        '<button class="sip" data-i="' + i + '" title="Situation ' + (i + 1) + '"></button>',
+      ).join('');
+    }
+    const current = state.ended ? -1 : state.index;
+    box.querySelectorAll<HTMLButtonElement>('.sip').forEach((b, i) => {
       const r = state.results[i];
-      const cls = r ? (r.promise ? 'ok' : 'bad') : i === current ? 'cur' : '';
-      const label = 'Situation ' + (i + 1) + (r ? (r.promise ? ' — promise kept' : ' — promise broken') : ' — pending');
-      return '<i class="' + cls + '" title="' + label + '"></i>';
-    }).join('');
+      b.className = 'sip ' + [r ? (r.promise ? 'ok' : 'bad') : '', i === current ? 'sel' : ''].filter(Boolean).join(' ');
+      b.title = 'Situation ' + (i + 1) + (r ? (r.promise ? ' — promise kept' : ' — promise broken') : ' — pending');
+    });
   }
 
   function situationNote(): string {
@@ -546,8 +574,7 @@ const scene: SceneFactory = (el) => {
     if (p.lostBags.length) bits.push(p.lostBags.length + (p.lostBags.length > 1 ? ' bags' : ' bag') + ' lost');
     if (p.lostReceipts.length) bits.push(p.lostReceipts.length + (p.lostReceipts.length > 1 ? ' slips' : ' slip') + ' lost');
     if (p.delay) bits.push('storm +' + p.delay + ' days');
-    const finished = sim.now >= sim.scenario.deadline + 2;
-    const n = Math.min(finished ? Math.max(1, state.index) : state.index + 1, SITUATIONS);
+    const n = Math.min(state.index + 1, SITUATIONS);
     return 'Situation ' + n + ': ' + (bits.length ? bits.join(' · ') : 'nothing goes wrong');
   }
 
@@ -642,11 +669,16 @@ const scene: SceneFactory = (el) => {
     if (state.playing) {
       stop();
       $('run').textContent = '▶ Resume';
-    } else play(false);
+      return;
+    }
+    if (state.ended || state.results.every(Boolean)) newCampaign();
+    play(false);
   });
-  $('step').addEventListener('click', () => {
-    if (state.playing) stop();
-    play(true);
+  $('sitchips').addEventListener('click', (ev) => {
+    const pip = (ev.target as Element | null)?.closest?.('.sip');
+    if (!pip) return;
+    const i = Number(pip.getAttribute('data-i'));
+    if (Number.isInteger(i)) selectSituation(i);
   });
   $('reset').addEventListener('click', () => newCampaign());
   $('skip').addEventListener('click', () => runAllMornings());

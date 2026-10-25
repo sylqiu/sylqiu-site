@@ -1,6 +1,6 @@
 // Day-level invariants for The Letters.
 // Run: node --experimental-strip-types scripts/verify-letters.mjs
-import { createDay, morningPlan, SITUATIONS, BUDGETS } from '../src/scenes/the-letters-sim.ts';
+import { createDay, morningPlan, flightDays, SITUATIONS, BUDGETS, SCENARIOS } from '../src/scenes/the-letters-sim.ts';
 
 let fails = 0;
 const ok = (cond, msg) => {
@@ -61,6 +61,12 @@ ok(d4good.cost <= BUDGETS[3], 'day 4, ledger on: inside budget (' + d4good.cost 
 
 // The full book must also survive day 1 (it is allowed to cost more).
 ok(sweep(0, full).kept === SITUATIONS, 'day 1, full book: ' + SITUATIONS + '/' + SITUATIONS);
+
+// One-way times are per edge. Bob moving remote must not lengthen A–C.
+ok(flightDays(SCENARIOS[0], 'direct', 'A', 'B') === 2, 'calm day: A–B is 2 days one-way');
+ok(flightDays(SCENARIOS[3], 'direct', 'A', 'B') === 4, 'remote Bob: A–B is 4 days one-way');
+ok(flightDays(SCENARIOS[3], 'direct', 'B', 'C') === 4, 'remote Bob: B–C is 4 days one-way');
+ok(flightDays(SCENARIOS[3], 'direct', 'A', 'C') === 2, 'remote Bob: A–C stays 2 days one-way');
 
 console.log(fails ? '\n' + fails + ' failure(s)' : '\nall checks passed');
 process.exit(fails ? 1 : 0);
