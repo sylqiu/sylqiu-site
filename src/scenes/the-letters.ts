@@ -154,7 +154,8 @@ const HTML = `
       <div class="score">
         <div class="head"><span class="big" id="promiseState">in progress</span><span class="mono" id="cost" style="font-size:10.5px;color:var(--dim)"></span></div>
         <div id="promise" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:2px 0 3px"></div>
-        <div id="sitnote" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:0 0 5px"></div>
+        <div id="sitnote" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:0 0 3px"></div>
+        <div id="why" style="font-size:9.5px;line-height:1.35;margin:0 0 5px;color:var(--dimmer)"></div>
         <div id="rows"></div>
       </div>
       <div class="log" id="log"></div>
@@ -577,6 +578,23 @@ const scene: SceneFactory = (el) => {
     return bits.length ? bits.join(' · ') : 'promise broken';
   }
 
+  function whySummary(): string {
+    const rs = state.results.filter((r): r is DaySummary => !!r);
+    const lost = rs.reduce((n, r) => n + r.lost, 0);
+    const dupes = rs.reduce((n, r) => n + r.dupes, 0);
+    const late = rs.reduce((n, r) => n + r.rows.filter((x) => x.delivered === 1 && !x.onTime).length, 0);
+    const unsigned = rs.reduce((n, r) => n + r.rows.filter((x) => x.delivered > 0 && !x.acked).length, 0);
+    const bits: string[] = [];
+    if (lost) bits.push(lost + ' never arrived');
+    if (dupes) bits.push(dupes + ' duplicate' + (dupes > 1 ? 's' : ''));
+    if (late) bits.push(late + ' late');
+    if (unsigned) bits.push(unsigned + ' without a signed slip');
+    if (!bits.length) {
+      return rs.length === SITUATIONS ? 'All ' + SITUATIONS + ' situations kept the promise.' : '';
+    }
+    return 'Why: ' + bits.join(' · ');
+  }
+
   function situationNote(): string {
     const sim = state.sim;
     if (!sim) return '';
@@ -605,6 +623,8 @@ const scene: SceneFactory = (el) => {
     $('promise').innerHTML =
       'Promise: every letter once, within ' + sim.scenario.deadline + ' days, with a signed slip back.';
     $('sitnote').textContent = situationNote();
+    $('why').textContent = whySummary();
+    $('why').style.color = agg.kept === SITUATIONS ? 'var(--green)' : 'var(--dim)';
     drawSitchips();
 
     $('rows').innerHTML = agg.per.map((p) =>
