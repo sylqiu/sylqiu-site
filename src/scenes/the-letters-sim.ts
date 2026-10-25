@@ -167,10 +167,10 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
-// One day = 20 mornings drawn from a distribution. The player commits one
+// One day = 10 mornings drawn from a distribution. The player commits one
 // rulebook; the morning decides which sacks and slips go missing.
-export const MORNINGS = 20;
-export const BUDGETS = [120, 150, 165, 190];
+export const SITUATIONS = 10;
+export const BUDGETS = [60, 75, 105, 150];
 
 const PROFILES = [
   // Day 1 is the tutorial: no sacks lost, no slips lost. The lesson is cost,
@@ -200,7 +200,10 @@ function morningRng(seed: number) {
 
 export function morningPlan(scenarioIdx: number, morning: number): Plan {
   const p = PROFILES[scenarioIdx];
-  const r = morningRng((scenarioIdx + 1) * 7919 + morning * 104729 + 17);
+  // Ten mornings sample the twenty-morning space at even indices, keeping the
+  // lost bags and slips that make days 2–4 teach something.
+  const sample = morning * 2;
+  const r = morningRng((scenarioIdx + 1) * 7919 + sample * 104729 + 17);
   const lostBags: { letter: number; attempt: number }[] = [];
   const lostReceipts: { letter: number }[] = [];
   for (let letter = 1; letter <= 3; letter++) {
@@ -434,6 +437,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
     deliveries,
     events,
     flightDays: F,
+    plan: { lostBags, lostReceipts, delay: plan?.delay ?? 0 },
     get now() {
       return now;
     },
