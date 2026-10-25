@@ -127,7 +127,7 @@ export const RULES: Record<string, RuleOption[]> = {
   retry: [
     { id: 'never', label: 'Never resend', cost: 0, note: 'One attempt, whatever happens.' },
     { id: 'tuned', label: 'Round-trip timeout', cost: 0.6, note: 'Resend once, but only after the route could have delivered and returned.' },
-    { id: 'quick', label: 'Fixed 6.5-day timeout', cost: 1.1, note: 'Impatient. Right for a 2-day route; wrong when the route grows.' },
+    { id: 'quick', label: 'Fixed 6.5-day retry', cost: 0.2, note: 'Cheap and fixed. Right for a 2-day route; wrong when the route grows.' },
   ],
   ledger: [
     { id: 'off', label: 'No ledger', cost: 0, note: 'Every copy that arrives is delivered.' },
