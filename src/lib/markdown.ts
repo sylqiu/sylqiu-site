@@ -32,7 +32,9 @@ const mdParser = unified()
 
 const toHtmlProc = unified()
   .use(remarkRehype, { allowDangerousHtml: true })
-  .use(rehypeKatex, { throwOnError: false })
+  // rehype-katex controls throwOnError itself (it renders a katex-error node
+  // instead of crashing); passing it is not part of its options type.
+  .use(rehypeKatex)
   .use(rehypeStringify, { allowDangerousHtml: true });
 
 /** Serialize a run of mdast nodes to an HTML fragment (KaTeX applied). */
