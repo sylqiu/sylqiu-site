@@ -173,8 +173,10 @@ export const MORNINGS = 20;
 export const BUDGETS = [120, 150, 165, 190];
 
 const PROFILES = [
-  { sack: 0.02, slip: 0.01, storm: 0 },
-  { sack: 0.07, slip: 0.03, storm: 0.05 },
+  // Day 1 is the tutorial: no sacks lost, no slips lost. The lesson is cost,
+  // not failure. Loss starts on day 2.
+  { sack: 0, slip: 0, storm: 0 },
+  { sack: 0.07, slip: 0, storm: 0 },
   { sack: 0.05, slip: 0.2, storm: 0.05 },
   { sack: 0.05, slip: 0.1, storm: 0.25 },
 ];
@@ -340,6 +342,9 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
       if (!l.acked && l.ackAt && now >= l.ackAt) {
         if (l.slipLost) {
           l.slipLost = false;
+          // The slip is gone, and so is this arrival time. Without clearing
+          // ackAt, the next tick would acknowledge the very slip we just lost.
+          l.ackAt = null;
           log('lost', `the signed slip for ${l.number || l.label} never arrived`, { letter: l.id });
         } else {
           l.acked = true;

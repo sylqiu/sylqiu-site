@@ -277,9 +277,12 @@ const scene: SceneFactory = (el) => {
     const agg = aggregate();
     const pass = agg.kept >= 17 && agg.cost <= agg.budget;
     $('verdict').classList.add('show');
+    const over = agg.cost > agg.budget;
     $('vt').innerHTML = pass
       ? '<span class="ok">Good enough: ' + agg.kept + ' / ' + MORNINGS + ' mornings.</span>'
-      : '<span class="bad">Not yet: ' + agg.kept + ' / ' + MORNINGS + ' mornings.</span>';
+      : over
+        ? '<span class="bad">Over budget: ' + agg.cost + ' / ' + agg.budget + ' coins.</span>'
+        : '<span class="bad">Not yet: ' + agg.kept + ' / ' + MORNINGS + ' mornings.</span>';
 
     let wi = -1;
     let wscore = 99;
