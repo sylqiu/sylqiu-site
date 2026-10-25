@@ -1,10 +1,10 @@
 /**
  * Site router + views.
  *
- * One site, five surfaces. The landing page stays deliberately minimal: name,
- * one line, links, and pointers. Detail lives on the linked pages.
+ * One site, five surfaces. The landing page stays deliberately minimal:
+ * a greeting, picked fresh on every visit. Detail lives on the linked pages.
  *
- *   #/                    minimal landing  (welcome message only)
+ *   #/                    minimal landing  (random greeting)
  *   #/research            publications
  *   #/courses             ExploreFlow course index
  *   #/courses/:id         one course's outline
@@ -82,16 +82,150 @@ function markActiveNav(hash: string) {
   });
 }
 
+/* -------------------------------- greeting -------------------------------- */
+
+type DayPart = 'morning' | 'afternoon' | 'evening' | 'night';
+
+interface Greeting {
+  text: string;
+  lang: string;
+  emoji?: string;
+  parts: DayPart[];
+}
+
+/**
+ * A small, hand-picked set of greetings. One is chosen at random for every
+ * visit; the visitor's language and time zone only tilt the odds, so the
+ * page still surprises. Nothing here is about the site owner.
+ */
+const GREETINGS: Greeting[] = [
+  { text: 'Good morning', lang: 'en', emoji: '☀️', parts: ['morning'] },
+  { text: 'Morning', lang: 'en', parts: ['morning'] },
+  { text: 'Buenos días', lang: 'es', parts: ['morning'] },
+  { text: 'Bonjour', lang: 'fr', parts: ['morning', 'afternoon'] },
+  { text: 'Guten Morgen', lang: 'de', parts: ['morning'] },
+  { text: 'Buongiorno', lang: 'it', parts: ['morning'] },
+  { text: 'Bom dia', lang: 'pt', parts: ['morning'] },
+  { text: 'おはよう', lang: 'ja', parts: ['morning'] },
+  { text: '早上好', lang: 'zh', parts: ['morning'] },
+  { text: '좋은 아침', lang: 'ko', parts: ['morning'] },
+  { text: 'Доброе утро', lang: 'ru', parts: ['morning'] },
+
+  { text: 'Hello', lang: 'en', emoji: '👋', parts: ['morning', 'afternoon', 'evening', 'night'] },
+  { text: 'Hi there', lang: 'en', parts: ['afternoon'] },
+  { text: 'Good afternoon', lang: 'en', parts: ['afternoon'] },
+  { text: 'Buenas tardes', lang: 'es', parts: ['afternoon'] },
+  { text: 'Bon après-midi', lang: 'fr', parts: ['afternoon'] },
+  { text: 'Guten Tag', lang: 'de', parts: ['afternoon'] },
+  { text: 'Buon pomeriggio', lang: 'it', parts: ['afternoon'] },
+  { text: 'Boa tarde', lang: 'pt', parts: ['afternoon'] },
+  { text: 'こんにちは', lang: 'ja', parts: ['afternoon'] },
+  { text: '你好', lang: 'zh', parts: ['afternoon'] },
+  { text: '안녕하세요', lang: 'ko', parts: ['afternoon'] },
+  { text: 'Добрый день', lang: 'ru', parts: ['afternoon'] },
+
+  { text: 'Good evening', lang: 'en', emoji: '🌆', parts: ['evening'] },
+  { text: 'Evening', lang: 'en', parts: ['evening'] },
+  { text: 'Buenas noches', lang: 'es', parts: ['evening', 'night'] },
+  { text: 'Bonsoir', lang: 'fr', parts: ['evening'] },
+  { text: 'Guten Abend', lang: 'de', parts: ['evening'] },
+  { text: 'Buonasera', lang: 'it', parts: ['evening'] },
+  { text: 'Boa noite', lang: 'pt', parts: ['evening', 'night'] },
+  { text: 'こんばんは', lang: 'ja', parts: ['evening', 'night'] },
+  { text: '晚上好', lang: 'zh', parts: ['evening'] },
+  { text: '좋은 저녁', lang: 'ko', parts: ['evening'] },
+  { text: 'Добрый вечер', lang: 'ru', parts: ['evening'] },
+
+  { text: 'Still up?', lang: 'en', emoji: '🌙', parts: ['night'] },
+  { text: 'Up late', lang: 'en', parts: ['night'] },
+  { text: 'Bonne nuit', lang: 'fr', parts: ['night'] },
+  { text: 'Gute Nacht', lang: 'de', parts: ['night'] },
+  { text: 'おやすみ', lang: 'ja', parts: ['night'] },
+  { text: '晚安', lang: 'zh', parts: ['night'] },
+  { text: '잘 자', lang: 'ko', parts: ['night'] },
+  { text: 'Спокойной ночи', lang: 'ru', parts: ['night'] },
+];
+
+/** Time-zone prefixes that suggest a language, used only as a gentle hint. */
+const TZ_LANG: [string, string][] = [
+  ['Asia/Tokyo', 'ja'],
+  ['Asia/Shanghai', 'zh'],
+  ['Asia/Hong_Kong', 'zh'],
+  ['Asia/Taipei', 'zh'],
+  ['Asia/Seoul', 'ko'],
+  ['Europe/Paris', 'fr'],
+  ['Europe/Berlin', 'de'],
+  ['Europe/Vienna', 'de'],
+  ['Europe/Zurich', 'de'],
+  ['Europe/Madrid', 'es'],
+  ['Europe/Rome', 'it'],
+  ['Europe/Lisbon', 'pt'],
+  ['Europe/Moscow', 'ru'],
+  ['America/Sao_Paulo', 'pt'],
+];
+
+function dayPart(hour: number): DayPart {
+  if (hour < 5) return 'night';
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+/** Browser languages plus a time-zone guess, in order of confidence. */
+function preferredLangs(): Set<string> {
+  const navLangs = (navigator.languages?.length ? navigator.languages : [navigator.language])
+    .filter(Boolean)
+    .map((l) => l.toLowerCase().split('-')[0]);
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  const byZone = TZ_LANG.find(([prefix]) => tz === prefix || tz.startsWith(prefix + '/'))?.[1];
+  return new Set([...navLangs, ...(byZone ? [byZone] : [])]);
+}
+
+function pickGreeting(): Greeting {
+  const part = dayPart(new Date().getHours());
+  const candidates = GREETINGS.filter((g) => g.parts.includes(part));
+  const favoured = candidates.filter((g) => preferredLangs().has(g.lang));
+  // Usually lean toward the visitor's language, but keep a little chaos.
+  const pool = favoured.length > 0 && Math.random() < 0.65 ? favoured : candidates;
+
+  let last = '';
+  try {
+    last = sessionStorage.getItem('greeting:last') || '';
+  } catch {
+    /* private mode — no memory, still random */
+  }
+  const fresh = pool.length > 1 ? pool.filter((g) => g.text !== last) : pool;
+  const choice = fresh[Math.floor(Math.random() * fresh.length)] ?? candidates[0];
+  try {
+    sessionStorage.setItem('greeting:last', choice.text);
+  } catch {
+    /* ignore */
+  }
+  return choice;
+}
+
+/** A quiet, visitor-only line: local clock plus the city in their time zone. */
+function localTimeLine(): string {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  const city = tz.split('/').pop()?.replace(/_/g, ' ') || '';
+  const clock = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (!city) return clock;
+  return `${clock} · ${city}`;
+}
+
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: a welcome message; navigation lives in the top bar.
+  // Deliberately tiny: one random greeting; navigation lives in the top bar.
+  const greeting = pickGreeting();
+  const when = localTimeLine();
+  const motion = Math.random() < 0.5 ? 'rise' : 'pop';
   app.innerHTML = `
     <section class="landing">
-      <h1>Welcome</h1>
-      <p class="role">I'm ${esc(site.name)} — ${esc(site.role)}. I work on 3D
-      reconstruction and generative AI for AR/VR, and build interactive
-      explanations of graphics, vision, and geometry.</p>
+      <h1 class="greeting ${motion}" lang="${esc(greeting.lang)}">${esc(greeting.text)}${
+        greeting.emoji ? ` <span class="greet-emoji" aria-hidden="true">${greeting.emoji}</span>` : ''
+      }</h1>
+      ${when ? `<p class="greet-meta">${esc(when)}</p>` : ''}
     </section>
   `;
 }
