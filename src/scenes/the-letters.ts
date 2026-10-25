@@ -578,13 +578,14 @@ const scene: SceneFactory = (el) => {
     return bits.length ? bits.join(' · ') : 'promise broken';
   }
 
-  function whySummary(): string {
+  function whySummary(agg: { kept: number; cost: number; budget: number }): string {
     const rs = state.results.filter((r): r is DaySummary => !!r);
     const lost = rs.reduce((n, r) => n + r.lost, 0);
     const dupes = rs.reduce((n, r) => n + r.dupes, 0);
     const late = rs.reduce((n, r) => n + r.rows.filter((x) => x.delivered === 1 && !x.onTime).length, 0);
     const unsigned = rs.reduce((n, r) => n + r.rows.filter((x) => x.delivered > 0 && !x.acked).length, 0);
     const bits: string[] = [];
+    if (agg.cost > agg.budget) bits.push('over budget by ' + (agg.cost - agg.budget).toFixed(1) + ' coins');
     if (lost) bits.push(lost + ' never arrived');
     if (dupes) bits.push(dupes + ' duplicate' + (dupes > 1 ? 's' : ''));
     if (late) bits.push(late + ' late');
@@ -612,7 +613,9 @@ const scene: SceneFactory = (el) => {
     if (!sim) return;
     const agg = aggregate();
     if (agg.n === SITUATIONS) {
-      $('promiseState').innerHTML = '<span class="' + (agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget ? 'ok' : 'bad') + '">' + agg.kept + ' / ' + SITUATIONS + '</span>';
+      const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
+      const label = agg.cost > agg.budget ? 'Over budget' : agg.kept + ' / ' + SITUATIONS;
+      $('promiseState').innerHTML = '<span class="' + (pass ? 'ok' : 'bad') + '">' + label + '</span>';
     } else if (agg.n === 0) {
       $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">in progress</span>';
     } else {
@@ -623,8 +626,8 @@ const scene: SceneFactory = (el) => {
     $('promise').innerHTML =
       'Promise: every letter once, within ' + sim.scenario.deadline + ' days, with a signed slip back.';
     $('sitnote').textContent = situationNote();
-    $('why').textContent = whySummary();
-    $('why').style.color = agg.kept === SITUATIONS ? 'var(--green)' : 'var(--dim)';
+    $('why').textContent = whySummary(agg);
+    $('why').style.color = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget ? 'var(--green)' : 'var(--red)';
     drawSitchips();
 
     $('rows').innerHTML = agg.per.map((p) =>
