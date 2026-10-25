@@ -100,7 +100,12 @@ export interface DaySummary {
   total: number;
   cost: number;
   attempts: number;
+  /** Delivery kept: every letter once, on time. */
   promise: boolean;
+  /** Letters whose signed slip reached the sender. */
+  signed: number;
+  /** Every letter arrived and every signed slip came back. */
+  proof: boolean;
 }
 
 export const CITIES: Record<string, City> = {
@@ -397,6 +402,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
     const onTime = rows.filter((r) => r.delivered === 1 && r.onTime).length;
     const dupes = rows.reduce((n, r) => n + Math.max(0, r.delivered - 1), 0);
     const lost = rows.filter((r) => r.delivered === 0).length;
+    const signed = rows.filter((r) => r.acked).length;
 
     const cost =
       letters.length * 1 +
@@ -416,10 +422,11 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; pla
       total: letters.length,
       cost: Math.round(cost * 10) / 10,
       attempts: attempts.length,
-      // The promise has three clauses: every letter once, on time, and the
-      // sender holds a signed slip. No receipts means the promise fails even
-      // when the letters arrive.
-      promise: onTime === letters.length && dupes === 0 && rows.every((r) => r.acked),
+      // Delivery is the base promise: every letter once, on time. A signed
+      // slip is proof, which earns the top rank rather than gating delivery.
+      promise: onTime === letters.length && dupes === 0,
+      signed,
+      proof: signed === letters.length,
     };
   }
 

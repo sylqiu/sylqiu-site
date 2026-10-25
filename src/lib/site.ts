@@ -277,10 +277,18 @@ export const illustrations: Illustration[] = [
   {
     id: 'postoffice-simulator',
     category: 'Distributed systems',
-    title: 'Intro to Distributed system via postoffice simulation',
+    title: 'Postmarked: Delivery',
     blurb:
-      'What makes a good post office?',
+      'A postal game about delivery guarantees. Keep the promise across ten weather worlds.',
     scene: 'the-letters',
+  },
+  {
+    id: 'the-registry',
+    category: 'Distributed systems',
+    title: 'Postmarked: The Registry',
+    blurb:
+      'One deed, three offices, a road that can be cut. Choose a quorum and keep the deed single-owner.',
+    scene: 'the-registry',
   },
   {
     id: 'kv-cache',

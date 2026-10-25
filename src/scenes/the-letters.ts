@@ -47,6 +47,7 @@ button:disabled { opacity: .4; cursor: default; }
 .sitchips .sip:hover { border-color: var(--text); color: var(--text); }
 .sitchips .sip.ok { background: #102219; border-color: #2b5d3b; color: #7ee2a8; }
 .sitchips .sip.bad { background: #2a1316; border-color: #6e2b31; color: #ff9b9b; }
+.sitchips .sip.warn { background: #221d10; border-color: #5a4a1c; color: #e3c37a; }
 .sitchips .sip.bad:hover { border-color: var(--red); }
 .sitchips .sip.sel { box-shadow: 0 0 0 1px var(--gold); }
 
@@ -146,8 +147,8 @@ const HTML = `
 
   <div class="brief">
     <div class="brief-title">Your job: keep the promise</div>
-    <div class="brief-copy">Deliver every letter once, on time, with a signed slip — across ten independent weather worlds. Pick the post-office add-ons; postage comes out of a fixed budget. Click a red result to replay its failure.</div>
-    <div class="brief-goal"><b>PASS</b> 9 / 10 kept and within budget · <b>PERFECT</b> 10 / 10 earns an S · best saved per day (<span id="briefBudget">60</span> coins)</div>
+    <div class="brief-copy">Deliver every letter once, on time — across ten independent weather worlds. Pick the post-office add-ons; postage comes out of a fixed budget. Signed slips are proof: they cost extra and earn the S. Click a red result to replay its failure.</div>
+    <div class="brief-goal"><b>PASS</b> 9 / 10 delivered within budget · <b>PERFECT</b> all slips back earns an S · best saved per day (<span id="briefBudget">60</span> coins)</div>
   </div>
 
   <div class="mapwrap">
@@ -167,7 +168,7 @@ const HTML = `
   <div class="rail">
     <span class="rail-label">Results</span>
     <div class="sitchips" id="sitchips"></div>
-    <span class="rail-hint">click any result to replay · red = broken</span>
+    <span class="rail-hint">click any result to replay · amber = delivered, unsigned · red = broken</span>
   </div>
 
   <div class="panels">
@@ -231,7 +232,7 @@ const scene: SceneFactory = (el) => {
     drawnLog: 0,
     focus: null as string | null,
     ended: false,
-    best: null as { kept: number; cost: number } | null,
+    best: null as { kept: number; signed: number; cost: number } | null,
   };
   let raf = 0;
   let lastTs = 0;
@@ -377,12 +378,14 @@ const scene: SceneFactory = (el) => {
     return 'letters:best:' + state.day;
   }
 
-  function loadBest(): { kept: number; cost: number } | null {
+  function loadBest(): { kept: number; signed: number; cost: number } | null {
     try {
       const raw = localStorage.getItem(bestKey());
       if (!raw) return null;
       const b = JSON.parse(raw);
-      if (b && typeof b.kept === 'number' && typeof b.cost === 'number') return b;
+      if (b && typeof b.kept === 'number' && typeof b.cost === 'number') {
+        return { kept: b.kept, signed: typeof b.signed === 'number' ? b.signed : 0, cost: b.cost };
+      }
     } catch {
       /* storage may be unavailable */
     }
@@ -393,9 +396,11 @@ const scene: SceneFactory = (el) => {
     const agg = aggregate();
     if (agg.kept < PASS_SITUATIONS || agg.cost > agg.budget) return;
     const cur = state.best;
-    const better = !cur || agg.kept > cur.kept || (agg.kept === cur.kept && agg.cost < cur.cost);
+    const better = !cur || agg.kept > cur.kept ||
+      (agg.kept === cur.kept && agg.signed > cur.signed) ||
+      (agg.kept === cur.kept && agg.signed === cur.signed && agg.cost < cur.cost);
     if (!better) return;
-    state.best = { kept: agg.kept, cost: agg.cost };
+    state.best = { kept: agg.kept, signed: agg.signed, cost: agg.cost };
     try {
       localStorage.setItem(bestKey(), JSON.stringify(state.best));
     } catch {
@@ -406,6 +411,7 @@ const scene: SceneFactory = (el) => {
   function aggregate() {
     const rs = state.results.filter((r): r is DaySummary => !!r);
     const kept = rs.filter((r) => r.promise).length;
+    const signed = rs.reduce((n, r) => n + r.signed, 0);
     const cost = Math.round(rs.reduce((acc, r) => acc + r.cost, 0) * 10) / 10;
     const budget = BUDGETS[state.day];
     const per = ['L1', 'L2', 'L3'].map((id) => {
@@ -419,7 +425,7 @@ const scene: SceneFactory = (el) => {
       }
       return { id, label, ok, dup };
     });
-    return { kept, cost, budget, per, n: rs.length };
+    return { kept, signed, cost, budget, per, n: rs.length };
   }
 
   function finishAll() {
@@ -629,14 +635,16 @@ const scene: SceneFactory = (el) => {
     const current = state.ended ? -1 : state.index;
     box.querySelectorAll<HTMLButtonElement>('.sip').forEach((b, i) => {
       const r = state.results[i];
-      b.className = 'sip ' + [r ? (r.promise ? 'ok' : 'bad') : '', i === current ? 'sel' : ''].filter(Boolean).join(' ');
+      const tone = r ? (r.promise ? (r.proof ? 'ok' : 'warn') : 'bad') : '';
+      b.className = 'sip ' + [tone, i === current ? 'sel' : ''].filter(Boolean).join(' ');
       b.title = 'Situation ' + (i + 1) + ' — ' + resultText(r);
     });
   }
 
   function resultText(r: DaySummary | null | undefined): string {
     if (!r) return 'not run';
-    if (r.promise) return 'promise kept';
+    if (r.promise && r.proof) return 'delivered · all slips back';
+    if (r.promise) return 'delivered · ' + r.signed + '/' + r.total + ' signed';
     const bits: string[] = [];
     if (r.lost) bits.push(r.lost + ' lost');
     if (r.dupes) bits.push(r.dupes + ' duplicate' + (r.dupes > 1 ? 's' : ''));
@@ -659,8 +667,12 @@ const scene: SceneFactory = (el) => {
     if (dupes) bits.push(dupes + ' duplicate' + (dupes > 1 ? 's' : ''));
     if (late) bits.push(late + ' late');
     if (unsigned) bits.push(unsigned + ' without a signed slip');
+    const deliveryOk = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
     if (!bits.length) {
-      return rs.length === SITUATIONS ? 'All ' + SITUATIONS + ' situations kept the promise.' : '';
+      return rs.length === SITUATIONS ? 'All delivered; every slip made it back.' : '';
+    }
+    if (deliveryOk && bits.length === 1 && unsigned) {
+      return 'All delivered; ' + unsigned + ' without a signed slip — no S rank.';
     }
     return 'Why: ' + bits.join(' · ');
   }
@@ -682,18 +694,14 @@ const scene: SceneFactory = (el) => {
     if (!sim) return;
     const agg = aggregate();
     const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
-    const perfect = agg.kept === SITUATIONS && agg.cost <= agg.budget;
+    const perfect = agg.kept === SITUATIONS && agg.signed === SITUATIONS * 3 && agg.cost <= agg.budget;
     const rank = perfect ? 'S' : pass ? 'A' : agg.kept >= PASS_SITUATIONS - 2 ? 'B' : 'C';
     $('rank').textContent = rank;
     $('rank').className = 'rank ' + rank.toLowerCase();
-    $('best').textContent = state.best ? state.best.kept + '/' + SITUATIONS + ' · ' + state.best.cost + 'c' : '—';
+    $('best').textContent = state.best ? state.best.kept + '/' + SITUATIONS + ' · ' + state.best.signed + 's · ' + state.best.cost + 'c' : '—';
     $('budgetBar').style.width = Math.min(100, (agg.cost / agg.budget) * 100) + '%';
     $('budgetBar').className = agg.cost > agg.budget ? 'over' : '';
     if (agg.n === SITUATIONS) {
-      const label = agg.cost > agg.budget ? 'Over budget' : agg.kept + ' / ' + SITUATIONS;
-      $('promiseState').innerHTML = '<span class="' + (pass ? 'ok' : 'bad') + '">' + label + '</span>';
-    } else if (agg.n === 0) {
-      const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
       const label = agg.cost > agg.budget ? 'Over budget' : agg.kept + ' / ' + SITUATIONS;
       $('promiseState').innerHTML = '<span class="' + (pass ? 'ok' : 'bad') + '">' + label + '</span>';
     } else if (agg.n === 0) {
@@ -704,10 +712,10 @@ const scene: SceneFactory = (el) => {
     $('cost').textContent = (agg.n ? agg.cost : '—') + ' / ' + agg.budget + ' coins';
     $('cost').className = 'mono' + (agg.cost > agg.budget ? ' bad' : '');
     $('promise').innerHTML =
-      'Promise: every letter once, within ' + sim.scenario.deadline + ' days, with a signed slip back.';
+      'Promise: every letter once, within ' + sim.scenario.deadline + ' days. Signed slips are proof; all of them earn an S.';
     $('sitnote').textContent = situationNote();
     $('why').textContent = whySummary(agg);
-    $('why').style.color = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget ? 'var(--green)' : 'var(--red)';
+    $('why').style.color = perfect ? 'var(--green)' : pass ? (agg.signed < SITUATIONS * 3 ? 'var(--amber)' : 'var(--green)') : 'var(--red)';
     drawSitchips();
 
     $('rows').innerHTML = agg.per.map((p) =>

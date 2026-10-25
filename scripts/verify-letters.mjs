@@ -10,6 +10,7 @@ const ok = (cond, msg) => {
 
 function sweep(day, rules) {
   let kept = 0;
+  let signed = 0;
   let cost = 0;
   let dup = 0;
   let lost = 0;
@@ -17,11 +18,12 @@ function sweep(day, rules) {
     const d = createDay({ scenario: day, rules, plan: morningPlan(day, i) });
     const s = d.runAll();
     kept += s.promise ? 1 : 0;
+    signed += s.signed;
     cost += s.cost;
     dup += s.dupes;
     lost += s.lost;
   }
-  return { kept, cost: Math.round(cost * 10) / 10, dup, lost };
+  return { kept, signed, cost: Math.round(cost * 10) / 10, dup, lost };
 }
 
 const minimal = { numbering: 'serial', receipts: 'sign', retry: 'never', ledger: 'off' };
@@ -31,11 +33,14 @@ const none = { numbering: 'none', receipts: 'none', retry: 'never', ledger: 'off
 // Day 1 is calm. A book with receipts + numbers must be perfect and affordable.
 const PASS = Math.ceil(SITUATIONS * 0.85);
 const d1 = sweep(0, minimal);
-ok(d1.kept === SITUATIONS, 'day 1, calm: minimal competent book keeps ' + SITUATIONS + '/' + SITUATIONS + ' (got ' + d1.kept + ')');
+ok(d1.kept === SITUATIONS, 'day 1, calm: minimal competent book delivers ' + SITUATIONS + '/' + SITUATIONS + ' (got ' + d1.kept + ')');
+ok(d1.signed === SITUATIONS * 3, 'day 1, calm: every signed slip returns (' + d1.signed + '/' + SITUATIONS * 3 + ')');
 ok(d1.cost <= BUDGETS[0], 'day 1, calm: minimal book is inside budget (' + d1.cost + ' / ' + BUDGETS[0] + ')');
 
-// The promise requires a signed slip, so no receipts cannot pass.
-ok(sweep(0, none).kept === 0, 'day 1, no receipts: promise fails in every morning');
+// Delivery and proof are separate: no receipts still delivers, but earns no S.
+const d1none = sweep(0, none);
+ok(d1none.kept === SITUATIONS, 'day 1, no receipts: delivery still holds (' + d1none.kept + '/' + SITUATIONS + ')');
+ok(d1none.signed === 0, 'day 1, no receipts: no signed slips (no S rank)');
 
 // Day 2 introduces loss: no resend loses mornings, a round-trip timeout recovers.
 const d2none = sweep(1, { ...minimal, retry: 'never' });
@@ -60,7 +65,9 @@ ok(d4good.kept >= PASS, 'day 4, ledger on: promise mostly holds (' + d4good.kept
 ok(d4good.cost <= BUDGETS[3], 'day 4, ledger on: inside budget (' + d4good.cost + ' / ' + BUDGETS[3] + ')');
 
 // The full book must also survive day 1 (it is allowed to cost more).
-ok(sweep(0, full).kept === SITUATIONS, 'day 1, full book: ' + SITUATIONS + '/' + SITUATIONS);
+const d1full = sweep(0, full);
+ok(d1full.kept === SITUATIONS, 'day 1, full book: ' + SITUATIONS + '/' + SITUATIONS);
+ok(d1full.signed === SITUATIONS * 3, 'day 1, full book: all signed slips return');
 
 // One-way times are per edge. Bob moving remote must not lengthen A–C.
 ok(flightDays(SCENARIOS[0], 'direct', 'A', 'B') === 2, 'calm day: A–B is 2 days one-way');
