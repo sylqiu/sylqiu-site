@@ -39,11 +39,15 @@ button:disabled { opacity: .4; cursor: default; }
 .days button.on { border-color: var(--gold); color: var(--gold); }
 .clock { font-size: 11px; color: var(--dim); }
 .clock b { color: var(--text); font-weight: 500; }
-.sitchips { display: flex; gap: 3px; align-items: center; }
-.sitchips .sip { width: 8px; height: 8px; padding: 0; border-radius: 50%; background: #242b36; border: 1px solid #333d4b; cursor: pointer; }
-.sitchips .sip:hover { border-color: var(--text); }
-.sitchips .sip.ok { background: var(--green); border-color: var(--green); }
-.sitchips .sip.bad { background: var(--red); border-color: var(--red); }
+.rail { display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-top: 1px solid var(--line); background: #0f1319; flex-wrap: wrap; }
+.rail .rail-label { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--dimmer); }
+.rail .rail-hint { font-size: 9.5px; color: var(--dimmer); }
+.sitchips { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.sitchips .sip { width: 30px; height: 24px; padding: 0; border-radius: 6px; background: #1a2029; border: 1px solid #333d4b; color: var(--dim); font-size: 10.5px; font-weight: 600; cursor: pointer; display: grid; place-items: center; }
+.sitchips .sip:hover { border-color: var(--text); color: var(--text); }
+.sitchips .sip.ok { background: #102219; border-color: #2b5d3b; color: #7ee2a8; }
+.sitchips .sip.bad { background: #2a1316; border-color: #6e2b31; color: #ff9b9b; }
+.sitchips .sip.bad:hover { border-color: var(--red); }
 .sitchips .sip.sel { box-shadow: 0 0 0 1px var(--gold); }
 
 .mapwrap { position: relative; height: 420px; background: radial-gradient(120% 100% at 50% 0%, #10151d 0%, #0b0d10 70%); }
@@ -116,10 +120,7 @@ const HTML = `
     <span class="title" id="title">A calm day <span>· day 1</span></span>
     <span class="spacer"></span>
     <div class="days" id="days"></div>
-    <span class="sitchips" id="sitchips"></span>
-    <button id="run" class="primary">▶ Run 10</button>
-    <button id="reset" title="Reset">↺</button>
-    <button id="skip" title="Skip to results">⏭</button>
+    <button id="reset" title="Recompute results">↺</button>
     <span class="clock mono"><b id="clock">situation 1/10 · day 0.0</b></span>
   </div>
 
@@ -135,6 +136,12 @@ const HTML = `
       <div class="vs" id="vs"></div>
       <div class="va"><button id="next" class="primary">Next day →</button><button id="again">Run again</button></div>
     </div>
+  </div>
+
+  <div class="rail">
+    <span class="rail-label">Results</span>
+    <div class="sitchips" id="sitchips"></div>
+    <span class="rail-hint">click any result to replay · red = broken</span>
   </div>
 
   <div class="panels">
@@ -225,27 +232,21 @@ const scene: SceneFactory = (el) => {
   function newCampaign() {
     stop();
     holdUntil = 0;
-    state.ended = false;
+    state.ended = true; // results are already in view
     state.single = false;
     state.drawnLog = 0;
     state.focus = null;
-    state.results = Array(SITUATIONS).fill(null);
     state.index = 0;
+    // Keep a fresh copy for replay, and score a separate copy of every world.
     state.days = Array.from({ length: SITUATIONS }, (_, i) =>
       createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) }),
+    );
+    state.results = state.days.map((_, i) =>
+      createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) }).runAll(),
     );
     state.sim = state.days[0];
     $('verdict').classList.remove('show');
     $('log').innerHTML = '';
-    $('run').textContent = '▶ Run ' + SITUATIONS;
-    draw();
-  }
-
-  function loadNextMorning() {
-    if (state.index >= state.days.length) return;
-    state.sim = state.days[state.index];
-    $('log').innerHTML = '';
-    state.drawnLog = 0;
     draw();
   }
 
@@ -265,7 +266,6 @@ const scene: SceneFactory = (el) => {
     }
     state.playing = true;
     state.single = single;
-    $('run').textContent = '⏸ Pause';
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(frame);
@@ -282,7 +282,6 @@ const scene: SceneFactory = (el) => {
     // not just freeze its final frame.
     state.days[i] = createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) });
     state.sim = state.days[i];
-    state.results[i] = null;
     $('log').innerHTML = '';
     state.drawnLog = 0;
     draw();
@@ -306,8 +305,8 @@ const scene: SceneFactory = (el) => {
       if (state.single) {
         state.playing = false;
         state.single = false;
+        state.ended = true;
         cancelAnimationFrame(raf);
-        $('run').textContent = '▶ Run ' + SITUATIONS;
         draw();
         return;
       }
@@ -358,7 +357,6 @@ const scene: SceneFactory = (el) => {
     state.playing = false;
     state.single = false;
     state.ended = true;
-    $('run').textContent = '▶ Run ' + SITUATIONS;
     const agg = aggregate();
     const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
     $('verdict').classList.add('show');
@@ -555,15 +553,28 @@ const scene: SceneFactory = (el) => {
     if (box.children.length !== SITUATIONS) {
       // Build the buttons once; replacing them every frame would eat clicks.
       box.innerHTML = Array.from({ length: SITUATIONS }, (_, i) =>
-        '<button class="sip" data-i="' + i + '" title="Situation ' + (i + 1) + '"></button>',
+        '<button class="sip" data-i="' + i + '" title="Situation ' + (i + 1) + '">' + (i + 1) + '</button>',
       ).join('');
     }
     const current = state.ended ? -1 : state.index;
     box.querySelectorAll<HTMLButtonElement>('.sip').forEach((b, i) => {
       const r = state.results[i];
       b.className = 'sip ' + [r ? (r.promise ? 'ok' : 'bad') : '', i === current ? 'sel' : ''].filter(Boolean).join(' ');
-      b.title = 'Situation ' + (i + 1) + (r ? (r.promise ? ' — promise kept' : ' — promise broken') : ' — pending');
+      b.title = 'Situation ' + (i + 1) + ' — ' + resultText(r);
     });
+  }
+
+  function resultText(r: DaySummary | null | undefined): string {
+    if (!r) return 'not run';
+    if (r.promise) return 'promise kept';
+    const bits: string[] = [];
+    if (r.lost) bits.push(r.lost + ' lost');
+    if (r.dupes) bits.push(r.dupes + ' duplicate' + (r.dupes > 1 ? 's' : ''));
+    const late = r.rows.filter((x) => x.delivered === 1 && !x.onTime).length;
+    if (late) bits.push(late + ' late');
+    const unsigned = r.rows.filter((x) => !x.acked).length;
+    if (unsigned) bits.push(unsigned + ' unsigned');
+    return bits.length ? bits.join(' · ') : 'promise broken';
   }
 
   function situationNote(): string {
@@ -582,7 +593,7 @@ const scene: SceneFactory = (el) => {
     const sim = state.sim;
     if (!sim) return;
     const agg = aggregate();
-    if (state.ended) {
+    if (agg.n === SITUATIONS) {
       $('promiseState').innerHTML = '<span class="' + (agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget ? 'ok' : 'bad') + '">' + agg.kept + ' / ' + SITUATIONS + '</span>';
     } else if (agg.n === 0) {
       $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">in progress</span>';
@@ -665,15 +676,6 @@ const scene: SceneFactory = (el) => {
     renderRules();
     newCampaign();
   }
-  $('run').addEventListener('click', () => {
-    if (state.playing) {
-      stop();
-      $('run').textContent = '▶ Resume';
-      return;
-    }
-    if (state.ended || state.results.every(Boolean)) newCampaign();
-    play(false);
-  });
   $('sitchips').addEventListener('click', (ev) => {
     const pip = (ev.target as Element | null)?.closest?.('.sip');
     if (!pip) return;
@@ -681,7 +683,6 @@ const scene: SceneFactory = (el) => {
     if (Number.isInteger(i)) selectSituation(i);
   });
   $('reset').addEventListener('click', () => newCampaign());
-  $('skip').addEventListener('click', () => runAllMornings());
   $('again').addEventListener('click', () => newCampaign());
   $('next').addEventListener('click', () => {
     if (state.day < SCENARIOS.length - 1) setDay(state.day + 1);
