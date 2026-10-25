@@ -4,7 +4,7 @@
  * One site, five surfaces. The landing page stays deliberately minimal: name,
  * one line, links, and pointers. Detail lives on the linked pages.
  *
- *   #/                    minimal landing  (name, role, links, three doors)
+ *   #/                    minimal landing  (welcome message only)
  *   #/research            publications
  *   #/courses             ExploreFlow course index
  *   #/courses/:id         one course's outline
@@ -60,7 +60,12 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 
 /* ---------------------------------- nav ---------------------------------- */
 
-const NAV = [{ href: '#/', label: 'Home', nav: '#/' }];
+const NAV = [
+  { href: '#/', label: 'Home', nav: '#/' },
+  { href: '#/cv', label: 'CV', nav: '#/cv' },
+  { href: '#/illustrations', label: 'Illustrations', nav: '#/illustrations' },
+  { href: '#/blog', label: 'Writing', nav: '#/blog' },
+];
 
 function renderNav() {
   topnav.innerHTML = NAV.map(
@@ -80,19 +85,13 @@ function markActiveNav(hash: string) {
 /* --------------------------------- landing -------------------------------- */
 
 function viewHome() {
-  // Deliberately tiny: the site's sections, stacked and alphabetical.
-  const links = [
-    { label: 'Curriculum Vitae', href: '#/cv' },
-    { label: 'Interactive Illustrations', href: '#/illustrations' },
-    { label: 'Writing', href: '#/blog' },
-  ]
-    .sort((a, b) => a.label.localeCompare(b.label))
-    .map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`)
-    .join('');
-
+  // Deliberately tiny: a welcome message; navigation lives in the top bar.
   app.innerHTML = `
     <section class="landing">
-      <nav class="landing-nav">${links}</nav>
+      <h1>Welcome</h1>
+      <p class="role">I'm ${esc(site.name)} — ${esc(site.role)}. I work on 3D
+      reconstruction and generative AI for AR/VR, and build interactive
+      explanations of graphics, vision, and geometry.</p>
     </section>
   `;
 }
@@ -174,9 +173,7 @@ function viewIllustrations(requested = 1, categorySlug = '') {
 
   app.innerHTML = `<article class="page">
     <header>
-      <h1>Interactive Illustrations</h1>
-      <p class="reading">Small, self-contained pictures of ideas I keep re-deriving. Each one has
-      its own page and is meant to be played with.</p>
+      <h1>Interactives</h1>
       <p class="reading">${summary}</p>
     </header>
     <div class="blog-layout">

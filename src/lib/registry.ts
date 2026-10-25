@@ -29,7 +29,6 @@ const registry: Record<string, () => Promise<{ default: SceneFactory }>> = {
   'prg-stretch': () => import('../scenes/prg-stretch.ts'),
   'kv-cache': () => import('../scenes/kv-cache.ts'),
   'flash-attention': () => import('../scenes/flash-attention.ts'),
-  'distributed-lab': () => import('../scenes/distributed-lab.ts'),
   'the-letters': () => import('../scenes/the-letters.ts'),
 };
 

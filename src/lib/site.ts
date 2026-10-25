@@ -275,19 +275,11 @@ export const illustrations: Illustration[] = [
     scene: 'flash-attention',
   },
   {
-    id: 'distributed-lab',
+    id: 'postoffice-simulator',
     category: 'Distributed systems',
-    title: 'One request, one lost reply (WIP)',
+    title: 'Intro to Distributed system via postoffice simulation',
     blurb:
-      'A ledger, a dropped reply, and four designs. Watch duplicate effects appear, then disappear — for the wrong and the right reasons.',
-    scene: 'distributed-lab',
-  },
-  {
-    id: 'the-letters',
-    category: 'Distributed systems',
-    title: 'The Letters (WIP)',
-    blurb:
-      'Three friends, three post offices, and a rule book you set. Watch a letter cross the world, then find the day your rules stop working.',
+      'What makes a good post office?',
     scene: 'the-letters',
   },
   {

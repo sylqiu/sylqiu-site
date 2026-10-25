@@ -62,7 +62,7 @@ interface Sec {
 const SECS: Sec[] = [
   {
     id: "memory",
-    title: "Hardware reliminary",
+    title: "Hardware preliminary",
     blurb:
       "The CPU orchestrates; GPU programs stage tiles explicitly through SMEM and rely on caches; TPU programs hand tiles to the compiler, which schedules CMEM and the MXU. Unified memory removes explicit copies, but not HBM bandwidth.",
     h: 590,
