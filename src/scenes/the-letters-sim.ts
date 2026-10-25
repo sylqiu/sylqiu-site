@@ -66,6 +66,8 @@ export interface Letter {
   attempts: Attempt[];
   acked: boolean;
   ackAt: number | null;
+  /** The first slip for this letter goes missing; a later one may arrive. */
+  slipLost: boolean;
 }
 
 export interface DayEvent {
@@ -140,7 +142,7 @@ export const SCENARIOS: Scenario[] = [
     day: 2,
     title: 'A sack goes missing',
     blurb: 'One courier bag never arrives. The letter inside is gone — not delayed, gone.',
-    deadline: 10,
+    deadline: 12,
     remote: false,
     lostBags: [{ letter: 1, attempt: 1 }],
     lostReceipts: [],
@@ -149,7 +151,7 @@ export const SCENARIOS: Scenario[] = [
     day: 3,
     title: 'The receipt never arrives',
     blurb: 'The letter arrived. The signed slip did not. The sender cannot tell the difference.',
-    deadline: 10,
+    deadline: 12,
     remote: false,
     lostBags: [],
     lostReceipts: [{ letter: 1 }],
@@ -158,12 +160,54 @@ export const SCENARIOS: Scenario[] = [
     day: 4,
     title: 'Bob moves to the mountains',
     blurb: 'Bob is four days away now. Every slip takes the slow road back.',
-    deadline: 12,
+    deadline: 14,
     remote: true,
     lostBags: [],
     lostReceipts: [],
   },
 ];
+
+// One day = 20 mornings drawn from a distribution. The player commits one
+// rulebook; the morning decides which sacks and slips go missing.
+export const MORNINGS = 20;
+export const BUDGETS = [120, 150, 165, 190];
+
+const PROFILES = [
+  { sack: 0.02, slip: 0.01, storm: 0 },
+  { sack: 0.07, slip: 0.03, storm: 0.05 },
+  { sack: 0.05, slip: 0.2, storm: 0.05 },
+  { sack: 0.05, slip: 0.1, storm: 0.25 },
+];
+
+export interface Plan {
+  lostBags: { letter: number; attempt: number }[];
+  lostReceipts: { letter: number }[];
+  delay: number;
+}
+
+function morningRng(seed: number) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), 1 | t);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function morningPlan(scenarioIdx: number, morning: number): Plan {
+  const p = PROFILES[scenarioIdx];
+  const r = morningRng((scenarioIdx + 1) * 7919 + morning * 104729 + 17);
+  const lostBags: { letter: number; attempt: number }[] = [];
+  const lostReceipts: { letter: number }[] = [];
+  for (let letter = 1; letter <= 3; letter++) {
+    if (r() < p.sack) lostBags.push({ letter, attempt: 1 });
+    if (r() < p.slip) lostReceipts.push({ letter });
+  }
+  const delay = r() < p.storm ? 2 : 0;
+  return { lostBags, lostReceipts, delay };
+}
 
 const SEND_AT = [0.1, 0.25, 0.4];
 const WALK = 0.4;
@@ -181,7 +225,7 @@ function ruleCost(group: string, id: string): number {
   return r ? r.cost : 0;
 }
 
-export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = {}) {
+export function createDay(opts: { scenario?: number; rules?: Partial<Rules>; plan?: Plan } = {}) {
   const scenario = SCENARIOS[opts.scenario ?? 0];
   const rules: Rules = {
     numbering: 'none',
@@ -192,7 +236,10 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
     ...(opts.rules || {}),
   };
   const ledgerOn = rules.ledger === 'on' && rules.numbering !== 'none';
-  const F = flightDays(opts.scenario ?? 0, rules.route);
+  const plan = opts.plan ?? null;
+  const lostBags = plan ? plan.lostBags : scenario.lostBags;
+  const lostReceipts = plan ? plan.lostReceipts : scenario.lostReceipts;
+  const F = flightDays(opts.scenario ?? 0, rules.route) + (plan?.delay ?? 0);
 
   const letters: Letter[] = [
     { id: 'L1', seq: 1, from: 'A', to: 'B', label: 'Alice → Bob' },
@@ -209,6 +256,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
     attempts: [],
     acked: false,
     ackAt: null,
+    slipLost: lostReceipts.some((r) => r.letter === l.seq),
   }));
 
   const attempts: Attempt[] = [];
@@ -235,7 +283,7 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
       delivered: false,
       status: 'moving',
       deliverAt: now + WALK + OFFICE + F + OFFICE + WALK,
-      lost: scenario.lostBags.some((b) => b.letter === letter.seq && b.attempt === n),
+      lost: lostBags.some((b) => b.letter === letter.seq && b.attempt === n),
       lostAt: now + WALK + OFFICE + F * 0.55,
     };
     letter.attempts.push(a);
@@ -256,6 +304,9 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
         letter: a.letterId,
         attempt: a.id,
       });
+      // the office still confirms the original delivery, or the sender would
+      // resend forever
+      if (rules.receipts === 'sign') letter.ackAt = now + F + RECEIPT_TAIL;
       return;
     }
     if (ledgerOn && a.number) ledger.add(a.number);
@@ -286,9 +337,14 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
     }
 
     for (const l of letters) {
-      if (!l.acked && l.ackAt && now >= l.ackAt && !scenario.lostReceipts.some((r) => r.letter === l.seq)) {
-        l.acked = true;
-        log('ack', `the signed slip for ${l.number || l.label} reached the sender`, { letter: l.id });
+      if (!l.acked && l.ackAt && now >= l.ackAt) {
+        if (l.slipLost) {
+          l.slipLost = false;
+          log('lost', `the signed slip for ${l.number || l.label} never arrived`, { letter: l.id });
+        } else {
+          l.acked = true;
+          log('ack', `the signed slip for ${l.number || l.label} reached the sender`, { letter: l.id });
+        }
       }
     }
 
@@ -346,7 +402,10 @@ export function createDay(opts: { scenario?: number; rules?: Partial<Rules> } = 
       total: letters.length,
       cost: Math.round(cost * 10) / 10,
       attempts: attempts.length,
-      promise: onTime === letters.length && dupes === 0,
+      // The promise has three clauses: every letter once, on time, and the
+      // sender holds a signed slip. No receipts means the promise fails even
+      // when the letters arrive.
+      promise: onTime === letters.length && dupes === 0 && rows.every((r) => r.acked),
     };
   }
 

@@ -10,7 +10,7 @@
  * live in a shadow root so the game cannot leak into the site's prose.
  */
 import type { SceneFactory } from '../lib/registry.ts';
-import { createDay, RULES, SCENARIOS, CITIES, type Day } from './the-letters-sim.ts';
+import { createDay, morningPlan, MORNINGS, BUDGETS, RULES, SCENARIOS, CITIES, type Day, type DaySummary } from './the-letters-sim.ts';
 
 const CSS = `
 :host { display: block; }
@@ -112,7 +112,8 @@ const HTML = `
     <div class="days" id="days"></div>
     <button id="run" class="primary">▶ Run</button>
     <button id="reset" title="Reset">↺</button>
-    <span class="clock mono"><b id="clock">day 0.0</b> / <span id="limit">5</span></span>
+    <button id="skip" title="Skip to results">⏭</button>
+    <span class="clock mono"><b id="clock">morning 1/20</b></span>
   </div>
 
   <div class="mapwrap">
@@ -133,6 +134,7 @@ const HTML = `
     <div>
       <div class="score">
         <div class="head"><span class="big" id="promiseState">in progress</span><span class="mono" id="cost" style="font-size:10.5px;color:var(--dim)"></span></div>
+        <div id="promise" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:2px 0 5px"></div>
         <div id="rows"></div>
       </div>
       <div class="log" id="log"></div>
@@ -159,14 +161,15 @@ const scene: SceneFactory = (el) => {
     day: 0,
     rules: { numbering: 'none', receipts: 'none', retry: 'never', ledger: 'off', route: 'direct' },
     sim: null as Day | null,
+    days: [] as Day[],
+    index: 0,
+    results: [] as DaySummary[],
     playing: false,
     speed: 2,
-    timer: null as ReturnType<typeof setInterval> | null,
     drawnLog: 0,
     focus: null as string | null,
     ended: false,
   };
-
   let raf = 0;
   let lastTs = 0;
 
@@ -199,20 +202,25 @@ const scene: SceneFactory = (el) => {
     cancelAnimationFrame(raf);
   }
 
-  function newSim() {
+  function newCampaign() {
     stop();
     state.ended = false;
     state.drawnLog = 0;
     state.focus = null;
-    state.sim = createDay({ scenario: state.day, rules: state.rules });
+    state.results = [];
+    state.index = 0;
+    state.days = Array.from({ length: MORNINGS }, (_, i) =>
+      createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) }),
+    );
+    state.sim = state.days[0];
     $('verdict').classList.remove('show');
     $('log').innerHTML = '';
-    $('run').textContent = '▶ Run';
+    $('run').textContent = '▶ Run 20';
     draw();
   }
 
   function play() {
-    if (state.ended) newSim();
+    if (state.ended) newCampaign();
     state.playing = true;
     $('run').textContent = '⏸ Pause';
     lastTs = performance.now();
@@ -224,42 +232,88 @@ const scene: SceneFactory = (el) => {
     if (!state.playing || !state.sim) return;
     const dt = Math.min(0.06, (ts - lastTs) / 1000);
     lastTs = ts;
-    state.sim.tick(dt * state.speed * 1.8);
-    draw();
+    state.sim.tick(dt * state.speed * 9);
     if (state.sim.now >= state.sim.scenario.deadline + 2) {
-      finish();
+      state.results.push(state.sim.summary());
+      state.index++;
+      if (state.index >= state.days.length) {
+        finishAll();
+        return;
+      }
+      state.sim = state.days[state.index];
+      $('log').innerHTML = '';
+      state.drawnLog = 0;
+      draw();
+      raf = requestAnimationFrame(frame);
       return;
     }
+    draw();
     raf = requestAnimationFrame(frame);
   }
 
-  function finish() {
-    stop();
-    state.ended = true;
-    if (!state.sim) return;
-    const s = state.sim.summary();
-    $('verdict').classList.add('show');
-    $('vt').innerHTML = s.promise ? '<span class="ok">Promise kept.</span>' : '<span class="bad">Promise broken.</span>';
-    const reasons: string[] = [];
-    s.rows.forEach((r) => {
-      if (r.delivered === 0) reasons.push(r.label + ' never arrived');
-      else if (r.delivered > 1) reasons.push(r.label + ' arrived ' + r.delivered + ' times');
-      else if (!r.onTime) reasons.push(r.label + ' arrived late');
+  function aggregate() {
+    const rs = state.results;
+    const kept = rs.filter((r) => r.promise).length;
+    const cost = Math.round(rs.reduce((acc, r) => acc + r.cost, 0) * 10) / 10;
+    const budget = BUDGETS[state.day];
+    const per = ['L1', 'L2', 'L3'].map((id) => {
+      const label = state.days[0]?.letters.find((l) => l.id === id)?.label ?? id;
+      let ok = 0;
+      let dup = 0;
+      for (const r of rs) {
+        const row = r.rows.find((x) => x.id === id);
+        if (row && row.delivered === 1) ok++;
+        if (row) dup += Math.max(0, row.delivered - 1);
+      }
+      return { id, label, ok, dup };
     });
-    $('vs').textContent =
-      (reasons.length ? reasons.join(' · ') + '. ' : 'All three letters, once each. ') + s.cost + ' coins of postage.';
+    return { kept, cost, budget, per, n: rs.length };
+  }
+
+  function finishAll() {
+    stop();
+    state.playing = false;
+    state.ended = true;
+    const agg = aggregate();
+    const pass = agg.kept >= 17 && agg.cost <= agg.budget;
+    $('verdict').classList.add('show');
+    $('vt').innerHTML = pass
+      ? '<span class="ok">Good enough: ' + agg.kept + ' / ' + MORNINGS + ' mornings.</span>'
+      : '<span class="bad">Not yet: ' + agg.kept + ' / ' + MORNINGS + ' mornings.</span>';
+
+    let wi = -1;
+    let wscore = 99;
+    state.results.forEach((r, i) => {
+      const sc = r.exact * 2 - r.dupes;
+      if (sc < wscore) { wscore = sc; wi = i; }
+    });
+    const worst = state.results[wi];
+    const wrow = worst ? worst.rows.slice().sort((x, y) => y.delivered - x.delivered)[0] : null;
+    const tail = wrow && wrow.delivered > 1
+      ? ' · worst: morning ' + (wi + 1) + ', ' + wrow.delivered + ' copies for ' + wrow.label
+      : worst && worst.lost > 0
+        ? ' · worst: morning ' + (wi + 1) + ', a letter never arrived'
+        : ' · every letter at most once';
+    $('vs').textContent = agg.cost + ' / ' + agg.budget + ' coins' + tail;
     const next = $('next') as HTMLButtonElement;
     next.disabled = state.day >= SCENARIOS.length - 1;
     next.textContent = state.day >= SCENARIOS.length - 1 ? 'That is the whole slice' : 'Next day →';
     draw();
   }
 
+  function runAllMornings() {
+    stop();
+    state.results = state.days.map((d) => d.runAll());
+    state.index = state.days.length;
+    state.sim = state.days[state.days.length - 1];
+    finishAll();
+  }
   function draw() {
     if (!state.sim) return;
     drawMap();
     drawPanels();
     drawLog();
-    $('clock').textContent = 'day ' + Math.min(state.sim.now, state.sim.scenario.deadline).toFixed(1);
+    $('clock').textContent = 'morning ' + Math.min(state.index + 1, MORNINGS) + '/' + MORNINGS;
   }
 
   function drawMap() {
@@ -411,29 +465,22 @@ const scene: SceneFactory = (el) => {
   function drawPanels() {
     const sim = state.sim;
     if (!sim) return;
-    const s = sim.summary();
-    $('promiseState').innerHTML = state.ended
-      ? s.promise
-        ? '<span class="ok">Kept</span>'
-        : '<span class="bad">Broken</span>'
-      : '<span style="color:var(--dim);font-size:12px">in progress</span>';
-    $('cost').textContent = s.cost + ' coins';
+    const agg = aggregate();
+    if (state.ended) {
+      $('promiseState').innerHTML = '<span class="' + (agg.kept >= 17 && agg.cost <= agg.budget ? 'ok' : 'bad') + '">' + agg.kept + ' / ' + MORNINGS + '</span>';
+    } else {
+      $('promiseState').innerHTML = '<span style="color:var(--dim);font-size:12px">' + agg.kept + ' / ' + Math.max(agg.n, 1) + ' so far</span>';
+    }
+    $('cost').textContent = agg.cost + ' / ' + agg.budget + ' coins';
+    $('cost').className = 'mono' + (agg.cost > agg.budget ? ' bad' : '');
+    $('promise').innerHTML =
+      'Promise: every letter once, within ' + sim.scenario.deadline + ' days, with a signed slip back.';
 
-    $('rows').innerHTML = s.rows
-      .map((r) => {
-        const status =
-          r.delivered === 0
-            ? state.ended
-              ? '<span class="bad">never</span>'
-              : '<span style="color:var(--dimmer)">in transit</span>'
-            : r.delivered > 1
-              ? `<span class="bad">${r.delivered} copies</span>`
-              : '<span class="ok">1 copy</span>';
-        return `<div class="srow"><div class="l"><b>${r.label}</b></div><div class="c">${status}</div><div class="t mono">${r.first === null ? '—' : r.first.toFixed(1) + 'd'}</div></div>`;
-      })
-      .join('');
+    $('rows').innerHTML = agg.per.map((p) =>
+      '<div class="srow"><div class="l"><b>' + p.label + '</b></div><div class="c">' +
+      (agg.n ? p.ok + '/' + agg.n : '—') + '</div><div class="t mono">' + (p.dup ? p.dup + ' dup' : '') + '</div></div>',
+    ).join('');
   }
-
   function drawLog() {
     const sim = state.sim;
     if (!sim) return;
@@ -464,7 +511,7 @@ const scene: SceneFactory = (el) => {
         const opts = RULES[key]
           .map((o) => {
             const disabled = key === 'ledger' && state.rules.numbering === 'none';
-            const on = state.rules[key] === o.id;
+            const on = (state.rules as unknown as Record<string, string>)[key] === o.id;
             return `<button class="opt ${on ? 'on' : ''} ${disabled ? 'off' : ''}" data-g="${key}" data-o="${o.id}" ${disabled ? 'disabled' : ''} title="${o.note}">
               <div class="row"><span class="nm">${o.label}</span><span class="pr mono">+${o.cost.toFixed(1)}</span></div>
               <div class="note">${disabled ? 'Needs a number on the envelope.' : o.note}</div>
@@ -480,7 +527,7 @@ const scene: SceneFactory = (el) => {
         state.rules[g as keyof typeof state.rules] = b.dataset.o!;
         if (g === 'numbering' && state.rules.numbering === 'none') state.rules.ledger = 'off';
         renderRules();
-        newSim();
+        newCampaign();
       });
     });
   }
@@ -488,26 +535,25 @@ const scene: SceneFactory = (el) => {
   function setDay(n: number) {
     state.day = n;
     const sc = SCENARIOS[n];
-    $('title').innerHTML = sc.title + ' <span>· day ' + sc.day + '</span>';
-    $('limit').textContent = String(sc.deadline);
+    $('title').innerHTML = sc.title + ' <span>· day ' + sc.day + '  ·  ' + MORNINGS + ' mornings</span>';
     $('days').innerHTML = SCENARIOS.map(
-      (s, i) => `<button data-d="${i}" class="${i === n ? 'on' : ''}">${s.day}</button>`,
+      (s, i) => '<button data-d="' + i + '" class="' + (i === n ? 'on' : '') + '">' + s.day + '</button>',
     ).join('');
     $('days').querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
       b.addEventListener('click', () => setDay(Number(b.dataset.d)));
     });
     renderRules();
-    newSim();
+    newCampaign();
   }
-
   $('run').addEventListener('click', () => {
     if (state.playing) {
       stop();
       $('run').textContent = '▶ Resume';
     } else play();
   });
-  $('reset').addEventListener('click', () => newSim());
-  $('again').addEventListener('click', () => newSim());
+  $('reset').addEventListener('click', () => newCampaign());
+  $('skip').addEventListener('click', () => runAllMornings());
+  $('again').addEventListener('click', () => newCampaign());
   $('next').addEventListener('click', () => {
     if (state.day < SCENARIOS.length - 1) setDay(state.day + 1);
   });
@@ -523,15 +569,14 @@ const scene: SceneFactory = (el) => {
     if (preset.length === 4) {
       state.rules = { numbering: preset[0], receipts: preset[1], retry: preset[2], ledger: preset[3], route: 'direct' };
       renderRules();
-      newSim();
+      newCampaign();
     }
     const at = Number(params.get('tlat'));
     if (at > 0) {
       while (state.sim && state.sim.now < at) state.sim.tick(0.05);
       draw();
     } else {
-      state.sim?.runAll();
-      finish();
+      runAllMornings();
     }
   }
 
