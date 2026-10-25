@@ -52,6 +52,7 @@ svg { width: 100%; height: 100%; display: block; }
 .letter path { stroke: #b99a52; fill: none; }
 .letter text { fill: #f0e6c8; font-size: 8px; font-weight: 700; }
 .letter { filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)); }
+.letter.focus rect { stroke: var(--gold); stroke-width: 2.2; }
 .stack text { fill: #f0e6c8; font-size: 7.5px; font-weight: 700; }
 .lostmark { fill: none; stroke: var(--red); stroke-width: 2; }
 
@@ -125,9 +126,9 @@ const HTML = `
 
   <div class="panels">
     <div>
-      <h3 class="grp" style="margin-bottom:8px">Post office rules</h3>
+      <h3 class="grp" style="margin-bottom:8px">Post office add-ons</h3>
       <div class="rulegrid" id="rules"></div>
-      <div style="font-size:9.5px;color:var(--dimmer);margin-top:6px;line-height:1.4">Rules apply to all three offices. Prices are per letter, in postage.</div>
+      <div style="font-size:9.5px;color:var(--dimmer);margin-top:6px;line-height:1.4">Add-ons apply to all three offices. Priced per letter, in postage.</div>
     </div>
     <div>
       <div class="score">
@@ -166,6 +167,9 @@ const scene: SceneFactory = (el) => {
     ended: false,
   };
 
+  let raf = 0;
+  let lastTs = 0;
+
   function cityPos(id: string) {
     if (state.sim?.scenario.remote && id === 'B') return REMOTE_B;
     return POS[id];
@@ -192,10 +196,7 @@ const scene: SceneFactory = (el) => {
 
   function stop() {
     state.playing = false;
-    if (state.timer) {
-      clearInterval(state.timer);
-      state.timer = null;
-    }
+    cancelAnimationFrame(raf);
   }
 
   function newSim() {
@@ -214,15 +215,22 @@ const scene: SceneFactory = (el) => {
     if (state.ended) newSim();
     state.playing = true;
     $('run').textContent = '⏸ Pause';
-    if (state.timer) clearInterval(state.timer);
-    state.timer = setInterval(step, 33);
+    lastTs = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(frame);
   }
 
-  function step() {
+  function frame(ts: number) {
     if (!state.playing || !state.sim) return;
-    state.sim.tick(0.033 * state.speed * 0.9);
+    const dt = Math.min(0.06, (ts - lastTs) / 1000);
+    lastTs = ts;
+    state.sim.tick(dt * state.speed * 1.8);
     draw();
-    if (state.sim.now >= state.sim.scenario.deadline + 2) finish();
+    if (state.sim.now >= state.sim.scenario.deadline + 2) {
+      finish();
+      return;
+    }
+    raf = requestAnimationFrame(frame);
   }
 
   function finish() {
@@ -294,6 +302,8 @@ const scene: SceneFactory = (el) => {
     }
 
     const total = 1.2 + F;
+    parts.push('<defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#1b2230"/></pattern></defs><rect x="0" y="0" width="800" height="430" fill="url(#dots)" opacity="0.65"/>');
+
     let jitter = 0;
     for (const a of sim.attempts) {
       if (a.status !== 'moving') continue;
@@ -301,6 +311,7 @@ const scene: SceneFactory = (el) => {
       const flyStart = 0.6 / total;
       const flyEnd = (0.6 + F) / total;
       let p: { x: number; y: number };
+      let angle = 0;
       if (u <= flyStart) {
         p = cityPos(a.from);
         p = { x: p.x - 40 - (jitter++ % 3) * 7, y: p.y - 2 };
@@ -311,13 +322,78 @@ const scene: SceneFactory = (el) => {
         const k = (u - flyStart) / (flyEnd - flyStart);
         const r = routeFor(a.from, a.to);
         p = quad(r.p1, r.c, r.p2, k);
+        const q = quad(r.p1, r.c, r.p2, Math.min(1, k + 0.015));
+        angle = Math.max(-20, Math.min(20, (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI));
         p.y -= 8;
+        for (let g = 1; g <= 2; g++) {
+          const gp = quad(r.p1, r.c, r.p2, Math.max(0, k - g * 0.03));
+          parts.push('<rect x="' + (gp.x - 8) + '" y="' + (gp.y - 13) + '" width="16" height="11" rx="2" fill="#f2e6c8" opacity="' + (0.18 / g) + '" />');
+        }
       }
-      parts.push(`<g class="letter" data-letter="${a.letterId}" style="cursor:pointer">
-        <rect x="${p.x - 10}" y="${p.y - 7}" width="20" height="14" rx="2" />
-        <path d="M ${p.x - 10} ${p.y - 7} L ${p.x} ${p.y} L ${p.x + 10} ${p.y - 7}" />
-        ${a.number ? `<text x="${p.x}" y="${p.y - 11}" text-anchor="middle">${a.number}</text>` : ''}
-      </g>`);
+      const focused = state.focus === a.letterId;
+      parts.push(
+        '<g class="letter ' + (focused ? 'focus' : '') + '" data-letter="' + a.letterId + '" style="cursor:pointer" transform="translate(' + p.x + ' ' + p.y + ') rotate(' + angle + ')">' +
+          '<rect x="-11" y="-7.5" width="22" height="15" rx="2" />' +
+          '<path d="M -11 -7.5 L 0 2 L 11 -7.5" />' +
+          '<circle cx="0" cy="0.5" r="1.7" fill="#b4453a" stroke="none" opacity="0.85" />' +
+          (a.number ? '<text x="0" y="-11" text-anchor="middle" transform="rotate(' + (-angle) + ' 0 -11)">' + a.number + '</text>' : '') +
+          '</g>',
+      );
+    }
+
+    // slips coming home
+    for (const l of sim.letters) {
+      const d = sim.deliveries.find((x) => x.letterId === l.id);
+      if (!d || sim.rules.receipts !== 'sign' || !l.ackAt) continue;
+      if (sim.now < d.at || sim.now > l.ackAt) continue;
+      const prog = (sim.now - d.at) / (l.ackAt - d.at);
+      const lost = sim.scenario.lostReceipts.some((r) => r.letter === l.seq);
+      if (lost && prog > 0.55) continue;
+      const r = routeFor(l.to, l.from);
+      const p = quad(r.p1, r.c, r.p2, prog);
+      const fade = lost ? Math.max(0.15, 1 - Math.max(0, prog - 0.3) / 0.25) : 1;
+      parts.push(
+        '<g transform="translate(' + p.x + ' ' + (p.y - 7) + ')" opacity="' + fade + '">' +
+          '<rect x="-7" y="-5" width="14" height="10" rx="1.5" fill="#e8eef7" stroke="#9fb0c8" />' +
+          '<path d="M -7 -5 L 0 0 L 7 -5" fill="none" stroke="#9fb0c8" />' +
+          '<circle cx="0" cy="2.4" r="1.5" fill="#b4453a" />' +
+          '</g>',
+      );
+    }
+
+    // arrivals
+    for (const d of sim.deliveries) {
+      const age = sim.now - d.at;
+      if (age < 0 || age > 1.1) continue;
+      const target = sim.letters.find((l) => l.id === d.letterId);
+      if (!target) continue;
+      const p = cityPos(target.to);
+      const k = age / 1.1;
+      parts.push('<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (28 + 36 * k) + '" fill="none" stroke="#3fb950" stroke-width="' + (2.2 * (1 - k)) + '" opacity="' + (0.5 * (1 - k)) + '" />');
+      for (let i = 0; i < 6; i++) {
+        const ang = (Math.PI * 2 * i) / 6;
+        const rad = 26 + 30 * k;
+        parts.push('<circle cx="' + (p.x + Math.cos(ang) * rad) + '" cy="' + (p.y + Math.sin(ang) * rad) + '" r="1.7" fill="#3fb950" opacity="' + (0.75 * (1 - k)) + '" />');
+      }
+    }
+
+    // the office stamp, while a letter is processed
+    for (const a of sim.attempts) {
+      if (a.status !== 'moving') continue;
+      const u = (sim.now - a.start) / total;
+      const s0 = 0.6 / total;
+      const s1 = 0.8 / total;
+      if (u < s0 || u > s1 + 0.08) continue;
+      const p = cityPos(a.from);
+      const k = Math.min(1, (u - s0) / (s1 - s0));
+      const sc = 0.75 + 0.25 * k;
+      const fade = u > s1 ? Math.max(0, 1 - (u - s1) / 0.08) : 1;
+      parts.push(
+        '<g transform="translate(' + (p.x - 26) + ' ' + (p.y + 24) + ') scale(' + sc + ')" opacity="' + (0.9 * fade) + '">' +
+          '<circle r="9" fill="none" stroke="#b4453a" stroke-width="1.4" />' +
+          '<path d="M -4 0 L -1 3 L 5 -3" fill="none" stroke="#b4453a" stroke-width="1.6" />' +
+          '</g>',
+      );
     }
 
     svg.innerHTML = parts.join('');
@@ -378,10 +454,10 @@ const scene: SceneFactory = (el) => {
     const box = $('rules');
     box.innerHTML = (
       [
-        ['numbering', 'Numbering'],
-        ['receipts', 'Receipts'],
-        ['retry', 'If no receipt'],
-        ['ledger', 'At the far office'],
+        ['numbering', 'Registered post'],
+        ['receipts', 'Return receipt'],
+        ['retry', 'Automatic resend'],
+        ['ledger', 'Delivery ledger'],
       ] as [string, string][]
     )
       .map(([key, label]) => {
@@ -449,8 +525,14 @@ const scene: SceneFactory = (el) => {
       renderRules();
       newSim();
     }
-    state.sim?.runAll();
-    finish();
+    const at = Number(params.get('tlat'));
+    if (at > 0) {
+      while (state.sim && state.sim.now < at) state.sim.tick(0.05);
+      draw();
+    } else {
+      state.sim?.runAll();
+      finish();
+    }
   }
 
   return {
