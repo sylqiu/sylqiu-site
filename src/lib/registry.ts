@@ -31,6 +31,7 @@ const registry: Record<string, () => Promise<{ default: SceneFactory }>> = {
   'flash-attention': () => import('../scenes/flash-attention.ts'),
   'the-letters': () => import('../scenes/the-letters.ts'),
   'the-registry': () => import('../scenes/the-registry.ts'),
+  'postmarked': () => import('../scenes/postmarked.ts'),
 };
 
 export function knownScenes(): string[] {

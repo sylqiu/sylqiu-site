@@ -275,20 +275,12 @@ export const illustrations: Illustration[] = [
     scene: 'flash-attention',
   },
   {
-    id: 'postoffice-simulator',
+    id: 'postmarked',
     category: 'Distributed systems',
-    title: 'Postmarked: Delivery',
+    title: 'Postmarked',
     blurb:
-      'A postal game about delivery guarantees. Keep the promise across ten weather worlds.',
-    scene: 'the-letters',
-  },
-  {
-    id: 'the-registry',
-    category: 'Distributed systems',
-    title: 'Postmarked: The Registry',
-    blurb:
-      'One deed, three offices, a road that can be cut. Choose a quorum and keep the deed single-owner.',
-    scene: 'the-registry',
+      'A postal game of delivery, proof, and shared state. Two acts, twenty worlds.',
+    scene: 'postmarked',
   },
   {
     id: 'kv-cache',
