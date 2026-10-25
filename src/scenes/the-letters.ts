@@ -81,6 +81,26 @@ h3.grp { font-size: 9px; letter-spacing: .13em; text-transform: uppercase; color
 .opt.on .note { display: block; }
 .opt.off { opacity: .38; cursor: not-allowed; }
 
+.brief { padding: 10px 14px 9px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #11161d, #0d1116); }
+.brief-title { font-size: 12px; font-weight: 600; letter-spacing: .01em; }
+.brief-copy { font-size: 10.5px; color: var(--dim); line-height: 1.5; margin-top: 3px; max-width: 760px; }
+.brief-goal { font-size: 9.5px; color: var(--dimmer); margin-top: 5px; }
+.brief-goal b { color: var(--gold); font-weight: 600; letter-spacing: .04em; }
+.score-rank { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.rank { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; font-weight: 650; border: 1px solid var(--line); background: #141922; color: var(--dim); flex: none; }
+.rank.s { background: var(--gold); border-color: var(--gold); color: #0d1117; }
+.rank.a { background: #102219; border-color: #2b5d3b; color: #7ee2a8; }
+.rank.b { background: #221d10; border-color: #5a4a1c; color: var(--amber); }
+.rank.c { background: #2a1316; border-color: #6e2b31; color: #ff9b9b; }
+.rank-body { flex: 1; min-width: 0; }
+.rank-title { font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dimmer); }
+.rank-body .big { font-size: 16px; }
+.best { text-align: right; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dimmer); line-height: 1.45; flex: none; }
+.best b { display: block; font-size: 10.5px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text); }
+.budget-line { display: flex; justify-content: space-between; font-size: 8.5px; letter-spacing: .1em; color: var(--dimmer); }
+.budget-track { height: 4px; border-radius: 999px; background: #1b222c; overflow: hidden; margin: 3px 0 5px; }
+.budget-track i { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s; }
+.budget-track i.over { background: var(--red); }
 .score .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
 .score .big { font-size: 15px; font-weight: 560; }
 .ok { color: var(--green); } .bad { color: var(--red); }
@@ -124,6 +144,12 @@ const HTML = `
     <span class="clock mono"><b id="clock">situation 1/10 · day 0.0</b></span>
   </div>
 
+  <div class="brief">
+    <div class="brief-title">Your job: keep the promise</div>
+    <div class="brief-copy">Deliver every letter once, on time, with a signed slip — across ten independent weather worlds. Pick the post-office add-ons; postage comes out of a fixed budget. Click a red result to replay its failure.</div>
+    <div class="brief-goal"><b>PASS</b> 9 / 10 kept and within budget · <b>PERFECT</b> 10 / 10 earns an S · best saved per day (<span id="briefBudget">60</span> coins)</div>
+  </div>
+
   <div class="mapwrap">
     <svg id="map" viewBox="0 0 800 430" preserveAspectRatio="xMidYMid meet">
       <defs><pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#1b2230"/></pattern></defs>
@@ -152,7 +178,16 @@ const HTML = `
     </div>
     <div>
       <div class="score">
-        <div class="head"><span class="big" id="promiseState">in progress</span><span class="mono" id="cost" style="font-size:10.5px;color:var(--dim)"></span></div>
+        <div class="score-rank">
+          <span class="rank" id="rank" title="S = perfect · A = pass · B = close · C = fail">—</span>
+          <div class="rank-body">
+            <div class="rank-title">Scoreboard</div>
+            <div class="big" id="promiseState">in progress</div>
+          </div>
+          <div class="best"><span>BEST</span><b id="best">—</b></div>
+        </div>
+        <div class="budget-line"><span>POSTAGE</span><span class="mono" id="cost" style="font-size:10.5px;color:var(--dim)"></span></div>
+        <div class="budget-track"><i id="budgetBar"></i></div>
         <div id="promise" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:2px 0 3px"></div>
         <div id="sitnote" style="font-size:9.5px;color:var(--dimmer);line-height:1.35;margin:0 0 3px"></div>
         <div id="why" style="font-size:9.5px;line-height:1.35;margin:0 0 5px;color:var(--dimmer)"></div>
@@ -196,6 +231,7 @@ const scene: SceneFactory = (el) => {
     drawnLog: 0,
     focus: null as string | null,
     ended: false,
+    best: null as { kept: number; cost: number } | null,
   };
   let raf = 0;
   let lastTs = 0;
@@ -245,6 +281,8 @@ const scene: SceneFactory = (el) => {
     state.results = state.days.map((_, i) =>
       createDay({ scenario: state.day, rules: state.rules, plan: morningPlan(state.day, i) }).runAll(),
     );
+    state.best = loadBest();
+    saveBest();
     state.sim = state.days[0];
     $('verdict').classList.remove('show');
     $('log').innerHTML = '';
@@ -307,6 +345,7 @@ const scene: SceneFactory = (el) => {
         state.playing = false;
         state.single = false;
         state.ended = true;
+        saveBest();
         cancelAnimationFrame(raf);
         draw();
         return;
@@ -332,6 +371,36 @@ const scene: SceneFactory = (el) => {
     }
     draw();
     raf = requestAnimationFrame(frame);
+  }
+
+  function bestKey() {
+    return 'letters:best:' + state.day;
+  }
+
+  function loadBest(): { kept: number; cost: number } | null {
+    try {
+      const raw = localStorage.getItem(bestKey());
+      if (!raw) return null;
+      const b = JSON.parse(raw);
+      if (b && typeof b.kept === 'number' && typeof b.cost === 'number') return b;
+    } catch {
+      /* storage may be unavailable */
+    }
+    return null;
+  }
+
+  function saveBest() {
+    const agg = aggregate();
+    if (agg.kept < PASS_SITUATIONS || agg.cost > agg.budget) return;
+    const cur = state.best;
+    const better = !cur || agg.kept > cur.kept || (agg.kept === cur.kept && agg.cost < cur.cost);
+    if (!better) return;
+    state.best = { kept: agg.kept, cost: agg.cost };
+    try {
+      localStorage.setItem(bestKey(), JSON.stringify(state.best));
+    } catch {
+      /* ignore */
+    }
   }
 
   function aggregate() {
@@ -612,7 +681,18 @@ const scene: SceneFactory = (el) => {
     const sim = state.sim;
     if (!sim) return;
     const agg = aggregate();
+    const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
+    const perfect = agg.kept === SITUATIONS && agg.cost <= agg.budget;
+    const rank = perfect ? 'S' : pass ? 'A' : agg.kept >= PASS_SITUATIONS - 2 ? 'B' : 'C';
+    $('rank').textContent = rank;
+    $('rank').className = 'rank ' + rank.toLowerCase();
+    $('best').textContent = state.best ? state.best.kept + '/' + SITUATIONS + ' · ' + state.best.cost + 'c' : '—';
+    $('budgetBar').style.width = Math.min(100, (agg.cost / agg.budget) * 100) + '%';
+    $('budgetBar').className = agg.cost > agg.budget ? 'over' : '';
     if (agg.n === SITUATIONS) {
+      const label = agg.cost > agg.budget ? 'Over budget' : agg.kept + ' / ' + SITUATIONS;
+      $('promiseState').innerHTML = '<span class="' + (pass ? 'ok' : 'bad') + '">' + label + '</span>';
+    } else if (agg.n === 0) {
       const pass = agg.kept >= PASS_SITUATIONS && agg.cost <= agg.budget;
       const label = agg.cost > agg.budget ? 'Over budget' : agg.kept + ' / ' + SITUATIONS;
       $('promiseState').innerHTML = '<span class="' + (pass ? 'ok' : 'bad') + '">' + label + '</span>';
@@ -690,6 +770,7 @@ const scene: SceneFactory = (el) => {
     state.day = n;
     const sc = SCENARIOS[n];
     $('title').innerHTML = sc.title + ' <span>· day ' + sc.day + '  ·  ' + SITUATIONS + ' situations</span>';
+    $('briefBudget').textContent = String(BUDGETS[n]);
     $('days').innerHTML = SCENARIOS.map(
       (s, i) => '<button data-d="' + i + '" class="' + (i === n ? 'on' : '') + '">' + s.day + '</button>',
     ).join('');
