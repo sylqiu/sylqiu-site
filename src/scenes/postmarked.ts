@@ -91,6 +91,8 @@ const scene: SceneFactory = (el) => {
   }
 
   const initial = (() => {
+    const requested = new URLSearchParams(location.search).get('act');
+    if (requested === 'registry' || requested === 'delivery') return requested;
     try {
       const saved = sessionStorage.getItem('postmarked:act');
       if (saved === 'registry' || saved === 'delivery') return saved;
