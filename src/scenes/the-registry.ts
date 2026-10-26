@@ -138,7 +138,9 @@ const scene: SceneFactory = (el) => {
   const BEST_KEY = 'registry:v2:best';
   function loadBest(): number | null {
     try {
-      const n = Number(localStorage.getItem(BEST_KEY));
+      const raw = localStorage.getItem(BEST_KEY);
+      if (raw === null) return null;
+      const n = Number(raw);
       return Number.isFinite(n) && n >= 0 ? n : null;
     } catch {
       return null;
