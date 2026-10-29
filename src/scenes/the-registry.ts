@@ -38,6 +38,17 @@ button.on { border-color:var(--gold); background:#211d12; color:var(--gold); }
 .brief-copy { font-size:10.5px; color:var(--dim); line-height:1.5; margin-top:3px; max-width:800px; }
 .brief-goal { font-size:9.5px; color:var(--dimmer); margin-top:5px; }
 .brief-goal b { color:var(--gold); font-weight:600; letter-spacing:.04em; }
+.guide { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px; }
+.gstep { border:1px solid var(--line); border-radius:7px; background:#10151d; padding:6px 8px; }
+.gstep b { display:block; font-size:10px; color:var(--gold); font-weight:600; }
+.gstep span { display:block; font-size:9.5px; color:var(--dim); line-height:1.4; margin-top:2px; }
+.terms { display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; }
+.term { font-size:9.5px; color:var(--dim); border:1px solid var(--line); border-radius:99px; padding:2px 7px; }
+.term b { color:var(--text); font-weight:600; }
+.hintline { font-size:9.5px; color:var(--dimmer); line-height:1.4; margin-top:6px; }
+.policy-line { font-size:9px; color:var(--dim); line-height:1.4; margin-top:5px; min-height:26px; }
+.legend { font-size:8.5px; color:var(--dimmer); flex-basis:100%; margin-top:1px; }
+@media (max-width:800px) { .guide { grid-template-columns:1fr; } }
 .body { display:grid; grid-template-columns:1fr 330px; }
 .main { min-width:0; border-right:1px solid var(--line); }
 .side { min-width:0; }
@@ -96,21 +107,27 @@ const HTML = `
 <div class="wrap">
   <div class="bar"><span class="title">The Registry <span>· three records, one damage bill</span></span><span class="spacer"></span><span class="clock mono">10 worlds</span></div>
   <div class="brief">
-    <div class="brief-title">Choose a policy per record. Minimize damage.</div>
-    <div class="brief-copy">You are Porto. Every world runs a write for the signup list, a parcel order, and a land deed. The same policy cannot be right for all three: a newsletter can lose a write silently, a parcel wants a refund, a deed needs a human clerk. Ten seeded worlds; six have conflicting writes and four have a single write.</div>
-    <div class="brief-goal"><b>DAMAGE</b> lost + turned away + slow · <b>S</b> within 10% of the brute-forced optimum · no single right answer</div>
+    <div class="brief-title">Your job: run Porto's record office. Lower the damage bill.</div>
+    <div class="brief-copy">Every world tries a write for all three records. Three decisions explain the whole game:</div>
+    <div class="guide">
+      <div class="gstep"><b>1 · Quorum</b><span>How many offices must confirm before a write counts. 1 is fast and brittle; 3 is safe but slow and often unavailable.</span></div>
+      <div class="gstep"><b>2 · Conflict</b><span>What happens when two writes collide: silent last-writer-wins, refund the loser, or send both to a human clerk.</span></div>
+      <div class="gstep"><b>3 · Damage</b><span>Lost + turned away + slow. Lower is better. S is within 10% of the best possible policy set.</span></div>
+    </div>
+    <div class="terms"><span class="term"><b>Silent</b> cheapest; a lost write is invisible.</span><span class="term"><b>Notify</b> refund the losing buyer; safe, costs more.</span><span class="term"><b>Clerk</b> keep both; a human resolves; fee + delay.</span></div>
+    <div class="hintline">The signup list can tolerate a silent loss. The land deed cannot. That is why one policy does not fit all three records.</div>
   </div>
   <div class="body">
     <div class="main">
       <div class="records" id="records"></div>
-      <div class="rail"><span class="rail-label">Worlds</span><div class="tiles" id="tiles"></div><span class="hint">click a world to inspect</span></div>
+      <div class="rail"><span class="rail-label">Worlds</span><div class="tiles" id="tiles"></div><span class="hint">click a world to inspect</span><span class="legend">tile = total damage · green clean · amber turned away · red lost</span></div>
       <div class="detail" id="detail"></div>
     </div>
     <div class="side">
       <div class="score">
         <div class="score-rank"><span class="rank" id="rank">—</span><div><div class="kicker">Damage</div><div class="big" id="total">—</div></div><div class="best"><span>BEST</span><b id="best">—</b></div></div>
-        <div class="stat"><span>Brute-force optimum</span><b id="optimum">—</b></div>
-        <div class="stat"><span>Best rank target</span><b id="target">—</b></div>
+        <div class="stat"><span>Best possible</span><b id="optimum">—</b></div>
+        <div class="stat"><span>S target</span><b id="target">—</b></div>
         <div class="target" id="note"></div>
         <div class="bars">
           <div class="brow"><span>Lost</span><div class="track"><i class="lost" id="barLost"></i></div><span class="mono" id="lost">0</span></div>
@@ -153,16 +170,25 @@ const scene: SceneFactory = (el) => {
   }
 
   const labelCut = (cut: string) => cut === 'none' ? 'roads open' : cut === 'A' ? 'Porto isolated' : cut === 'B' ? 'Kyoto isolated' : cut === 'C' ? 'Denver isolated' : 'all roads cut';
-  const labelOutcome = (o: string) => o === 'lostSilent' ? 'silent loss' : o === 'lostNotified' ? 'refunded' : o === 'clerk' ? 'human clerk' : o === 'one refused' ? 'one refused' : o === 'both refused' ? 'both refused' : o === 'refused' ? 'refused' : 'committed';
+  const labelOutcome = (o: string) => o === 'lostSilent' ? 'both accepted; one lost silently' : o === 'lostNotified' ? 'both accepted; loser refunded' : o === 'clerk' ? 'both accepted; sent to a clerk' : o === 'one refused' ? 'one accepted; one turned away' : o === 'both refused' ? 'no quorum; both turned away' : o === 'refused' ? 'no quorum; turned away' : 'committed';
+
+  function policyNote(p: { quorum: Quorum; conflict: Conflict }): string {
+    const q = p.quorum === 1 ? 'One office can accept alone.' : p.quorum === 2 ? 'Two offices must agree.' : 'All three offices must agree.';
+    const c = p.conflict === 'silent' ? 'A collision can vanish without telling the buyer.' : p.conflict === 'notify' ? 'A collision is refused and the buyer is refunded.' : 'A collision goes to a human clerk (slow, fee).';
+    return q + ' ' + c;
+  }
 
   function renderRecords(perRecord: Record<RecordId, number>) {
     $('records').innerHTML = RECORDS.map((rec) => {
       const p = state.policies[rec.id];
-      const q = [1, 2, 3].map((n) => '<button class="chip' + (p.quorum === n ? ' on' : '') + '" data-q="' + n + '" data-rec="' + rec.id + '">' + n + '</button>').join('');
-      const c = (['silent', 'notify', 'clerk'] as Conflict[]).map((x) => '<button class="chip' + (p.conflict === x ? ' on' : '') + '" data-c="' + x + '" data-rec="' + rec.id + '">' + (x === 'silent' ? 'Silent' : x === 'notify' ? 'Notify' : 'Clerk') + '</button>').join('');
+      const qLabels: Record<number, string> = { 1: 'Fast; one office can accept alone.', 2: 'Majority; may refuse during a cut.', 3: 'All three; slow and often refuses.' };
+      const cLabels: Record<Conflict, string> = { silent: 'Cheapest; a lost write is silent.', notify: 'Refund the losing buyer.', clerk: 'Keep both; a human resolves.' };
+      const q = [1, 2, 3].map((n) => '<button class="chip' + (p.quorum === n ? ' on' : '') + '" title="' + qLabels[n] + '" data-q="' + n + '" data-rec="' + rec.id + '">' + n + '</button>').join('');
+      const c = (['silent', 'notify', 'clerk'] as Conflict[]).map((x) => '<button class="chip' + (p.conflict === x ? ' on' : '') + '" title="' + cLabels[x] + '" data-c="' + x + '" data-rec="' + rec.id + '">' + (x === 'silent' ? 'Silent' : x === 'notify' ? 'Notify' : 'Clerk') + '</button>').join('');
       return '<div class="rec"><div class="rec-head"><b>' + rec.label + '</b><span>stakes ' + rec.stakes + (rec.refundable ? ' · refundable' : ' · no refund') + '</span></div>' +
-        '<div class="grp">Write quorum</div><div class="seg">' + q + '</div>' +
-        '<div class="grp">Conflict rule</div><div class="opts">' + c + '</div>' +
+        '<div class="grp">Quorum · offices that must agree</div><div class="seg">' + q + '</div>' +
+        '<div class="grp">Conflict · what happens to the loser</div><div class="opts">' + c + '</div>' +
+        '<div class="policy-line">' + policyNote(p) + '</div>' +
         '<div class="rec-dmg"><span>damage</span><b class="mono">' + perRecord[rec.id].toFixed(1) + '</b></div></div>';
     }).join('');
     $('records').querySelectorAll<HTMLButtonElement>('[data-q]').forEach((b) => b.addEventListener('click', () => {
@@ -194,7 +220,8 @@ const scene: SceneFactory = (el) => {
     $('total').textContent = out.total.toFixed(1);
     $('optimum').textContent = opt.toFixed(1);
     $('target').textContent = '≤ ' + (opt * 1.1).toFixed(1);
-    $('note').textContent = 'Damage = lost + turned away + slow. The optimum is recomputed from all nine policies per record; no single policy wins every record.';
+    const gap = out.total - opt;
+    $('note').textContent = 'Your bill ' + out.total.toFixed(1) + '. Best possible ' + opt.toFixed(1) + '. S is ≤ ' + (opt * 1.1).toFixed(1) + '. Lost costs the most; turned away is an unserved customer; slow is delay.' + (gap > 0.05 ? ' You are ' + gap.toFixed(1) + ' above the optimum.' : '');
     $('lost').textContent = out.lost.toFixed(1);
     $('refused').textContent = out.refused.toFixed(1);
     $('slow').textContent = out.slow.toFixed(1);
@@ -206,7 +233,7 @@ const scene: SceneFactory = (el) => {
     renderRecords(out.perRecord);
     $('tiles').innerHTML = out.worlds.map((w, i) => {
       const tone = w.lost > 0 ? 'bad' : w.refused > 0 ? 'warn' : 'ok';
-      return '<button class="tile ' + tone + (i === state.selected ? ' sel' : '') + '" data-i="' + i + '" title="World ' + (i + 1) + '">' + w.total.toFixed(1) + '</button>';
+      return '<button class="tile ' + tone + (i === state.selected ? ' sel' : '') + '" data-i="' + i + '" title="World ' + (i + 1) + ' · total damage ' + w.total.toFixed(1) + ' · click to inspect">' + w.total.toFixed(1) + '</button>';
     }).join('');
     $('tiles').querySelectorAll<HTMLButtonElement>('[data-i]').forEach((b) => b.addEventListener('click', () => {
       state.selected = Number(b.dataset.i);
